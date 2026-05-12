@@ -272,10 +272,9 @@ class PostKunjunganRanapHelper
         }
 
         // B. Data Lokasi (Bangsal)
-        $relmasterRuang = $request->relmasterruangranap['ruang'] ?? null;
-        $ruangId = $relmasterRuang['satset_uuid'] ?? null;
-        $lantai = $relmasterRuang['lantai'] ?? '-';
-        $gedung = $relmasterRuang['gedung'] ?? '-';
+        $ruangId = $request->relmasterruangranap->ruang->satset_uuid ?? $request->relmasterruangranap['ruang']['satset_uuid'] ?? null;
+        $lantai = $request->relmasterruangranap->ruang->lantai ?? $request->relmasterruangranap['ruang']['lantai'] ?? '-';
+        $gedung = $request->relmasterruangranap->ruang->gedung ?? $request->relmasterruangranap['ruang']['gedung'] ?? '-';
 
         // C. Perakit Resource Encounter (IMP)
         $formEncounter = [
@@ -340,7 +339,7 @@ class PostKunjunganRanapHelper
                 "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/ServiceClass"
             ]],
             "location" => [
-                "reference" => "Location/" . ($ruangId && $ruangId != '-' ? $ruangId : '{{Location_Ruang_Default_id}}'),
+                "reference" => "Location/" . ($ruangId ?: '00000000-0000-0000-0000-000000000000'), // Gunakan ID Valid atau Default
                 "display" => "Bed $request->nomorbed, $request->ruangan, Lantai $lantai Gedung $gedung"
             ],
             "period" => ["start" => $start]
