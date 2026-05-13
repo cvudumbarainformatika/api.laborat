@@ -154,7 +154,7 @@ class TindakanController extends Controller
     }
     public function showAgain(Request $request)
     {
-        $caritindakan = MtindakanSementara::where('rs1', $request->kdtindakan)->first();
+        $caritindakan = MtindakanSementara::where('idx', $request->idx)->first();
         $caritindakan->tgl_hapus = null;
         $caritindakan->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
         $caritindakan->save();
