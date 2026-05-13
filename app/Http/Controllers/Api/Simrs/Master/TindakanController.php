@@ -149,7 +149,7 @@ class TindakanController extends Controller
             $caritindakan->tgl_hapus = $request->tgl_mulai_berlaku;
             $caritindakan->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
             $caritindakan->save();
-            return new JsonResponse(['message' => 'Data menjadi Dasar penghapusan tindakan'], 200);
+            return new JsonResponse(['message' => 'Data menjadi Dasar penghapusan tarif'], 200);
         }
     }
     public function showAgain(Request $request)
