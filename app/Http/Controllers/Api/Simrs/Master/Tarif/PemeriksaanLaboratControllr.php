@@ -17,6 +17,7 @@ class PemeriksaanLaboratControllr extends Controller
     public function list()
     {
         $data = MpemeriksaaanLabSementara::select(
+            'id',
             'rs1',
             'rs1 as kode',
             'rs2 as nama',
@@ -89,28 +90,51 @@ class PemeriksaanLaboratControllr extends Controller
             } else {
                 $kode = $request->kode;
             }
-            $result['simpan'] = MpemeriksaaanLabSementara::updateOrCreate(
-                [
-                    'rs1' => $kode,
-                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
-                ],
-                [
-                    'rs2' => $request->nama,
-                    'rs3' => $request->hs1 ?? 0,
-                    'rs4' => $request->hp1 ?? 0,
-                    'rs5' => $request->hs2 ?? 0,
-                    'rs6' => $request->hp2 ?? 0,
-                    'pss' => $request->pss ?? 0,
-                    'psp' => $request->psp ?? 0,
-                    'hcus' => $request->hcus ?? 0,
-                    'hcup' => $request->hcup ?? 0,
-                    'hcs' => $request->hcs ?? 0,
-                    'hcp' => $request->hcp ?? 0,
-                    'rs21' => $request->kelompok ?? '',
-                    'jenislab' => $request->jenislab ?? '',
-                    'dasar_perubahan' => $request->dasar_perubahan,
-                ]
-            );
+
+            $cekData = MpemeriksaaanLabSementara::where('rs1', $kode)->whereDate('tgl_mulai_berlaku', '>', today())->first();
+            if (!$cekData) {
+                $result['simpan'] = MpemeriksaaanLabSementara::create(
+                    [
+                        'rs1' => $kode,
+                        'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
+                        'rs2' => $request->nama,
+                        'rs3' => $request->hs1 ?? 0,
+                        'rs4' => $request->hp1 ?? 0,
+                        'rs5' => $request->hs2 ?? 0,
+                        'rs6' => $request->hp2 ?? 0,
+                        'pss' => $request->pss ?? 0,
+                        'psp' => $request->psp ?? 0,
+                        'hcus' => $request->hcus ?? 0,
+                        'hcup' => $request->hcup ?? 0,
+                        'hcs' => $request->hcs ?? 0,
+                        'hcp' => $request->hcp ?? 0,
+                        'rs21' => $request->kelompok ?? '',
+                        'jenislab' => $request->jenislab ?? '',
+                        'dasar_perubahan' => $request->dasar_perubahan,
+                    ]
+                );
+            } else {
+                $result['simpan'] = $cekData->update(
+                    [
+                        // 'rs1' => $kode,
+                        'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
+                        'rs2' => $request->nama,
+                        'rs3' => $request->hs1 ?? 0,
+                        'rs4' => $request->hp1 ?? 0,
+                        'rs5' => $request->hs2 ?? 0,
+                        'rs6' => $request->hp2 ?? 0,
+                        'pss' => $request->pss ?? 0,
+                        'psp' => $request->psp ?? 0,
+                        'hcus' => $request->hcus ?? 0,
+                        'hcup' => $request->hcup ?? 0,
+                        'hcs' => $request->hcs ?? 0,
+                        'hcp' => $request->hcp ?? 0,
+                        'rs21' => $request->kelompok ?? '',
+                        'jenislab' => $request->jenislab ?? '',
+                        'dasar_perubahan' => $request->dasar_perubahan,
+                    ]
+                );
+            }
             $result['message'] = 'Data Berhasil Disimpan';
             DB::commit();
             return new JsonResponse($result);
@@ -128,16 +152,29 @@ class PemeriksaanLaboratControllr extends Controller
 
     public function hidden(Request $request)
     {
-        $caritindakan = MpemeriksaaanLabSementara::where('rs1', $request->kode)->first();
-        $caritindakan->tgl_hapus = $request->tgl_mulai_berlaku;
-        $caritindakan->hidden = '1';
-        $caritindakan->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
-        $caritindakan->save();
-        return new JsonResponse(['message' => 'ok'], 200);
+        $cekNull = MpemeriksaaanLabSementara::where('id', $request->id)->first();
+        if ($request->action == 'delete') {
+            if ($cekNull->tgl_mulai_berlaku == null) return new JsonResponse(['message' => 'Data Ini tidak boleh dihapus'], 410);
+            $caritindakan = MpemeriksaaanLabSementara::where('id', $request->id)->whereNotNull('tgl_mulai_berlaku')->first();
+            if (!$caritindakan) return new JsonResponse(['message' => 'Data Tidak ditemukan'], 410);
+            $caritindakan->delete();
+
+            return new JsonResponse(['message' => 'Data Dihapus'], 200);
+        } else {
+            if ($cekNull->tgl_mulai_berlaku == null) return new JsonResponse(['message' => 'Data Ini tidak boleh dijadikan sebagai dasar penghapusan. silahkan edit data terlebih dahulu, kemudian jadikan data tersebut sebagai dasar penghapusan'], 410);
+            $caritindakan = MpemeriksaaanLabSementara::where('id', $request->id)->whereNotNull('tgl_mulai_berlaku')->first();
+            if (!$caritindakan) return new JsonResponse(['message' => 'Data Tidak ditemukan'], 410);
+            $caritindakan->tgl_hapus = $request->tgl_mulai_berlaku;
+            $caritindakan->hidden = '1';
+            $caritindakan->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
+            $caritindakan->save();
+            return new JsonResponse(['message' => 'Data menjadi Dasar penghapusan tindakan'], 200);
+        }
     }
     public function showAgain(Request $request)
     {
-        $caritindakan = MpemeriksaaanLabSementara::where('rs1', $request->kode)->first();
+        $caritindakan = MpemeriksaaanLabSementara::where('id', $request->id)->first();
+
         $caritindakan->tgl_hapus = null;
         $caritindakan->hidden = '';
         $caritindakan->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
