@@ -47,44 +47,83 @@ class RsTigaPuluhTarifController extends Controller
             } else {
                 $kode = $request->rs1;
             }
-            $result['simpan'] = TarifVisiteDanKamarSementara::updateOrCreate(
-                [
-                    'rs1' => $kode,
-                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
-                ],
-                [
-                    'rs2' => $request->rs2,
-                    // 'rs4' => $request->rs4,
-                    // 'rs5' => $request->rs5,
-                    'rs6' => $request->rs6 ?? 0,
-                    'rs7' => $request->rs7 ?? 0,
-                    'rs8' => $request->rs8 ?? 0,
-                    'rs9' => $request->rs9 ?? 0,
-                    'rs10' => $request->rs10 ?? 0,
-                    'rs11' => $request->rs11 ?? 0,
-                    'rs12' => $request->rs12 ?? 0,
-                    'rs13' => $request->rs13 ?? 0,
-                    'rs14' => $request->rs14 ?? 0,
-                    'rs15' => $request->rs15 ?? 0,
-                    'rs16' => $request->rs16 ?? 0,
-                    'rs17' => $request->rs17 ?? 0,
-                    'hcus' => $request->hcus ?? 0,
-                    'hcup' => $request->hcup ?? 0,
-                    'icus' => $request->icus ?? 0,
-                    'icup' => $request->icup ?? 0,
-                    'iccus' => $request->iccus ?? 0,
-                    'iccup' => $request->iccup ?? 0,
-                    'nicus' => $request->nicus ?? 0,
-                    'nicup' => $request->nicup ?? 0,
-                    'ins' => $request->ins ?? 0,
-                    'inp' => $request->inp ?? 0,
-                    'isos' => $request->isos ?? 0,
-                    'isop' => $request->isop ?? 0,
-                    'pss' => $request->pss ?? 0,
-                    'psp' => $request->psp ?? 0,
-                    'dasar_perubahan' => $request->dasar_perubahan,
-                ]
-            );
+            $cekData = TarifVisiteDanKamarSementara::where('rs1', $kode)->whereDate('tgl_mulai_berlaku', '>', today())->first();
+            if (!$cekData) {
+                $result['simpan'] = TarifVisiteDanKamarSementara::create(
+                    [
+                        'rs1' => $kode,
+                        'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
+                        'rs2' => $request->rs2,
+                        // 'rs4' => $request->rs4,
+                        // 'rs5' => $request->rs5,
+                        'rs6' => $request->rs6 ?? 0,
+                        'rs7' => $request->rs7 ?? 0,
+                        'rs8' => $request->rs8 ?? 0,
+                        'rs9' => $request->rs9 ?? 0,
+                        'rs10' => $request->rs10 ?? 0,
+                        'rs11' => $request->rs11 ?? 0,
+                        'rs12' => $request->rs12 ?? 0,
+                        'rs13' => $request->rs13 ?? 0,
+                        'rs14' => $request->rs14 ?? 0,
+                        'rs15' => $request->rs15 ?? 0,
+                        'rs16' => $request->rs16 ?? 0,
+                        'rs17' => $request->rs17 ?? 0,
+                        'hcus' => $request->hcus ?? 0,
+                        'hcup' => $request->hcup ?? 0,
+                        'icus' => $request->icus ?? 0,
+                        'icup' => $request->icup ?? 0,
+                        'iccus' => $request->iccus ?? 0,
+                        'iccup' => $request->iccup ?? 0,
+                        'nicus' => $request->nicus ?? 0,
+                        'nicup' => $request->nicup ?? 0,
+                        'ins' => $request->ins ?? 0,
+                        'inp' => $request->inp ?? 0,
+                        'isos' => $request->isos ?? 0,
+                        'isop' => $request->isop ?? 0,
+                        'pss' => $request->pss ?? 0,
+                        'psp' => $request->psp ?? 0,
+                        'dasar_perubahan' => $request->dasar_perubahan,
+                    ]
+                );
+            } else {
+                $result['simpan'] = $cekData->update(
+                    [
+                        'rs1' => $kode,
+                        'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
+                        'rs2' => $request->rs2,
+                        // 'rs4' => $request->rs4,
+                        // 'rs5' => $request->rs5,
+                        'rs6' => $request->rs6 ?? 0,
+                        'rs7' => $request->rs7 ?? 0,
+                        'rs8' => $request->rs8 ?? 0,
+                        'rs9' => $request->rs9 ?? 0,
+                        'rs10' => $request->rs10 ?? 0,
+                        'rs11' => $request->rs11 ?? 0,
+                        'rs12' => $request->rs12 ?? 0,
+                        'rs13' => $request->rs13 ?? 0,
+                        'rs14' => $request->rs14 ?? 0,
+                        'rs15' => $request->rs15 ?? 0,
+                        'rs16' => $request->rs16 ?? 0,
+                        'rs17' => $request->rs17 ?? 0,
+                        'hcus' => $request->hcus ?? 0,
+                        'hcup' => $request->hcup ?? 0,
+                        'icus' => $request->icus ?? 0,
+                        'icup' => $request->icup ?? 0,
+                        'iccus' => $request->iccus ?? 0,
+                        'iccup' => $request->iccup ?? 0,
+                        'nicus' => $request->nicus ?? 0,
+                        'nicup' => $request->nicup ?? 0,
+                        'ins' => $request->ins ?? 0,
+                        'inp' => $request->inp ?? 0,
+                        'isos' => $request->isos ?? 0,
+                        'isop' => $request->isop ?? 0,
+                        'pss' => $request->pss ?? 0,
+                        'psp' => $request->psp ?? 0,
+                        'dasar_perubahan' => $request->dasar_perubahan,
+                        'tgl_hapus' => null,
+                    ]
+                );
+            }
             $result['message'] = 'Data Berhasil Disimpan';
             DB::commit();
             return new JsonResponse($result);
@@ -101,16 +140,33 @@ class RsTigaPuluhTarifController extends Controller
     }
     public function hidden(Request $request)
     {
-        $data = TarifVisiteDanKamarSementara::where('rs1', $request->kode)->first();
-        $data->tgl_hapus = $request->tgl_mulai_berlaku;
-        // $data->flag = '1';
-        $data->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
-        $data->save();
-        return new JsonResponse(['message' => 'ok'], 200);
+        $cekNull = TarifVisiteDanKamarSementara::where('id', $request->id)->first();
+        if ($request->action == 'delete') {
+            if ($cekNull->tgl_mulai_berlaku == null) return new JsonResponse(['message' => 'Data Ini tidak boleh dihapus'], 410);
+            $data = TarifVisiteDanKamarSementara::where('id', $request->id)->whereNotNull('tgl_mulai_berlaku')->first();
+            if (!$data) return new JsonResponse(['message' => 'Data Tidak ditemukan'], 410);
+            $data->delete();
+            return new JsonResponse(['message' => 'Data Dihapus'], 200);
+        } else {
+            if ($cekNull->tgl_mulai_berlaku == null) return new JsonResponse(['message' => 'Data Ini tidak boleh dijadikan sebagai dasar penghapusan. silahkan edit data terlebih dahulu, kemudian jadikan data tersebut sebagai dasar penghapusan'], 410);
+            $data = TarifVisiteDanKamarSementara::where('id', $request->id)->whereNotNull('tgl_mulai_berlaku')->first();
+            if (!$data) return new JsonResponse(['message' => 'Data Tidak ditemukan'], 410);
+            $data->tgl_hapus = $request->tgl_mulai_berlaku;
+            // $data->flag = '1';
+            $data->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
+            $data->save();
+            return new JsonResponse(['message' => 'Data menjadi Dasar penghapusan tarif'], 200);
+        }
+        // $data = TarifVisiteDanKamarSementara::where('rs1', $request->kode)->first();
+        // $data->tgl_hapus = $request->tgl_mulai_berlaku;
+        // // $data->flag = '1';
+        // $data->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
+        // $data->save();
+        // return new JsonResponse(['message' => 'ok'], 200);
     }
     public function showAgain(Request $request)
     {
-        $data = TarifVisiteDanKamarSementara::where('rs1', $request->kode)->first();
+        $data = TarifVisiteDanKamarSementara::where('id', $request->id)->first();
         $data->tgl_hapus = null;
         // $data->flag = '';
         $data->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
