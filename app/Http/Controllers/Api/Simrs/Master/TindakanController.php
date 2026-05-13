@@ -25,6 +25,7 @@ class TindakanController extends Controller
     public function listtindakan()
     {
         $listtindakan = MtindakanSementara::select(
+            'idx',
             'rs1 as kdtindakan',
             'rs2 as nmtindakan',
             'rs4 as ruangan',
@@ -131,11 +132,25 @@ class TindakanController extends Controller
 
     public function hidden(Request $request)
     {
-        $caritindakan = MtindakanSementara::where('rs1', $request->kdtindakan)->whereNotNull('tgl_mulai_berlaku')->first();
-        $caritindakan->tgl_hapus = $request->tgl_mulai_berlaku;
-        $caritindakan->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
-        $caritindakan->save();
-        return new JsonResponse(['message' => 'ok'], 200);
+
+        // return new JsonResponse(['message' => 'ok', 'req', $request->all()], 200);
+        $cekNull = MtindakanSementara::where('idx', $request->idx)->first();
+        if ($request->action == 'delete') {
+            if ($cekNull->tgl_mulai_berlaku == null) return new JsonResponse(['message' => 'Data Ini tidak boleh dihapus'], 410);
+            $caritindakan = MtindakanSementara::where('idx', $request->idx)->whereNotNull('tgl_mulai_berlaku')->first();
+            if (!$caritindakan) return new JsonResponse(['message' => 'Data Tidak ditemukan'], 410);
+            $caritindakan->delete();
+
+            return new JsonResponse(['message' => 'Data Dihapus'], 200);
+        } else {
+            if ($cekNull->tgl_mulai_berlaku == null) return new JsonResponse(['message' => 'Data Ini tidak boleh dijadikan sebagai dasar penghapusan. silahkan edit data terlebih dahulu, kemudian jadikan data tersebut sebagai dasar penghapusan'], 410);
+            $caritindakan = MtindakanSementara::where('idx', $request->idx)->whereNotNull('tgl_mulai_berlaku')->first();
+            if (!$caritindakan) return new JsonResponse(['message' => 'Data Tidak ditemukan'], 410);
+            $caritindakan->tgl_hapus = $request->tgl_mulai_berlaku;
+            $caritindakan->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
+            $caritindakan->save();
+            return new JsonResponse(['message' => 'Data menjadi Dasar penghapusan tindakan'], 200);
+        }
     }
     public function showAgain(Request $request)
     {
@@ -167,46 +182,88 @@ class TindakanController extends Controller
         } else {
             $kdtindakan = $request->kdtindakan;
         }
-        $simpantindakan = MtindakanSementara::updateOrCreate(
-            [
-                'rs1' => $kdtindakan,
-                'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
-            ],
-            [
-                'rs2' => $request->nmtindakan,
-                'rs3' => 'T1#',
-                'rs8' => $request->js3,
-                'rs9' => $request->jp3,
-                'rs10' => $request->habispake3,
-                'anastesi' => $request->anastesi,
-                'rs11' => $request->js2,
-                'rs12' => $request->jp2,
-                'rs13' => $request->habispake2,
-                'rs14' => $request->js1,
-                'rs15' => $request->jp1,
-                'rs16' => $request->habispake1,
-                'rs17' => $request->jsutama,
-                'rs18' => $request->jputama,
-                'rs19' => $request->habispakeutama,
-                'rs20' => $request->jsvip,
-                'rs21' => $request->jpvip,
-                'rs22' => $request->habispakevip,
-                'rs23' => $request->jsvvip,
-                'rs24' => $request->jpvvip,
-                'rs25' => $request->habispakevvip,
-                'dasar_perubahan' => $request->dasar_perubahan,
-                'pss' => $request->js_presidential,
-                'psp' => $request->jp_presidential,
-                'habispake_presidential' => $request->habispake_presidential,
-                'js_hcu' => $request->js_hcu,
-                'jp_hcu' => $request->jp_hcu,
-                'habispake_hcu' => $request->habispake_hcu,
-                'js_hc' => $request->js_hc,
-                'jp_hc' => $request->jp_hc,
-                'habispake_hc' => $request->habispake_hc,
-                'rs4' => $request->ruangan,
-            ]
-        );
+        $cekData = MtindakanSementara::where('rs1', $kdtindakan)->whereDate('tgl_mulai_berlaku', '>', today())->first();
+        if (!$cekData) {
+            $simpantindakan = MtindakanSementara::create(
+                [
+                    'rs1' => $kdtindakan,
+                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
+                    'rs2' => $request->nmtindakan,
+                    'rs3' => 'T1#',
+                    'rs8' => $request->js3,
+                    'rs9' => $request->jp3,
+                    'rs10' => $request->habispake3,
+                    'anastesi' => $request->anastesi ?? 0,
+                    'rs11' => $request->js2,
+                    'rs12' => $request->jp2,
+                    'rs13' => $request->habispake2,
+                    'rs14' => $request->js1,
+                    'rs15' => $request->jp1,
+                    'rs16' => $request->habispake1,
+                    'rs17' => $request->jsutama,
+                    'rs18' => $request->jputama,
+                    'rs19' => $request->habispakeutama,
+                    'rs20' => $request->jsvip,
+                    'rs21' => $request->jpvip,
+                    'rs22' => $request->habispakevip,
+                    'rs23' => $request->jsvvip,
+                    'rs24' => $request->jpvvip,
+                    'rs25' => $request->habispakevvip,
+                    'dasar_perubahan' => $request->dasar_perubahan,
+                    'pss' => $request->js_presidential,
+                    'psp' => $request->jp_presidential,
+                    'habispake_presidential' => $request->habispake_presidential,
+                    'js_hcu' => $request->js_hcu,
+                    'jp_hcu' => $request->jp_hcu,
+                    'habispake_hcu' => $request->habispake_hcu,
+                    'js_hc' => $request->js_hc,
+                    'jp_hc' => $request->jp_hc,
+                    'habispake_hc' => $request->habispake_hc,
+                    'tgl_hapus' => null,
+                    'rs4' => $request->ruangan ?? '',
+                ]
+            );
+        } else {
+            $simpantindakan = $cekData->update(
+                [
+                    // 'rs1' => $kdtindakan,
+                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
+                    'rs2' => $request->nmtindakan,
+                    'rs3' => 'T1#',
+                    'rs8' => $request->js3,
+                    'rs9' => $request->jp3,
+                    'rs10' => $request->habispake3,
+                    'anastesi' => $request->anastesi ?? 0,
+                    'rs11' => $request->js2,
+                    'rs12' => $request->jp2,
+                    'rs13' => $request->habispake2,
+                    'rs14' => $request->js1,
+                    'rs15' => $request->jp1,
+                    'rs16' => $request->habispake1,
+                    'rs17' => $request->jsutama,
+                    'rs18' => $request->jputama,
+                    'rs19' => $request->habispakeutama,
+                    'rs20' => $request->jsvip,
+                    'rs21' => $request->jpvip,
+                    'rs22' => $request->habispakevip,
+                    'rs23' => $request->jsvvip,
+                    'rs24' => $request->jpvvip,
+                    'rs25' => $request->habispakevvip,
+                    'dasar_perubahan' => $request->dasar_perubahan,
+                    'pss' => $request->js_presidential,
+                    'psp' => $request->jp_presidential,
+                    'habispake_presidential' => $request->habispake_presidential,
+                    'js_hcu' => $request->js_hcu,
+                    'jp_hcu' => $request->jp_hcu,
+                    'habispake_hcu' => $request->habispake_hcu,
+                    'js_hc' => $request->js_hc,
+                    'jp_hc' => $request->jp_hc,
+                    'habispake_hc' => $request->habispake_hc,
+                    'tgl_hapus' => null,
+                    'rs4' => $request->ruangan,
+                ]
+            );
+        }
         if (!$simpantindakan) {
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 410);
         }
