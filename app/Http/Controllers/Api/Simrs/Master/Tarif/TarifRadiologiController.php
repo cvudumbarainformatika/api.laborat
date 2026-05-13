@@ -47,24 +47,42 @@ class TarifRadiologiController extends Controller
                 $cektotal = (int) substr($request->rs1, 2);
                 $kode = $request->rs1;
             }
-            $result['simpan'] = MasterPemeriksaanRadiologiSementara::updateOrCreate(
-                [
-                    'rs1' => $kode,
-                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
-                ],
-                [
-                    'rs2' => $request->rs2,
-                    'rs3' => $request->rs3 ?? '',
-                    'rs4' => $request->rs4 ?? 0,
-                    'rs5' => $request->rs5 ?? 0,
-                    'rs6' => $request->rs6 ?? 0,
-                    'rs7' => $request->rs7 ?? 0,
-                    'pss' => $request->pss ?? 0,
-                    'psp' => $request->psp ?? 0,
-                    'dasar_perubahan' => $request->dasar_perubahan,
-                    'idx' => $cektotal
-                ]
-            );
+            $cekData = MasterPemeriksaanRadiologiSementara::where('rs1', $kode)->whereDate('tgl_mulai_berlaku', '>', today())->first();
+            if (!$cekData) {
+                $result['simpan'] = MasterPemeriksaanRadiologiSementara::create(
+                    [
+                        'rs1' => $kode,
+                        'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
+                        'rs2' => $request->rs2,
+                        'rs3' => $request->rs3 ?? '',
+                        'rs4' => $request->rs4 ?? 0,
+                        'rs5' => $request->rs5 ?? 0,
+                        'rs6' => $request->rs6 ?? 0,
+                        'rs7' => $request->rs7 ?? 0,
+                        'pss' => $request->pss ?? 0,
+                        'psp' => $request->psp ?? 0,
+                        'dasar_perubahan' => $request->dasar_perubahan,
+                        'idx' => $cektotal
+                    ]
+                );
+            } else {
+                $result['simpan'] = $cekData->update(
+                    [
+                        'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
+                        'rs2' => $request->rs2,
+                        'rs3' => $request->rs3 ?? '',
+                        'rs4' => $request->rs4 ?? 0,
+                        'rs5' => $request->rs5 ?? 0,
+                        'rs6' => $request->rs6 ?? 0,
+                        'rs7' => $request->rs7 ?? 0,
+                        'pss' => $request->pss ?? 0,
+                        'psp' => $request->psp ?? 0,
+                        'tgl_hapus' => null,
+                        'hidden' => '',
+                        'dasar_perubahan' => $request->dasar_perubahan,
+                    ]
+                );
+            }
             $result['message'] = 'Data Berhasil Disimpan';
             DB::commit();
             return new JsonResponse($result);
@@ -81,16 +99,27 @@ class TarifRadiologiController extends Controller
     }
     public function hidden(Request $request)
     {
-        $data = MasterPemeriksaanRadiologiSementara::where('rs1', $request->kode)->first();
-        $data->tgl_hapus = $request->tgl_mulai_berlaku;
-        $data->hidden = '1';
-        $data->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
-        $data->save();
-        return new JsonResponse(['message' => 'ok'], 200);
+        $cekNull = MasterPemeriksaanRadiologiSementara::where('id1', $request->id1)->first();
+        if ($request->action == 'delete') {
+            if ($cekNull->tgl_mulai_berlaku == null) return new JsonResponse(['message' => 'Data Ini tidak boleh dihapus'], 410);
+            $data = MasterPemeriksaanRadiologiSementara::where('id1', $request->id1)->whereNotNull('tgl_mulai_berlaku')->first();
+            if (!$data) return new JsonResponse(['message' => 'Data Tidak ditemukan'], 410);
+            $data->delete();
+            return new JsonResponse(['message' => 'Data Dihapus'], 200);
+        } else {
+            if ($cekNull->tgl_mulai_berlaku == null) return new JsonResponse(['message' => 'Data Ini tidak boleh dijadikan sebagai dasar penghapusan. silahkan edit data terlebih dahulu, kemudian jadikan data tersebut sebagai dasar penghapusan'], 410);
+            $data = MasterPemeriksaanRadiologiSementara::where('id1', $request->id1)->whereNotNull('tgl_mulai_berlaku')->first();
+            if (!$data) return new JsonResponse(['message' => 'Data Tidak ditemukan'], 410);
+            $data->tgl_hapus = $request->tgl_mulai_berlaku;
+            $data->hidden = '1';
+            $data->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
+            $data->save();
+            return new JsonResponse(['message' => 'Data menjadi Dasar penghapusan tindakan'], 200);
+        }
     }
     public function showAgain(Request $request)
     {
-        $data = MasterPemeriksaanRadiologiSementara::where('rs1', $request->kode)->first();
+        $data = MasterPemeriksaanRadiologiSementara::where('id1', $request->id1)->first();
         $data->tgl_hapus = null;
         $data->hidden = '';
         $data->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;

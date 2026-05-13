@@ -118,6 +118,8 @@ class PemeriksaanLaboratControllr extends Controller
                     [
                         // 'rs1' => $kode,
                         'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
+                        'tgl_hapus' => null,
+                        'hidden' => '',
                         'rs2' => $request->nama,
                         'rs3' => $request->hs1 ?? 0,
                         'rs4' => $request->hp1 ?? 0,

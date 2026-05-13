@@ -80,10 +80,12 @@ class TindakanOperasiController extends Controller
                         'rs11' => $request->rs11 ?? 0,
                         'rs12' => $request->rs12 ?? 0,
                         'rs13' => $request->rs13 ?? 0,
+                        'rs14' => '',
                         'ssp' => $request->ssp ?? 0,
                         'psp' => $request->psp ?? 0,
                         'asp' => $request->asp ?? 0,
                         'dasar_perubahan' => $request->dasar_perubahan,
+                        'tgl_hapus' => null,
                     ]
                 );
             }
@@ -107,9 +109,9 @@ class TindakanOperasiController extends Controller
         $cekNull = MasterOperasiSementara::where('idx', $request->idx)->first();
         if ($request->action == 'delete') {
             if ($cekNull->tgl_mulai_berlaku == null) return new JsonResponse(['message' => 'Data Ini tidak boleh dihapus'], 410);
-            $caritindakan = MasterOperasiSementara::where('idx', $request->idx)->whereNotNull('tgl_mulai_berlaku')->first();
-            if (!$caritindakan) return new JsonResponse(['message' => 'Data Tidak ditemukan'], 410);
-            $caritindakan->delete();
+            $data = MasterOperasiSementara::where('idx', $request->idx)->whereNotNull('tgl_mulai_berlaku')->first();
+            if (!$data) return new JsonResponse(['message' => 'Data Tidak ditemukan'], 410);
+            $data->delete();
             return new JsonResponse(['message' => 'Data Dihapus'], 200);
         } else {
             if ($cekNull->tgl_mulai_berlaku == null) return new JsonResponse(['message' => 'Data Ini tidak boleh dijadikan sebagai dasar penghapusan. silahkan edit data terlebih dahulu, kemudian jadikan data tersebut sebagai dasar penghapusan'], 410);
