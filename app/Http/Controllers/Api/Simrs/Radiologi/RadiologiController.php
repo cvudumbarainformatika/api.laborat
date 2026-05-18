@@ -116,6 +116,7 @@ class RadiologiController extends Controller
 
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
+            'rs48_pacs.view_url as view_url',
         )
             ->leftjoin('rs17', 'rs106.rs1', '=', 'rs17.rs1') //rajal
             ->leftjoin('rs23', 'rs106.rs1', '=', 'rs23.rs1') //ranap
@@ -127,6 +128,7 @@ class RadiologiController extends Controller
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs106.rs8') //dokter
             // // ->leftjoin('rs21', 'rs21.rs1', '=', 'rs107.rs8') //mboh
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs106.rs14') //sistembayar
+            ->leftjoin('rs48_pacs', 'rs48_pacs.nota', '=', 'rs106.rs2') //pacs
         ;
 
 
@@ -446,7 +448,7 @@ class RadiologiController extends Controller
                             ->on('rs48.rs4', '=', 'rs151.kode');
                     })->leftJoin('rs47', function ($join) {
                         $join->on('rs48.rs4', '=', 'rs47.rs1');
-                    })
+                    })->leftJoin('rs48_pacs', 'rs48.rs2', '=', 'rs48_pacs.nota')
                         ->select(
                             'rs48.*',
                             'rs151.hasil',
@@ -459,6 +461,9 @@ class RadiologiController extends Controller
                             'rs47.rs2 as nama',
                             'rs47.rs1 as kode',
                             'rs47.rs3 as jenis',
+                            'rs48_pacs.status',
+                            'rs48_pacs.view_url as view_url',
+                            'rs48_pacs.view_url_local as view_url_local'
                         );
                 }
 
