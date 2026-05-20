@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Simrs\Master\Mwilayah;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,17 @@ class Pasien extends Model
     protected $table = 'rs15';
     protected $primaryKey = 'rs1';
     protected $appends = ['usia'];
+
+
+    public function getWilayahAttribute()
+    {
+        return Mwilayah::where([
+            'kode2' => $this->kd_propinsi,
+            'kode3' => $this->kd_kota,
+            'kode4' => $this->kd_kec,
+            'kode5' => $this->kd_kel,
+        ])->first();
+    }
 
     public function getUsiaAttribute()
     {

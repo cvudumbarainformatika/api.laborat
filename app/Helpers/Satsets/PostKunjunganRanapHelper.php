@@ -177,6 +177,30 @@ class PostKunjunganRanapHelper
             ->leftjoin('rs242', 'rs242.rs1', 'rs23.rs1') // rencana tindak lanjut
             ->where('rs23.rs1', $noreg)
             ->with([
+                'patient' => function ($q) {
+                    $q->select(
+                        'rs1',
+                        'kd_propinsi',
+                        'kd_kota',
+                        'kd_kec',
+                        'kd_kel'
+                    )
+                        ->selectRaw("kode2 as satset_province")
+
+                        ->selectRaw(" CONCAT( kode2, LPAD(kode3, 2, '0') ) as satset_city ")
+
+                        ->selectRaw(" CONCAT( kode2, LPAD(kode3, 2, '0'), LPAD(kode4, 2, '0') ) as satset_district ")
+
+                        ->selectRaw(" CONCAT( kode2, LPAD(kode3, 2, '0'), LPAD(kode4, 2, '0'), LPAD(kode5, 4, '0') ) as satset_village ")
+
+                        ->leftJoin('wilayah', function ($join) {
+
+                            $join->on('wilayah.kode2', '=', 'rs15.kd_propinsi')
+                                ->on('wilayah.kode3', '=', 'rs15.kd_kota')
+                                ->on('wilayah.kode4', '=', 'rs15.kd_kec')
+                                ->on('wilayah.kode5', '=', 'rs15.kd_kel');
+                        });
+                },
                 'satset:uuid',
                 'satset_error:uuid',
                 'diagnosa' => function ($q) {
@@ -225,13 +249,17 @@ class PostKunjunganRanapHelper
     public static function kirimKunjunganRanap($data)
     {
         // dd($data);
-        $pasien_uuid = $data?->pasien_uuid ?? null;
+        $pasien_uuid =  $data?->pasien_uuid ?? null;
         $practitioner_uuid = $data?->datasimpeg?->satset_uuid;
+
+        // dd($pasien_uuid);
 
         if (!$pasien_uuid) {
             // $getPasienFromSatset = self::getPasienByNikSatset($data);
             // $pasien_uuid = $getPasienFromSatset['data']['uuid'] ?? null;
             $result = self::getPasienByNikSatset($data);
+
+
             // =====================================
             // PASIEN SUDAH ADA DI SATUSEHAT
             // =====================================
@@ -248,12 +276,14 @@ class PostKunjunganRanapHelper
                 // CREATE PATIENT KE SATUSEHAT
                 // =====================================
                 $create = self::createPatientSatset($data);
-
+                // dd($create);
                 // berhasil create
                 if (($create['message'] ?? null) === 'success') {
                     $pasien_uuid = $create['uuid'];
                 }
             }
+
+            // dd(json_encode($result, JSON_PRETTY_PRINT));
         }
 
         if (!$practitioner_uuid) {
@@ -266,10 +296,10 @@ class PostKunjunganRanapHelper
         }
 
         $send = self::form($data, $pasien_uuid);
-        // if ($send['message'] === 'success') {
-        //     $token = AuthSatsetHelper::accessToken();
-        //     $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
-        // }
+        if ($send['message'] === 'success') {
+            $token = AuthSatsetHelper::accessToken();
+            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+        }
         return $send;
     }
 
@@ -278,6 +308,9 @@ class PostKunjunganRanapHelper
         try {
 
             $token = AuthSatsetHelper::accessToken();
+
+            $isBayi = Carbon::parse($pasien->tgllahir)
+                ->diffInYears(now()) < 1;
 
             $payload = [
                 "resourceType" => "Patient",
@@ -291,21 +324,66 @@ class PostKunjunganRanapHelper
                 "name" => [
                     [
                         "use" => "official",
-                        "text" => $pasien->nama
+                        "text" => $pasien->nama_panggil
                     ]
                 ],
                 "gender" => $pasien->kelamin == 'L'
                     ? 'male'
                     : 'female',
 
-                "birthDate" => date('Y-m-d', strtotime($pasien->tgllahir))
+                "birthDate" => date('Y-m-d', strtotime($pasien->tgllahir)),
+                "address" => [
+                    [
+                        "use" => "home",
+
+                        "line" => [
+                            $pasien->alamat ?? "-"
+                        ],
+
+                        "country" => "ID",
+
+                        "extension" => [
+                            [
+                                "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/administrativeCode",
+
+                                "extension" => [
+                                    [
+                                        "url" => "province",
+                                        "valueCode" => (string) $pasien->patient->satset_province
+                                    ],
+                                    [
+                                        "url" => "city",
+                                        "valueCode" => (string) $pasien->patient->satset_city
+                                    ],
+                                    [
+                                        "url" => "district",
+                                        "valueCode" => (string) $pasien->patient->satset_district
+                                    ],
+                                    [
+                                        "url" => "village",
+                                        "valueCode" => (string) $pasien->patient->satset_village
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+
             ];
+
+            if ($isBayi) {
+
+                $payload['multipleBirthBoolean'] = false;
+                $payload['multipleBirthInteger'] = 0;
+            }
 
             $send = BridgingSatsetHelper::post_data(
                 $token,
                 '/Patient',
                 $payload
             );
+
+            // dd(json_encode($send, JSON_PRETTY_PRINT));
 
             // sukses create
             if (isset($send['data']['id'])) {
@@ -347,35 +425,6 @@ class PostKunjunganRanapHelper
         }
     }
 
-    // public static function getPasienByNikSatset($pasien)
-    // {
-    //     // return $request->all();
-    //     $nik = $pasien->nik;
-    //     $norm = $pasien->norm;
-    //     $noreg = $pasien->noreg;
-    //     // get data ke satset
-    //     $token = AuthSatsetHelper::accessToken();
-    //     $params = '/Patient?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
-
-    //     $send = BridgingSatsetHelper::get_data($token, $params);
-
-    //     $data = Pasien::where([
-    //         ['rs49', $nik],
-    //         ['rs1', $norm],
-    //     ])->first();
-
-    //     if ($send['message'] === 'success') {
-    //         $data->satset_uuid = $send['data']['uuid'];
-    //         $data->save();
-    //     } else {
-    //         SatsetErrorRespon::create([
-    //             'uuid' => $noreg,
-    //             'response' => $send
-    //         ]);
-    //     }
-    //     return $send;
-    // }
-
     public static function getPasienByNikSatset($pasien)
     {
         // dd($pasien);
@@ -393,6 +442,7 @@ class PostKunjunganRanapHelper
             ['rs1', $norm],
         ])->first();
 
+        // dd(json_encode($send, JSON_PRETTY_PRINT));
         // =========================
         // RESPONSE VALID
         // =========================
@@ -498,6 +548,11 @@ class PostKunjunganRanapHelper
             foreach ($res_radiologi as $rad_entry) {
                 $form['entry'][] = $rad_entry;
             }
+        }
+        // 3 imunisasi
+        $imunization = self::imunisasi($request, $pasien_uuid, $encounter_uuid, $organization_id);
+        if (!empty($imunization)) {
+            $form['entry'][] = $imunization;
         }
 
         return ['message' => 'success', 'data' => $form];
@@ -749,5 +804,99 @@ class PostKunjunganRanapHelper
             }
         }
         return $entries;
+    }
+
+    public static function imunisasi($request, $pasien_uuid, $encounter_uuid, $organization_id)
+    {
+        $imunisasi = collect($request->nursenote)
+            ->pluck('reseps')
+            ->flatten(1)
+            ->first(function ($item) {
+
+                $text = strtolower(
+                    ($item['nama_obat'] ?? '') . ' ' .
+                        ($item['kandungan'] ?? '')
+                );
+
+                return str_contains($text, 'hb0')
+                    || str_contains($text, 'hepatitis b')
+                    || str_contains($text, 'vaksin hb0');
+            });
+
+        // Carbon::parse($request->tglmasuk)->toIso8601String();
+        // return $imunisasi;
+        $form = [];
+
+        // B. Data Lokasi (Bangsal)
+        $ruangId = $request->relmasterruangranap->ruang->satset_uuid ?? $request->relmasterruangranap['ruang']['satset_uuid'] ?? null;
+        $lantai = $request->relmasterruangranap->ruang->lantai ?? $request->relmasterruangranap['ruang']['lantai'] ?? '-';
+        $gedung = $request->relmasterruangranap->ruang->gedung ?? $request->relmasterruangranap['ruang']['gedung'] ?? '-';
+
+        $practitioner_uuid = $request?->datasimpeg?->satset_uuid;
+
+        if ($imunisasi) {
+            $form =
+                [
+                    "fullUrl" => "urn:uuid:" . self::generateUuid(),
+                    "resource" => [
+                        "resourceType" => "Immunization",
+                        "status" => "completed",
+                        "vaccineCode" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://hl7.org/fhir/sid/cvx",
+                                    "code" => "08",
+                                    "display" => "Hep B, adolescent or pediatric"
+                                ]
+                            ]
+                        ],
+                        "reasonCode" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://terminology.kemkes.go.id/CodeSystem/immunization-routine-timing",
+                                    "code" => "IM-Ideal",
+                                    "display" => "Imunisasi Ideal"
+                                ]
+                            ]
+                        ],
+
+                        "patient" => [
+                            "reference" => "Patient/" . $pasien_uuid,
+                            "display" => $request->nama_panggil
+                        ],
+
+                        "encounter" => [
+                            "reference" => "Encounter/" . $encounter_uuid
+                        ],
+
+                        "occurrenceDateTime" => Carbon::parse($imunisasi['created_at'])->toIso8601String(),
+
+                        "primarySource" => true,
+
+                        "location" => [
+                            "reference" => "Location/" . ($ruangId ?: '00000000-0000-0000-0000-000000000000'), // Gunakan ID Valid atau Default
+                            "display" => "Bed $request->nomorbed, $request->ruangan, Lantai $lantai Gedung $gedung"
+                        ],
+
+                        "performer" => [
+                            [
+                                "actor" => [
+                                    "reference" => "Practitioner/" . $practitioner_uuid
+                                ]
+                            ]
+                        ],
+
+                        "protocolApplied" => [
+                            [
+                                "doseNumberPositiveInt" => 1,
+                                "series" => "Hepatitis B"
+                            ]
+                        ]
+                    ],
+
+                    "request" => ["method" => "POST", "url" => "Immunization"]
+                ];
+        }
+        return $form;
     }
 }

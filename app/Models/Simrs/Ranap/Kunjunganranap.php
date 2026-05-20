@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Ranap;
 
 use App\Models\KunjunganPoli;
+use App\Models\Pasien;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Satset\Satset;
 use App\Models\Satset\SatsetErrorRespon;
@@ -101,7 +102,10 @@ class Kunjunganranap extends Model
     //protected $connection = 'farmasi';
 
 
-
+    public function patient()
+    {
+        return $this->hasOne(Pasien::class, 'rs1', 'norm');
+    }
 
     public function satset()
     {
