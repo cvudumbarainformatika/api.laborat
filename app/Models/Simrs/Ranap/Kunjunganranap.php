@@ -81,6 +81,7 @@ use App\Models\Simrs\Planing\Planningdokter;
 use App\Models\Simrs\Psikologitrans\Psikologitrans;
 use App\Models\Simrs\Rajal\Memodiagnosadokter;
 use App\Models\Simrs\Ranap\Pelayanan\Cppt;
+use App\Models\Simrs\Ranap\Pelayanan\NurseNote;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanUmum;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\Penilaian;
 use App\Models\Simrs\Tindakan\Tindakan;
@@ -709,5 +710,10 @@ class Kunjunganranap extends Model
     public function generalcons()
     {
         return $this->hasOne(Generalconsent::class, 'noreg', 'rs1');
+    }
+
+    public function nursenote()
+    {
+        return $this->hasMany(NurseNote::class, 'noreg', 'rs1');
     }
 }

@@ -6,6 +6,7 @@ use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Penunjang\Fisioterapi\FisioSambung;
+use App\Models\Simrs\Penunjang\Fisioterapi\FisioSoap;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
@@ -587,11 +588,12 @@ class PengunjungController extends Controller
         $data->save();
 
         $res = FisioSambung::where('link_noreg', $request->link_noreg ?? $request->noreg)->get();
-
+        $soap = FisioSoap::where('noreg', $request->link_noreg ?? $request->noreg)->get();
         return new JsonResponse(
             [
                 'message' => 'ok',
                 'result' => $res,
+                'soap' => $soap,
             ],
             200
         );

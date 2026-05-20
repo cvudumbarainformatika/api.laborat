@@ -53,7 +53,7 @@ class KunjunganController extends Controller
             // }
             // return ['yg terkirim' => $ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
 
-            return PostKunjunganRanapHelper::ranap('40888/05/2026/X');
+            return PostKunjunganRanapHelper::cobaRanap('04742/04/2026/I');
         }
 
         if ($jenis_kunjungan === 'igd') {

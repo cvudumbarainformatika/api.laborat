@@ -116,14 +116,144 @@ class PostKunjunganRanapHelper
         return self::kirimKunjunganRanap($select);
     }
 
+    public static function cobaRanap($noreg)
+    {
+        // 1. Ambil tanggal 5 hari yang lalu
+        // $tglTarget = Carbon::now()->subDays(5)->toDateString();
+
+        $query = Kunjunganranap::query();
+
+        $select = $query->select(
+            'rs23.rs1',
+            'rs23.rs1 as noreg',
+            'rs23.rs2 as norm',
+            'rs23.rs3 as tglmasuk',
+            'rs23.rs4 as tglkeluar',
+            'rs23.rs5 as kdruangan',
+            'rs23.rs5',
+            'rs23.rs6 as ketruangan',
+            'rs23.rs7 as nomorbed',
+            'rs23.rs10 as kddokter',
+            'rs23.rs10',
+            'rs23.rs27',
+            'rs21.rs2 as dokter',
+            'rs23.rs19 as kodesistembayar', // ini untuk farmasi
+            'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG
+            'rs23.rs38 as hak_kelas',
+            'rs15.rs2 as nama_panggil',
+
+            DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
+            DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
+            DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
+                      TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
+                      TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
+            DB::raw("(IF(rs23.rs4='0000-00-00 00:00:00',datediff('" . date("Y-m-d") . "',rs23.rs3),
+          datediff(rs23.rs4,rs23.rs3)))+1  as lama"),
+
+            'rs15.rs4 as alamatbarcode',
+            'rs15.rs16 as tgllahir',
+            'rs15.rs17 as kelamin',
+            'rs15.rs19 as pendidikan',
+            'rs15.rs22 as agama',
+            'rs15.rs37 as templahir',
+            'rs15.rs39 as suku',
+            'rs15.rs40 as jenispasien',
+            'rs15.rs46 as noka',
+            'rs15.rs49 as nik',
+            'rs15.rs55 as nohp',
+            'rs15.satset_uuid as pasien_uuid',
+            'rs9.rs2 as sistembayar',
+            'rs9.groups as groups',
+            'rs21.rs2 as namanakes',
+            'rs24.rs2 as ruangan',
+            'rs24.rs3 as kelasruangan',
+            'rs24.rs5 as group_ruangan',
+            'rs242.rs4 as tindaklanjut'
+        )
+            ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
+            ->leftjoin('rs9', 'rs9.rs1', 'rs23.rs19')
+            ->leftjoin('rs21', 'rs21.rs1', 'rs23.rs10')
+            ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
+            ->leftjoin('rs242', 'rs242.rs1', 'rs23.rs1') // rencana tindak lanjut
+            ->where('rs23.rs1', $noreg)
+            ->with([
+                'satset:uuid',
+                'satset_error:uuid',
+                'diagnosa' => function ($q) {
+                    $q->select('rs101.rs1', 'rs101.rs3 as kode', 'rs99x.rs4 as inggris', 'rs99x.rs3 as indonesia', 'rs101.rs4 as type', 'rs101.rs7 as status', 'rs101.rs12 as recordedDate')
+                        ->leftjoin('rs99x', 'rs101.rs3', 'rs99x.rs1')
+                        ->orderBy('rs101.id', 'asc');
+                },
+                'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
+                'relmasterruangranap' => function ($q) {
+                    $q->select('rs1', 'rs2 as nama', 'kode_ruang')->with('ruang:kode,uraian,groupper,gedung,lantai,satset_uuid,departement_uuid');
+                },
+
+                'radiologi' => function ($t) {
+                    $t->with([
+                        'rincians' => function ($r) {
+                            $r->leftJoin('rs151', function ($join) {
+                                $join->on('rs48.rs2', '=', 'rs151.rs5')
+                                    ->on('rs48.rs1', '=', 'rs151.rs1')
+                                    ->on('rs48.rs4', '=', 'rs151.kode');
+                            })->leftJoin('rs48_pacs', 'rs48.rs2', '=', 'rs48_pacs.nota')
+                                ->select('rs48.*', 'rs48_pacs.*', 'rs151.hasil', 'rs151.rs3 as kesimpulan', 'rs151.hasilhtml', 'rs151.kesimpulanhtml', 'rs151.rs4 as pelaksana');
+                        },
+                        'rincians.relmasterpemeriksaan',
+                        'dokter:nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
+                    ])->orderBy('id', 'DESC');
+                },
+                'nursenote' => function ($t) {
+                    $t->select('id', 'noreg', 'user', 'reseps');
+                    $t->with('petugas:kdpegsimrs,nik,nip,nama,kdgroupnakes,foto');
+                }
+            ])
+
+            // ->where('rs23.rs1', $noreg)
+            // ->where('rs23.rs4', 'LIKE', $tglTarget . '%')
+            ->whereIn('rs23.rs22', ['2', '3'])                                   // Status sudah pulang
+            ->doesntHave('satset')
+            // ->doesntHave('satset_error')                                         // Belum terkirim
+            ->orderBy('rs23.rs4', 'asc')
+
+            ->first();
+
+        // return $select;
+        return self::kirimKunjunganRanap($select);
+    }
+
     public static function kirimKunjunganRanap($data)
     {
-        $pasien_uuid = $data->pasien_uuid;
-        $practitioner_uuid = $data->datasimpeg ? $data->datasimpeg['satset_uuid'] : null;
+        // dd($data);
+        $pasien_uuid = $data?->pasien_uuid ?? null;
+        $practitioner_uuid = $data?->datasimpeg?->satset_uuid;
 
         if (!$pasien_uuid) {
-            $getPasienFromSatset = self::getPasienByNikSatset($data);
-            $pasien_uuid = $getPasienFromSatset['data']['uuid'] ?? null;
+            // $getPasienFromSatset = self::getPasienByNikSatset($data);
+            // $pasien_uuid = $getPasienFromSatset['data']['uuid'] ?? null;
+            $result = self::getPasienByNikSatset($data);
+            // =====================================
+            // PASIEN SUDAH ADA DI SATUSEHAT
+            // =====================================
+            if ($result['message'] === 'success') {
+                $pasien_uuid = $result['uuid'];
+            }
+
+            // =====================================
+            // PASIEN BELUM ADA
+            // =====================================
+            if ($result['message'] === 'not-found') {
+
+                // =====================================
+                // CREATE PATIENT KE SATUSEHAT
+                // =====================================
+                $create = self::createPatientSatset($data);
+
+                // berhasil create
+                if (($create['message'] ?? null) === 'success') {
+                    $pasien_uuid = $create['uuid'];
+                }
+            }
         }
 
         if (!$practitioner_uuid) {
@@ -136,20 +266,124 @@ class PostKunjunganRanapHelper
         }
 
         $send = self::form($data, $pasien_uuid);
-        if ($send['message'] === 'success') {
-            $token = AuthSatsetHelper::accessToken();
-            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
-        }
+        // if ($send['message'] === 'success') {
+        //     $token = AuthSatsetHelper::accessToken();
+        //     $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+        // }
         return $send;
     }
 
+    public static function createPatientSatset($pasien)
+    {
+        try {
+
+            $token = AuthSatsetHelper::accessToken();
+
+            $payload = [
+                "resourceType" => "Patient",
+                "identifier" => [
+                    [
+                        "system" => "https://fhir.kemkes.go.id/id/nik",
+                        "value" => $pasien->nik
+                    ]
+                ],
+                "active" => true,
+                "name" => [
+                    [
+                        "use" => "official",
+                        "text" => $pasien->nama
+                    ]
+                ],
+                "gender" => $pasien->kelamin == 'L'
+                    ? 'male'
+                    : 'female',
+
+                "birthDate" => date('Y-m-d', strtotime($pasien->tgllahir))
+            ];
+
+            $send = BridgingSatsetHelper::post_data(
+                $token,
+                '/Patient',
+                $payload
+            );
+
+            // sukses create
+            if (isset($send['data']['id'])) {
+
+                $uuid = $send['data']['id'];
+
+                Pasien::where('rs1', $pasien->norm)
+                    ->update([
+                        'satset_uuid' => $uuid
+                    ]);
+
+                return [
+                    'message' => 'success',
+                    'uuid' => $uuid
+                ];
+            }
+
+            // gagal validasi SATUSEHAT
+            SatsetErrorRespon::create([
+                'uuid' => $pasien->noreg,
+                'response' => $send
+            ]);
+
+            return [
+                'message' => 'failed',
+                'data' => $send
+            ];
+        } catch (\Throwable $e) {
+
+            SatsetErrorRespon::create([
+                'uuid' => $pasien->noreg,
+                'response' => $e->getMessage()
+            ]);
+
+            return [
+                'message' => 'failed',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    // public static function getPasienByNikSatset($pasien)
+    // {
+    //     // return $request->all();
+    //     $nik = $pasien->nik;
+    //     $norm = $pasien->norm;
+    //     $noreg = $pasien->noreg;
+    //     // get data ke satset
+    //     $token = AuthSatsetHelper::accessToken();
+    //     $params = '/Patient?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
+
+    //     $send = BridgingSatsetHelper::get_data($token, $params);
+
+    //     $data = Pasien::where([
+    //         ['rs49', $nik],
+    //         ['rs1', $norm],
+    //     ])->first();
+
+    //     if ($send['message'] === 'success') {
+    //         $data->satset_uuid = $send['data']['uuid'];
+    //         $data->save();
+    //     } else {
+    //         SatsetErrorRespon::create([
+    //             'uuid' => $noreg,
+    //             'response' => $send
+    //         ]);
+    //     }
+    //     return $send;
+    // }
+
     public static function getPasienByNikSatset($pasien)
     {
-        // return $request->all();
-        $nik = $pasien->nik;
-        $norm = $pasien->norm;
-        // get data ke satset
-        $token = AuthSatsetHelper::accessToken();
+        // dd($pasien);
+        $nik   = trim($pasien->nik);
+        $norm  = $pasien->norm;
+        $noreg = $pasien->noreg;
+
+        $token  = AuthSatsetHelper::accessToken();
         $params = '/Patient?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
 
         $send = BridgingSatsetHelper::get_data($token, $params);
@@ -159,16 +393,57 @@ class PostKunjunganRanapHelper
             ['rs1', $norm],
         ])->first();
 
-        if ($send['message'] === 'success') {
-            $data->satset_uuid = $send['data']['uuid'];
-            $data->save();
-        } else {
-            SatsetErrorRespon::create([
-                'uuid' => $pasien->noreg,
-                'response' => $send
-            ]);
+        // =========================
+        // RESPONSE VALID
+        // =========================
+        if (
+            isset($send['data']['response']['total'])
+        ) {
+
+            $total = $send['data']['response']['total'];
+
+            // =========================
+            // PASIEN DITEMUKAN
+            // =========================
+            if ($total > 0) {
+
+                $entry = $send['data']['response']['entry'][0]['resource'] ?? null;
+
+                if ($entry) {
+
+                    $data->satset_uuid = $entry['id'];
+                    $data->save();
+
+                    return [
+                        'message' => 'success',
+                        'exists'  => true,
+                        'uuid'    => $entry['id']
+                    ];
+                }
+            }
+
+            // =========================
+            // PASIEN TIDAK DITEMUKAN
+            // =========================
+            return [
+                'message' => 'not-found',
+                'exists'  => false,
+                'uuid'    => null
+            ];
         }
-        return $send;
+
+        // =========================
+        // ERROR TEKNIS
+        // =========================
+        SatsetErrorRespon::create([
+            'uuid'     => $noreg,
+            'response' => $send
+        ]);
+
+        return [
+            'message' => 'failed',
+            'data'    => $send
+        ];
     }
 
     public static function getPractitionerFromSatset($pasien)
