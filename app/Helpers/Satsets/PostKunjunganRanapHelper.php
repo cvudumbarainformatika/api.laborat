@@ -137,6 +137,10 @@ class PostKunjunganRanapHelper
                         'dokter:nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
                     ])->orderBy('id', 'DESC');
                 },
+                'nursenote' => function ($t) {
+                    $t->select('id', 'noreg', 'user', 'reseps');
+                    $t->with('petugas:kdpegsimrs,nik,nip,nama,kdgroupnakes,foto');
+                }
             ])
 
             // ->where('rs23.rs1', $noreg)
@@ -284,7 +288,7 @@ class PostKunjunganRanapHelper
             // ->where('rs23.rs1', $noreg)
             // ->where('rs23.rs4', 'LIKE', $tglTarget . '%')
             ->whereIn('rs23.rs22', ['2', '3'])                                   // Status sudah pulang
-            ->doesntHave('satset')
+            // ->doesntHave('satset')                                               // Bypass agar bisa coba berulang kali
             // ->doesntHave('satset_error')                                         // Belum terkirim
             ->orderBy('rs23.rs4', 'asc')
 
@@ -297,6 +301,9 @@ class PostKunjunganRanapHelper
     public static function kirimKunjunganRanap($data)
     {
         // dd($data);
+        if (!$data) {
+            return ['message' => 'error', 'data' => 'Data Kunjungan Rawat Inap tidak ditemukan atau sudah pernah dikirim.'];
+        }
         $pasien_uuid =  $data?->pasien_uuid ?? null;
         $practitioner_uuid = $data?->datasimpeg?->satset_uuid;
 
@@ -361,6 +368,9 @@ class PostKunjunganRanapHelper
             $isBayi = Carbon::parse($pasien->tgllahir)->diffInYears(now()) < 1;
             $nikIbu = $pasien?->nik_ibu ?? null; // fallback sementara
 
+            $genderLower = strtolower(trim($pasien->kelamin));
+            $gender = ($genderLower === 'l' || str_starts_with($genderLower, 'laki') || $genderLower === 'male') ? 'male' : 'female';
+
             $payload = [
                 "resourceType" => "Patient",
                 "meta" => [
@@ -369,15 +379,23 @@ class PostKunjunganRanapHelper
                     ]
                 ],
                 "active" => true,
+                "identifier" => [
+                    [
+                        "use" => "official",
+                        "system" => "https://fhir.kemkes.go.id/id/nik",
+                        "value" => trim($pasien->nik)
+                    ]
+                ],
                 "name" => [
                     [
                         "use" => "official",
                         "text" => $pasien->nama_panggil ?? "-",
                     ]
                 ],
-                "gender" => $pasien->kelamin == 'L' ? 'male' : 'female',
+                "gender" => $gender,
                 "birthDate" => $pasien->tgllahir ?? null,
                 "deceasedBoolean" => false,
+                "multipleBirthBoolean" => false,
 
                 // Telecom (opsional tapi membantu)
                 "telecom" => [
@@ -443,29 +461,6 @@ class PostKunjunganRanapHelper
 
             // ==================== LOGIKA BAYI ====================
             if ($isBayi) {
-                // if (empty($nikIbu)) {
-                //     return ['message' => 'failed', 'error' => 'NIK Ibu wajib diisi untuk bayi baru lahir'];
-                // }
-
-                // $payload['identifier'] = [
-                //     [
-                //         "use" => "official",
-                //         "system" => "https://fhir.kemkes.go.id/id/nik-ibu",
-                //         "value" => $nikIbu
-                //     ]
-                // ];
-
-                $payload['identifier'] = [
-                    [
-                        "use" => "official",
-                        "system" => "https://fhir.kemkes.go.id/id/nik",
-                        "value" => $pasien->nik
-                    ]
-                ];
-
-                $payload['multipleBirthBoolean'] = false;
-                $payload['multipleBirthInteger'] = 0;
-
                 // Marital Status untuk Bayi
                 $payload['maritalStatus'] = [
                     "coding" => [
@@ -474,16 +469,6 @@ class PostKunjunganRanapHelper
                             "code" => "S",
                             "display" => "Never Married"
                         ]
-                    ]
-                ];
-            }
-            // ==================== PASIEN DEWASA ====================
-            else {
-                $payload['identifier'] = [
-                    [
-                        "use" => "official",
-                        "system" => "https://fhir.kemkes.go.id/id/nik",
-                        "value" => $pasien->nik
                     ]
                 ];
             }
@@ -530,9 +515,238 @@ class PostKunjunganRanapHelper
         }
     }
 
+    public static function updateNikPasien($noreg)
+    {
+        try {
+            // 1. Ambil data kunjungan dan data pasien lengkap beserta relasi wilayah
+            $query = Kunjunganranap::query();
+            $pasien = $query->select(
+                'rs23.rs1 as noreg',
+                'rs23.rs2 as norm',
+                'rs15.rs2 as nama_panggil',
+                'rs15.rs4 as alamatbarcode',
+                'rs15.rs16 as tgllahir',
+                'rs15.rs17 as kelamin',
+                'rs15.rs37 as templahir',
+                'rs15.rs49 as nik',
+                'rs15.rs55 as nohp',
+                'rs15.satset_uuid as pasien_uuid'
+            )
+            ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
+            ->where('rs23.rs1', $noreg)
+            ->with([
+                'patient' => function ($q) {
+                    $q->select(
+                        'rs1',
+                        'kd_propinsi',
+                        'kd_kota',
+                        'kd_kec',
+                        'kd_kel'
+                    )
+                        ->addSelect([
+                            'kota.wilayah as nama_kota',
+                            'kec.wilayah as nama_kecamatan',
+                            'kel.wilayah as nama_kelurahan',
+                        ])
+                        ->leftJoin('wilayah as kota', function ($join) {
+                            $join->on('kota.kode2', '=', 'rs15.kd_propinsi')
+                                ->on('kota.kode3', '=', 'rs15.kd_kota')
+                                ->where('kota.kode4', '')
+                                ->where('kota.kode5', '');
+                        })
+                        ->leftJoin('wilayah as kec', function ($join) {
+                            $join->on('kec.kode2', '=', 'rs15.kd_propinsi')
+                                ->on('kec.kode3', '=', 'rs15.kd_kota')
+                                ->on('kec.kode4', '=', 'rs15.kd_kec')
+                                ->where('kec.kode5', '');
+                        })
+                        ->leftJoin('wilayah as kel', function ($join) {
+                            $join->on('kel.kode2', '=', 'rs15.kd_propinsi')
+                                ->on('kel.kode3', '=', 'rs15.kd_kota')
+                                ->on('kel.kode4', '=', 'rs15.kd_kec')
+                                ->on('kel.kode5', '=', 'rs15.kd_kel');
+                        })
+                        ->selectRaw("kel.kode2 as satset_province")
+                        ->selectRaw(" CONCAT( kel.kode2, LPAD(kel.kode3, 2, '0') ) as satset_city ")
+                        ->selectRaw(" CONCAT( kel.kode2, LPAD(kel.kode3, 2, '0'), LPAD(kel.kode4, 2, '0') ) as satset_district ")
+                        ->selectRaw(" CONCAT( kel.kode2, LPAD(kel.kode3, 2, '0'), LPAD(kel.kode4, 2, '0'), LPAD(kel.kode5, 4, '0') ) as satset_village ");
+                }
+            ])
+            ->first();
+
+            if (!$pasien) {
+                return ['message' => 'error', 'data' => 'Data kunjungan atau pasien tidak ditemukan.'];
+            }
+
+            $newNik = trim($pasien->nik);
+            if (!$newNik) {
+                return ['message' => 'error', 'data' => 'NIK Baru kosong di database lokal.'];
+            }
+
+            $token = AuthSatsetHelper::accessToken();
+
+            // 2. Buat payload Patient FHIR lengkap untuk mendaftarkan/menghubungkan NIK baru
+            $genderLower = strtolower(trim($pasien->kelamin));
+            $gender = ($genderLower === 'l' || str_starts_with($genderLower, 'laki') || $genderLower === 'male') ? 'male' : 'female';
+
+            $payload = [
+                "resourceType" => "Patient",
+                "meta" => [
+                    "profile" => [
+                        "https://fhir.kemkes.go.id/r4/StructureDefinition/Patient"
+                    ]
+                ],
+                "active" => true,
+                "identifier" => [
+                    [
+                        "use" => "official",
+                        "system" => "https://fhir.kemkes.go.id/id/nik",
+                        "value" => $newNik
+                    ]
+                ],
+                "name" => [
+                    [
+                        "use" => "official",
+                        "text" => $pasien->nama_panggil ?? "-",
+                    ]
+                ],
+                "gender" => $gender,
+                "birthDate" => $pasien->tgllahir ?? null,
+                "deceasedBoolean" => false,
+                "multipleBirthBoolean" => false,
+                "telecom" => [
+                    [
+                        "system" => "phone",
+                        "value" => $pasien->nohp ?? '-',
+                        "use" => "mobile"
+                    ]
+                ],
+                "address" => [
+                    [
+                        "use" => "home",
+                        "line" => [(string)($pasien->alamatbarcode ?? $pasien->alamat ?? "-")],
+                        "city" => !empty($pasien?->patient?->nama_kota) && $pasien?->patient?->nama_kota !== '-' ? $pasien->patient->nama_kota : "KOTA PROBOLINGGO",
+                        "district" => !empty($pasien?->patient?->nama_kecamatan) && $pasien?->patient?->nama_kecamatan !== '-' ? $pasien->patient->nama_kecamatan : "Wonoasih",
+                        "country" => "ID",
+                        "extension" => [
+                            [
+                                "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/administrativeCode",
+                                "extension" => [
+                                    ["url" => "province", "valueCode" => (string)($pasien?->patient?->satset_province ?? '35')],
+                                    ["url" => "city",    "valueCode" => (string)($pasien?->patient?->satset_city ?? '3574')],
+                                    ["url" => "district", "valueCode" => (string)($pasien?->patient?->satset_district ?? '357402')],
+                                    ["url" => "village", "valueCode" => (string)($pasien?->patient?->satset_village ?? '3574021005')]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                "extension" => [
+                    [
+                        "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/birthPlace",
+                        "valueAddress" => [
+                            "city" => $pasien?->templahir ?? "-",
+                            "country" => "ID"
+                        ]
+                    ],
+                    [
+                        "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/citizenshipStatus",
+                        "valueCode" => "WNI"
+                    ]
+                ],
+                "communication" => [
+                    [
+                        "language" => [
+                            "coding" => [
+                                [
+                                    "system" => "urn:ietf:bcp:47",
+                                    "code" => "id-ID",
+                                    "display" => "Indonesian"
+                                ]
+                            ],
+                            "text" => "Indonesian"
+                        ],
+                        "preferred" => true
+                    ]
+                ]
+            ];
+
+            // Cek jika pasien adalah bayi (< 1 tahun)
+            $isBayi = Carbon::parse($pasien->tgllahir)->diffInYears(now()) < 1;
+            if ($isBayi) {
+                $payload['maritalStatus'] = [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+                            "code" => "S",
+                            "display" => "Never Married"
+                        ]
+                    ]
+                ];
+            }
+
+            // 3. Kirim POST /Patient ke SatuSehat
+            $send = BridgingSatsetHelper::post_data($token, '/Patient', $payload);
+
+            // Jika sukses mendaftarkan NIK baru ke SatuSehat
+            if (isset($send['data']['id']) && !empty($send['data']['id'])) {
+                $uuid = $send['data']['id'];
+
+                Pasien::where('rs1', $pasien->norm)
+                    ->update([
+                        'satset_uuid' => $uuid
+                    ]);
+
+                return [
+                    'message' => 'success',
+                    'local_noreg' => $noreg,
+                    'local_nik' => $newNik,
+                    'satset_uuid' => $uuid,
+                    'detail' => 'NIK berhasil didaftarkan dan dihubungkan ke SatuSehat.',
+                    'satset_response' => $send['data']
+                ];
+            }
+
+            // Jika gagal karena NIK duplikat/sudah ada di SatuSehat, lakukan pencarian data via GET
+            $errMessage = json_encode($send);
+            if (str_contains(strtolower($errMessage), 'duplicate') || str_contains($errMessage, '20002')) {
+                $getPasien = self::getPasienByNikSatset($pasien);
+                if ($getPasien['message'] === 'success') {
+                    $uuid = $getPasien['uuid'];
+                    return [
+                        'message' => 'success',
+                        'local_noreg' => $noreg,
+                        'local_nik' => $newNik,
+                        'satset_uuid' => $uuid,
+                        'detail' => 'NIK sudah terdaftar di SatuSehat. Berhasil mencocokkan dan memperbarui database lokal.',
+                        'satset_response' => $getPasien
+                    ];
+                }
+            }
+
+            return [
+                'message' => 'failed',
+                'local_noreg' => $noreg,
+                'local_nik' => $newNik,
+                'detail' => 'Gagal mendaftarkan NIK ke SatuSehat.',
+                'satset_response' => $send
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'message' => 'failed',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+
+
     public static function getPasienByNikSatset($pasien)
     {
         // dd($pasien);
+        if (!$pasien) {
+            return ['message' => 'failed', 'data' => 'Data pasien kosong'];
+        }
         $nik   = trim($pasien->nik);
         $norm  = $pasien->norm;
         $noreg = $pasien->noreg;
@@ -825,7 +1039,7 @@ class PostKunjunganRanapHelper
                         "category" => [["coding" => [["system" => "http://snomed.info/sct", "code" => "363679005", "display" => "Imaging procedure"]]]],
                         "code" => ["coding" => [["system" => "http://loinc.org", "code" => $loinc_code, "display" => $loinc_display]], "text" => $nama_foto],
                         "subject" => ["reference" => "Patient/" . $pasien_uuid],
-                        "encounter" => ["reference" => $encounter_uuid],
+                        "encounter" => ["reference" => "urn:uuid:" . $encounter_uuid],
                         "occurrenceDateTime" => Carbon::parse($rad['rs3'])->toIso8601String(),
                         "requester" => ["reference" => "Practitioner/" . ($request->datasimpeg['satset_uuid'] ?? '-')],
                         "performer" => [["reference" => "Organization/" . $organization_id]],
@@ -857,7 +1071,7 @@ class PostKunjunganRanapHelper
                             ],
                             "status" => "available",
                             "subject" => ["reference" => "Patient/" . $pasien_uuid],
-                            "encounter" => ["reference" => $encounter_uuid],
+                            "encounter" => ["reference" => "urn:uuid:" . $encounter_uuid],
                             "basedOn" => [["reference" => $servisRequest_uuid]],
                             "started" => Carbon::parse($rincian['created_at'] ?? $rad['rs3'])->toIso8601String(),
                             "modality" => [["system" => "http://dicom.nema.org/resources/ontology/DCM", "code" => $modality]],
@@ -878,7 +1092,7 @@ class PostKunjunganRanapHelper
                             "category" => [["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/observation-category", "code" => "imaging", "display" => "Imaging"]]]],
                             "code" => ["coding" => [["system" => "http://loinc.org", "code" => $loinc_code, "display" => $loinc_display]]],
                             "subject" => ["reference" => "Patient/" . $pasien_uuid],
-                            "encounter" => ["reference" => $encounter_uuid],
+                            "encounter" => ["reference" => "urn:uuid:" . $encounter_uuid],
                             "effectiveDateTime" => Carbon::parse($rincian['updated_at'] ?? $rad['rs3'])->toIso8601String(),
                             "performer" => [["reference" => "Practitioner/" . ($request->datasimpeg['satset_uuid'] ?? '-')]],
                             "valueString" => $hasil_expertise
@@ -894,7 +1108,7 @@ class PostKunjunganRanapHelper
                             "category" => [["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/v2-0074", "code" => "RAD", "display" => "Radiology"]]]],
                             "code" => ["coding" => [["system" => "http://loinc.org", "code" => $loinc_code, "display" => $loinc_display]]],
                             "subject" => ["reference" => "Patient/" . $pasien_uuid],
-                            "encounter" => ["reference" => $encounter_uuid],
+                            "encounter" => ["reference" => "urn:uuid:" . $encounter_uuid],
                             "effectiveDateTime" => Carbon::parse($rincian['updated_at'] ?? $rad['rs3'])->toIso8601String(),
                             "issued" => Carbon::parse($rincian['updated_at'] ?? $rad['rs3'])->toIso8601String(),
                             "performer" => [["reference" => "Organization/" . $organization_id]],

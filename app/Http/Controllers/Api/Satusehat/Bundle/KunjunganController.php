@@ -44,8 +44,13 @@ class KunjunganController extends Controller
         if ($jenis_kunjungan === 'ranap') {
 
             // return PostKunjunganRanapHelper::cobaRanap('04742/04/2026/I');
-            return PostKunjunganRanapHelper::cobaRanap('04749/04/2026/I');
+            return PostKunjunganRanapHelper::cobaRanap('04769/05/2026/I');
         }
+
+        if ($jenis_kunjungan === 'updatenikpasien') {
+            return PostKunjunganRanapHelper::updateNikPasien('04742/04/2026/I');
+        }
+
 
         if ($jenis_kunjungan === 'igd') {
             $ygTerkirim = 0;
