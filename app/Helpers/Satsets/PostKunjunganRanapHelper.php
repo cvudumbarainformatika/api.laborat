@@ -75,6 +75,42 @@ class PostKunjunganRanapHelper
             ->leftjoin('rs242', 'rs242.rs1', 'rs23.rs1') // rencana tindak lanjut
             // ->where('rs23.rs1', $noreg)
             ->with([
+                'patient' => function ($q) {
+                    $q->select(
+                        'rs1',
+                        'kd_propinsi',
+                        'kd_kota',
+                        'kd_kec',
+                        'kd_kel'
+                    )
+                        ->addSelect([
+                            'kota.wilayah as nama_kota',
+                            'kec.wilayah as nama_kecamatan',
+                            'kel.wilayah as nama_kelurahan',
+                        ])
+                        ->leftJoin('wilayah as kota', function ($join) {
+                            $join->on('kota.kode2', '=', 'rs15.kd_propinsi')
+                                ->on('kota.kode3', '=', 'rs15.kd_kota')
+                                ->where('kota.kode4', '')
+                                ->where('kota.kode5', '');
+                        })
+                        ->leftJoin('wilayah as kec', function ($join) {
+                            $join->on('kec.kode2', '=', 'rs15.kd_propinsi')
+                                ->on('kec.kode3', '=', 'rs15.kd_kota')
+                                ->on('kec.kode4', '=', 'rs15.kd_kec')
+                                ->where('kec.kode5', '');
+                        })
+                        ->leftJoin('wilayah as kel', function ($join) {
+                            $join->on('kel.kode2', '=', 'rs15.kd_propinsi')
+                                ->on('kel.kode3', '=', 'rs15.kd_kota')
+                                ->on('kel.kode4', '=', 'rs15.kd_kec')
+                                ->on('kel.kode5', '=', 'rs15.kd_kel');
+                        })
+                        ->selectRaw("kel.kode2 as satset_province")
+                        ->selectRaw(" CONCAT( kel.kode2, LPAD(kel.kode3, 2, '0') ) as satset_city ")
+                        ->selectRaw(" CONCAT( kel.kode2, LPAD(kel.kode3, 2, '0'), LPAD(kel.kode4, 2, '0') ) as satset_district ")
+                        ->selectRaw(" CONCAT( kel.kode2, LPAD(kel.kode3, 2, '0'), LPAD(kel.kode4, 2, '0'), LPAD(kel.kode5, 4, '0') ) as satset_village ");
+                },
                 'satset:uuid',
                 'satset_error:uuid',
                 'diagnosa' => function ($q) {
@@ -185,21 +221,33 @@ class PostKunjunganRanapHelper
                         'kd_kec',
                         'kd_kel'
                     )
-                        ->selectRaw("kode2 as satset_province")
-
-                        ->selectRaw(" CONCAT( kode2, LPAD(kode3, 2, '0') ) as satset_city ")
-
-                        ->selectRaw(" CONCAT( kode2, LPAD(kode3, 2, '0'), LPAD(kode4, 2, '0') ) as satset_district ")
-
-                        ->selectRaw(" CONCAT( kode2, LPAD(kode3, 2, '0'), LPAD(kode4, 2, '0'), LPAD(kode5, 4, '0') ) as satset_village ")
-
-                        ->leftJoin('wilayah', function ($join) {
-
-                            $join->on('wilayah.kode2', '=', 'rs15.kd_propinsi')
-                                ->on('wilayah.kode3', '=', 'rs15.kd_kota')
-                                ->on('wilayah.kode4', '=', 'rs15.kd_kec')
-                                ->on('wilayah.kode5', '=', 'rs15.kd_kel');
-                        });
+                        ->addSelect([
+                            'kota.wilayah as nama_kota',
+                            'kec.wilayah as nama_kecamatan',
+                            'kel.wilayah as nama_kelurahan',
+                        ])
+                        ->leftJoin('wilayah as kota', function ($join) {
+                            $join->on('kota.kode2', '=', 'rs15.kd_propinsi')
+                                ->on('kota.kode3', '=', 'rs15.kd_kota')
+                                ->where('kota.kode4', '')
+                                ->where('kota.kode5', '');
+                        })
+                        ->leftJoin('wilayah as kec', function ($join) {
+                            $join->on('kec.kode2', '=', 'rs15.kd_propinsi')
+                                ->on('kec.kode3', '=', 'rs15.kd_kota')
+                                ->on('kec.kode4', '=', 'rs15.kd_kec')
+                                ->where('kec.kode5', '');
+                        })
+                        ->leftJoin('wilayah as kel', function ($join) {
+                            $join->on('kel.kode2', '=', 'rs15.kd_propinsi')
+                                ->on('kel.kode3', '=', 'rs15.kd_kota')
+                                ->on('kel.kode4', '=', 'rs15.kd_kec')
+                                ->on('kel.kode5', '=', 'rs15.kd_kel');
+                        })
+                        ->selectRaw("kel.kode2 as satset_province")
+                        ->selectRaw(" CONCAT( kel.kode2, LPAD(kel.kode3, 2, '0') ) as satset_city ")
+                        ->selectRaw(" CONCAT( kel.kode2, LPAD(kel.kode3, 2, '0'), LPAD(kel.kode4, 2, '0') ) as satset_district ")
+                        ->selectRaw(" CONCAT( kel.kode2, LPAD(kel.kode3, 2, '0'), LPAD(kel.kode4, 2, '0'), LPAD(kel.kode5, 4, '0') ) as satset_village ");
                 },
                 'satset:uuid',
                 'satset_error:uuid',
@@ -276,7 +324,7 @@ class PostKunjunganRanapHelper
                 // CREATE PATIENT KE SATUSEHAT
                 // =====================================
                 $create = self::createPatientSatset($data);
-                // dd($create);
+                // dd(json_encode($create, JSON_PRETTY_PRINT));
                 // berhasil create
                 if (($create['message'] ?? null) === 'success') {
                     $pasien_uuid = $create['uuid'];
@@ -303,91 +351,148 @@ class PostKunjunganRanapHelper
         return $send;
     }
 
+
+
     public static function createPatientSatset($pasien)
     {
         try {
-
             $token = AuthSatsetHelper::accessToken();
 
-            $isBayi = Carbon::parse($pasien->tgllahir)
-                ->diffInYears(now()) < 1;
+            $isBayi = Carbon::parse($pasien->tgllahir)->diffInYears(now()) < 1;
+            $nikIbu = $pasien?->nik_ibu ?? null; // fallback sementara
 
             $payload = [
                 "resourceType" => "Patient",
-                "identifier" => [
-                    [
-                        "system" => "https://fhir.kemkes.go.id/id/nik",
-                        "value" => $pasien->nik
+                "meta" => [
+                    "profile" => [
+                        "https://fhir.kemkes.go.id/r4/StructureDefinition/Patient"
                     ]
                 ],
                 "active" => true,
                 "name" => [
                     [
                         "use" => "official",
-                        "text" => $pasien->nama_panggil
+                        "text" => $pasien->nama_panggil ?? "-",
                     ]
                 ],
-                "gender" => $pasien->kelamin == 'L'
-                    ? 'male'
-                    : 'female',
+                "gender" => $pasien->kelamin == 'L' ? 'male' : 'female',
+                "birthDate" => $pasien->tgllahir ?? null,
+                "deceasedBoolean" => false,
 
-                "birthDate" => date('Y-m-d', strtotime($pasien->tgllahir)),
+                // Telecom (opsional tapi membantu)
+                "telecom" => [
+                    [
+                        "system" => "phone",
+                        "value" => $pasien->nohp ?? '-',
+                        "use" => "mobile"
+                    ]
+                ],
+
                 "address" => [
                     [
                         "use" => "home",
-
-                        "line" => [
-                            $pasien->alamat ?? "-"
-                        ],
-
+                        "line" => [(string)($pasien->alamatbarcode ?? $pasien->alamat ?? "-")],
+                        "city" => !empty($pasien?->patient?->nama_kota) && $pasien?->patient?->nama_kota !== '-' ? $pasien->patient->nama_kota : "KOTA PROBOLINGGO",
+                        "district" => !empty($pasien?->patient?->nama_kecamatan) && $pasien?->patient?->nama_kecamatan !== '-' ? $pasien->patient->nama_kecamatan : "Wonoasih",
                         "country" => "ID",
-
                         "extension" => [
                             [
                                 "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/administrativeCode",
-
                                 "extension" => [
-                                    [
-                                        "url" => "province",
-                                        "valueCode" => (string) $pasien->patient->satset_province
-                                    ],
-                                    [
-                                        "url" => "city",
-                                        "valueCode" => (string) $pasien->patient->satset_city
-                                    ],
-                                    [
-                                        "url" => "district",
-                                        "valueCode" => (string) $pasien->patient->satset_district
-                                    ],
-                                    [
-                                        "url" => "village",
-                                        "valueCode" => (string) $pasien->patient->satset_village
-                                    ]
+                                    ["url" => "province", "valueCode" => (string)($pasien?->patient?->satset_province ?? '35')],
+                                    ["url" => "city",    "valueCode" => (string)($pasien?->patient?->satset_city ?? '3574')],
+                                    ["url" => "district", "valueCode" => (string)($pasien?->patient?->satset_district ?? '357402')],
+                                    ["url" => "village", "valueCode" => (string)($pasien?->patient?->satset_village ?? '3574021005')]
                                 ]
                             ]
                         ]
                     ]
-                ]
+                ],
 
+                // Extension
+                "extension" => [
+                    [
+                        "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/birthPlace",
+                        "valueAddress" => [
+                            "city" => $pasien?->templahir ?? "-",
+                            "country" => "ID"
+                        ]
+                    ],
+                    [
+                        "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/citizenshipStatus",
+                        "valueCode" => "WNI"
+                    ]
+                ],
+
+                "communication" => [
+                    [
+                        "language" => [
+                            "coding" => [
+                                [
+                                    "system" => "urn:ietf:bcp:47",
+                                    "code" => "id-ID",
+                                    "display" => "Indonesian"
+                                ]
+                            ],
+                            "text" => "Indonesian"
+                        ],
+                        "preferred" => true
+                    ]
+                ]
             ];
 
+            // ==================== LOGIKA BAYI ====================
             if ($isBayi) {
+                // if (empty($nikIbu)) {
+                //     return ['message' => 'failed', 'error' => 'NIK Ibu wajib diisi untuk bayi baru lahir'];
+                // }
+
+                // $payload['identifier'] = [
+                //     [
+                //         "use" => "official",
+                //         "system" => "https://fhir.kemkes.go.id/id/nik-ibu",
+                //         "value" => $nikIbu
+                //     ]
+                // ];
+
+                $payload['identifier'] = [
+                    [
+                        "use" => "official",
+                        "system" => "https://fhir.kemkes.go.id/id/nik",
+                        "value" => $pasien->nik
+                    ]
+                ];
 
                 $payload['multipleBirthBoolean'] = false;
                 $payload['multipleBirthInteger'] = 0;
+
+                // Marital Status untuk Bayi
+                $payload['maritalStatus'] = [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+                            "code" => "S",
+                            "display" => "Never Married"
+                        ]
+                    ]
+                ];
+            }
+            // ==================== PASIEN DEWASA ====================
+            else {
+                $payload['identifier'] = [
+                    [
+                        "use" => "official",
+                        "system" => "https://fhir.kemkes.go.id/id/nik",
+                        "value" => $pasien->nik
+                    ]
+                ];
             }
 
-            $send = BridgingSatsetHelper::post_data(
-                $token,
-                '/Patient',
-                $payload
-            );
+            // dd(json_encode($payload, JSON_PRETTY_PRINT)); // aktifkan jika debugging
 
-            // dd(json_encode($send, JSON_PRETTY_PRINT));
+            $send = BridgingSatsetHelper::post_data($token, '/Patient', $payload);
 
-            // sukses create
-            if (isset($send['data']['id'])) {
-
+            if (isset($send['data']['id']) && !empty($send['data']['id'])) {
                 $uuid = $send['data']['id'];
 
                 Pasien::where('rs1', $pasien->norm)
@@ -397,11 +502,12 @@ class PostKunjunganRanapHelper
 
                 return [
                     'message' => 'success',
-                    'uuid' => $uuid
+                    'uuid' => $uuid,
+                    'is_bayi' => $isBayi
                 ];
             }
 
-            // gagal validasi SATUSEHAT
+            // Gagal
             SatsetErrorRespon::create([
                 'uuid' => $pasien->noreg,
                 'response' => $send
@@ -412,7 +518,6 @@ class PostKunjunganRanapHelper
                 'data' => $send
             ];
         } catch (\Throwable $e) {
-
             SatsetErrorRespon::create([
                 'uuid' => $pasien->noreg,
                 'response' => $e->getMessage()
@@ -527,7 +632,7 @@ class PostKunjunganRanapHelper
     public static function form($request, $pasien_uuid)
     {
         $organization_id = BridgingSatsetHelper::organization_id();
-        $encounter_uuid = "urn:uuid:" . self::generateUuid();
+        $encounter_uuid = self::generateUuid();
 
         $form = [
             "resourceType" => "Bundle",
@@ -594,7 +699,7 @@ class PostKunjunganRanapHelper
                         "text" => $val['indonesia'] ?? $val['inggris'] ?? 'Diagnosis'
                     ],
                     "subject" => ["reference" => "Patient/$pasien_uuid"],
-                    "encounter" => ["reference" => $encounter_uuid],
+                    "encounter" => ["reference" => "urn:uuid:" . $encounter_uuid],
                     "onsetDateTime" => $start,
                 ],
                 "request" => ["method" => "POST", "url" => "Condition"]
@@ -608,7 +713,7 @@ class PostKunjunganRanapHelper
 
         // C. Perakit Resource Encounter (IMP)
         $formEncounter = [
-            "fullUrl" => $encounter_uuid,
+            "fullUrl" => "urn:uuid:" . $encounter_uuid,
             "resource" => [
                 "resourceType" => "Encounter",
                 "identifier" => [["system" => "http://sys-ids.kemkes.go.id/encounter/$organization_id", "value" => $request->noreg]],
@@ -845,17 +950,30 @@ class PostKunjunganRanapHelper
                             "coding" => [
                                 [
                                     "system" => "http://hl7.org/fhir/sid/cvx",
-                                    "code" => "08",
-                                    "display" => "Hep B, adolescent or pediatric"
+                                    "code" => "93",
+                                    "display" => "Hepatitis B"
                                 ]
                             ]
                         ],
+                        // "reasonCode" => [
+                        //     "coding" => [
+                        //         [
+                        //             "system" => "http://terminology.kemkes.go.id/CodeSystem/immunization-routine-timing",
+                        //             "code" => "IM-Ideal",
+                        //             "display" => "Imunisasi Ideal"
+                        //         ]
+                        //     ]
+                        // ],
+
+                        // === PERBAIKAN DISINI ===
                         "reasonCode" => [
-                            "coding" => [
-                                [
-                                    "system" => "http://terminology.kemkes.go.id/CodeSystem/immunization-routine-timing",
-                                    "code" => "IM-Ideal",
-                                    "display" => "Imunisasi Ideal"
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://terminology.kemkes.go.id/CodeSystem/immunization-routine-timing",
+                                        "code" => "IM-Ideal",
+                                        "display" => "Imunisasi Ideal"
+                                    ]
                                 ]
                             ]
                         ],
@@ -866,13 +984,14 @@ class PostKunjunganRanapHelper
                         ],
 
                         "encounter" => [
-                            "reference" => "Encounter/" . $encounter_uuid
+                            "reference" => "urn:uuid:" . $encounter_uuid   // ← Harus pakai urn:uuid
                         ],
 
                         "occurrenceDateTime" => Carbon::parse($imunisasi['created_at'])->toIso8601String(),
 
                         "primarySource" => true,
-
+                        "lotNumber" => $imunisasi['kdobat'],
+                        "expirationDate" => date('Y-m-d', strtotime('+18 months')),
                         "location" => [
                             "reference" => "Location/" . ($ruangId ?: '00000000-0000-0000-0000-000000000000'), // Gunakan ID Valid atau Default
                             "display" => "Bed $request->nomorbed, $request->ruangan, Lantai $lantai Gedung $gedung"
@@ -880,6 +999,15 @@ class PostKunjunganRanapHelper
 
                         "performer" => [
                             [
+                                "function" => [
+                                    "coding" => [
+                                        [
+                                            "system" => "http://terminology.hl7.org/CodeSystem/v2-0443",
+                                            "code" => "AP",                    // ← WAJIB
+                                            "display" => "Administering Provider"
+                                        ]
+                                    ]
+                                ],
                                 "actor" => [
                                     "reference" => "Practitioner/" . $practitioner_uuid
                                 ]

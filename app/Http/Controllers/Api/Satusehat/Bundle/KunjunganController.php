@@ -42,18 +42,9 @@ class KunjunganController extends Controller
         }
 
         if ($jenis_kunjungan === 'ranap') {
-            // $ygTerkirim = 0;
-            // $arrayKunjungan = self::cekKunjunganRanap();
-            // // return self::ranap($arrayKunjungan[8]);
-            // for ($i = 0; $i < count($arrayKunjungan); $i++) {
-            //     self::ranap($arrayKunjungan[$i]);
-            //     // echo $i;
-            //     // sleep(5);//menunggu 5 detik
-            //     $ygTerkirim = $i + 1;
-            // }
-            // return ['yg terkirim' => $ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
 
-            return PostKunjunganRanapHelper::cobaRanap('04669/04/2026/I');
+            // return PostKunjunganRanapHelper::cobaRanap('04742/04/2026/I');
+            return PostKunjunganRanapHelper::cobaRanap('04749/04/2026/I');
         }
 
         if ($jenis_kunjungan === 'igd') {
