@@ -732,10 +732,13 @@ class EresepController extends Controller
                 })
                     ->where('tgl_kirim', 'LIKE', '%' . $sekarang . '%')->whereIn('flag', ['3', '4'])->where('depo', $request->kodedepo)->pluck('noresep');
 
-                $adaObat1 = Resepkeluarrinci::where('kdobat', $request->kodeobat)->whereIn('noresep', $head1)->where('jumlah', '>', 0)->count();
-                $adaRetur = Returpenjualan_r::where('kdobat', $request->kodeobat)->whereIn('noresep', $head1)->where('jumlah_retur', '>=', 'jumlah_keluar')->count();
+                // Hitung total jumlah obat yang telah keluar dengan jumlah > 0
+                $totalObatKeluar = Resepkeluarrinci::where('kdobat', $request->kodeobat)->whereIn('noresep', $head1)->where('jumlah', '>', 0)->sum('jumlah');
+                // Hitung total jumlah retur untuk obat tersebut
+                $totalRetur = Returpenjualan_r::where('kdobat', $request->kodeobat)->whereIn('noresep', $head1)->sum('jumlah_retur');
 
-                if ($adaObat1 > $adaRetur) {
+                // Jika ada sisa obat yang belum diretur, tolak permintaan
+                if ((int)$totalObatKeluar > (int)$totalRetur) {
                     $pesanA = 'Item Obat ';
                     $pesanT = '';
                     $pesanB = ' Sudah Pernah Diberikan Hari ini ';
@@ -747,8 +750,8 @@ class EresepController extends Controller
                     return new JsonResponse([
                         'message' => $msg,
                         'bypass' => $bypass,
-                        'adaObat1' => $adaObat1,
-                        'adaRetur' => $adaRetur,
+                        'totalObatKeluar' => $totalObatKeluar,
+                        'totalRetur' => $totalRetur,
                     ], 410);
                 }
             }
