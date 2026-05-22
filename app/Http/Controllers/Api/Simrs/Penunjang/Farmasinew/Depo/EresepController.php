@@ -1674,30 +1674,45 @@ class EresepController extends Controller
             // ambil obat untuk pasien kunjungan sekarang
             $obatKeluar = Resepkeluarrinci::whereIn('noresep', $normalHeadKel)->where('jumlah', '>', 0)->get();
             $obatNormal = Permintaanresep::whereIn('noresep', $normalHead)->get();
-            $obatNormalRacikan = Permintaanresepracikan::whereIn('noresep', $normalHead)->orWhereIn('noresep', $returHead)->get();
+            // Fix OR query: gunakan array_merge yang lebih aman daripada orWhereIn
+            $combineHeads = array_merge($normalHead->toArray(), $returHead->toArray());
+            $obatNormalRacikan = Permintaanresepracikan::whereIn('noresep', $combineHeads)->get();
             // ambil retur obat (kalau ada)
             $obatAdaRetur = Permintaanresep::whereIn('noresep', $returHead)->get();
-            // ambil obat yang diretur
-            $obatRetur = Returpenjualan_r::whereIn('noresep', $returHead)->get();
-            // cek retur, berapa jumlah nya, jika semua maka dianggap tidak diberikan
+            // ambil obat yang diretur dan hitung total per obat
+            $obatReturPerObat = Returpenjualan_r::whereIn('noresep', $returHead)->get();
+            // hitung total jumlah obat keluar dan retur per kdobat untuk cek partial return
+            $totalKeluarPerObat = [];
+            $totalReturPerObat = [];
+            foreach ($obatReturPerObat as $ret) {
+                $kdobat = $ret['kdobat'];
+                if (!isset($totalKeluarPerObat[$kdobat])) {
+                    $totalKeluarPerObat[$kdobat] = 0;
+                    $totalReturPerObat[$kdobat] = 0;
+                }
+                $totalKeluarPerObat[$kdobat] += (int)$ret['jumlah_keluar'];
+                $totalReturPerObat[$kdobat] += (int)$ret['jumlah_retur'];
+            }
+            // cek retur, jika ada sisa (tidak semua diretur), maka obat tidak boleh diberikan lagi
             $arrayAda = $obatAdaRetur->toArray();
             $keys = array_column($arrayAda, 'kdobat');
             $masukIf = [];
-            foreach ($obatRetur as $ret) {
-                $index = array_search($ret['kdobat'], $keys);
-                $masukIf[] = [
-                    'ret' => $ret['kdobat'],
-                    'index' => $index,
-                    'if' => ($index !== false),
-                    'int' => (int)$index,
-                ];
-                if ((int)$index >= 0) {
-                    $keluar = $ret['jumlah_keluar'];
-                    $retur = $ret['jumlah_retur'];
-                    // yang ada retur, jika di retur semua obatnya berarti dianggap tidak ada
-                    if ($keluar == $retur) {
-                        array_splice($arrayAda, $index, 1);
-                    }
+            foreach ($keys as $idx => $kdobat) {
+                $keluar = $totalKeluarPerObat[$kdobat] ?? 0;
+                $retur = $totalReturPerObat[$kdobat] ?? 0;
+                // yang ada retur, HANYA JIKA SEMUA diretur barulah dianggap tidak ada
+                // jika ada sisa (keluar > retur), berarti masih ada obat yang belum dikembalikan
+                if ((int)$keluar > (int)$retur) {
+                    // Ada sisa obat yang belum diretur, tetap di array
+                    $masukIf[] = [
+                        'kdobat' => $kdobat,
+                        'keluar' => $keluar,
+                        'retur' => $retur,
+                        'sisa' => $keluar - $retur,
+                    ];
+                } else if ((int)$keluar === (int)$retur && (int)$keluar > 0) {
+                    // Semua sudah diretur, hapus dari array
+                    array_splice($arrayAda, $idx, 1);
                 }
             }
             // bandingkan
@@ -1705,6 +1720,7 @@ class EresepController extends Controller
             $cN = [];
             $cR = [];
             $cRA = [];
+            $cK = [];  // Track obat yang sudah keluar
             $msg = '';
             $arrayKeluar = $obatKeluar->toArray();
             $arrayNormal = $obatNormal->toArray();
@@ -1722,13 +1738,25 @@ class EresepController extends Controller
                     $indNRa = array_search($obt['kdobat'], $norR);
                     $indK = array_search($obt['kdobat'], $kel);
 
-                    $fIndR = $indR !== false; // kalo ga ketemu itu false, kelo ketemu itu number, kalo ketemu 0 itu juga dianggap false
+                    $fIndR = $indR !== false;
                     $fIndN = $indN !== false;
                     $findNRa = $indNRa !== false;
+                    $fIndK = $indK !== false;  // Gunakan untuk cek obat sudah keluar
 
-                    if ($fIndR && self::pushToArray($fIndR, $sudahAda, 'kdobat', $obt['kdobat'])) $sudahAda[] = $obt;
-                    else if ($fIndN && self::pushToArray($fIndN, $sudahAda, 'kdobat', $obt['kdobat'])) $sudahAda[] = $obt;
-                    else if ($findNRa && self::pushToArray($findNRa, $sudahAda, 'kdobat', $obt['kdobat'])) $sudahAda[] = $obt;
+                    // Jika obat sudah keluar, maka tidak boleh dikirim lagi
+                    if ($fIndK && self::pushToArray($fIndK, $sudahAda, 'kdobat', $obt['kdobat'])) {
+                        $sudahAda[] = $obt;
+                        $cK[] = [true, $obt['kdobat'], 'Sudah Keluar'];
+                    } else if ($fIndR && self::pushToArray($fIndR, $sudahAda, 'kdobat', $obt['kdobat'])) {
+                        $sudahAda[] = $obt;
+                        $cR[] = [true, $obt['kdobat']];
+                    } else if ($fIndN && self::pushToArray($fIndN, $sudahAda, 'kdobat', $obt['kdobat'])) {
+                        $sudahAda[] = $obt;
+                        $cN[] = [true, $obt['kdobat']];
+                    } else if ($findNRa && self::pushToArray($findNRa, $sudahAda, 'kdobat', $obt['kdobat'])) {
+                        $sudahAda[] = $obt;
+                        $cRA[] = [true, $obt['kdobat']];
+                    }
 
                     if (sizeof($sudahAda) == 1) $msg = $msg . $obt['mobat']['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
                     if (sizeof($sudahAda) > 1) $msg = $msg . ', ' . $obt['mobat']['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
@@ -1740,46 +1768,48 @@ class EresepController extends Controller
             // racikan
             if (count($obatRacikan) > 0) {
                 foreach ($obatRacikan as $obt) {
-                    // $sdh=array_column($sudahAda,'kdobat');
                     $indR = array_search($obt['kdobat'], $ret);
                     $indN = array_search($obt['kdobat'], $nor);
                     $indNRa = array_search($obt['kdobat'], $norR);
                     $indK = array_search($obt['kdobat'], $kel);
-                    // $indS=array_search($obt['kdobat'],$sdh);
-                    // return new JsonResponse($indS);
-                    // if($indS===false){
-                    $fIndR = $indR !== false; // kalo ga ketemu itu false, kelo ketemu itu number, kalo ketemu 0 itu juga dianggap false
+
+                    $fIndR = $indR !== false;
                     $fIndN = $indN !== false;
                     $findNRa = $indNRa !== false;
+                    $fIndK = $indK !== false;  // Gunakan untuk cek obat sudah keluar
 
-                    if ($fIndR && self::pushToArray($fIndR, $sudahAda, 'kdobat', $obt['kdobat'])) $sudahAda[] = $obt;
-                    else if ($fIndN && self::pushToArray($fIndN, $sudahAda, 'kdobat', $obt['kdobat'])) $sudahAda[] = $obt;
-                    else if ($findNRa && self::pushToArray($findNRa, $sudahAda, 'kdobat', $obt['kdobat'])) $sudahAda[] = $obt;
+                    // Jika obat sudah keluar, maka tidak boleh dikirim lagi
+                    if ($fIndK && self::pushToArray($fIndK, $sudahAda, 'kdobat', $obt['kdobat'])) {
+                        $sudahAda[] = $obt;
+                        $cK[] = [true, $obt['kdobat'], 'Sudah Keluar'];
+                    } else if ($fIndR && self::pushToArray($fIndR, $sudahAda, 'kdobat', $obt['kdobat'])) {
+                        $sudahAda[] = $obt;
+                        $cR[] = [true, $obt['kdobat']];
+                    } else if ($fIndN && self::pushToArray($fIndN, $sudahAda, 'kdobat', $obt['kdobat'])) {
+                        $sudahAda[] = $obt;
+                        $cN[] = [true, $obt['kdobat']];
+                    } else if ($findNRa && self::pushToArray($findNRa, $sudahAda, 'kdobat', $obt['kdobat'])) {
+                        $sudahAda[] = $obt;
+                        $cRA[] = [true, $obt['kdobat']];
+                    }
 
                     if (sizeof($sudahAda) == 1) $msg = $msg . $obt['mobat']['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
                     if (sizeof($sudahAda) > 1) $msg = $msg . ', ' . $obt['mobat']['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
-                    // }
                     $cN[] = [$fIndN, $obt['kdobat']];
                     $cR[] = [$fIndR, $obt['kdobat']];
                     $cRA[] = [$findNRa, $obt['kdobat']];
                 }
             }
             if (sizeof($sudahAda) > 0) {
-                // $msg=$msg . ' Sudah diresepkan';
                 return new JsonResponse([
                     'message' => $msg,
                     'sudahAda' => $sudahAda,
+                    'sudahKeluar' => $cK,  // Informasi obat yang sudah keluar
+                    'obatDenganRetur' => $masukIf,  // Detail retur per obat
                     'cR' => $cR,
                     'cN' => $cN,
                     'cRA' => $cRA,
-                    'arrayAda' => $arrayAda,
-                    'arrayNormal' => $arrayNormal,
-                    'arrayNormalRacikan' => $arrayNormalRacikan,
-                    'obatnya' => $obatnya,
-                    'normalHead' => $normalHead,
-                    'masukIf' => $masukIf,
-                    'count' => sizeof($sudahAda),
-
+                    'totalRestriksi' => sizeof($sudahAda),
                 ], 410);
             }
         }
@@ -1795,6 +1825,41 @@ class EresepController extends Controller
             return new JsonResponse([
                 'message' => 'Resep tidak ditemukan',
             ], 410);
+        }
+
+        /**
+         * Validasi tambahan: Cek pembatasan jumlah obat untuk BPJS
+         * Harus konsisten dengan pembuatanresep (7 untuk ranap, 5 untuk rajal)
+         */
+        if (in_array($kirimresep->depo, $depoLimit) && (int)$kirimresep->sistembayar === '1') {
+            // Hitung jumlah racikan dan non-racikan
+            $racikan = Permintaanresepracikan::where('noresep', $request->noresep)->groupBy('namaracikan')->count();
+            $nonracikan = Permintaanresep::select('resep_permintaan_keluar.kdobat')
+                ->leftJoin('new_masterobat', 'new_masterobat.kd_obat', '=', 'resep_permintaan_keluar.kdobat')
+                ->where('resep_permintaan_keluar.noresep', $request->noresep)
+                ->where('new_masterobat.jenis_perbekalan', 'obat')
+                ->count();
+
+            $totalObat = (int)$racikan + (int)$nonracikan;
+
+            // Terapkan batasan sesuai depo
+            if ($kirimresep->depo === 'Gd-04010102' && $totalObat > 7) {
+                return new JsonResponse([
+                    'message' => 'Jumlah Obat Dibatasi 7 saja untuk Ranap',
+                    'racikan' => $racikan,
+                    'nonracikan' => $nonracikan,
+                    'total' => $totalObat,
+                ], 410);
+            }
+
+            if ($kirimresep->depo === 'Gd-05010101' && $totalObat > 5) {
+                return new JsonResponse([
+                    'message' => 'Jumlah Obat Dibatasi 5 saja untuk Rajal',
+                    'racikan' => $racikan,
+                    'nonracikan' => $nonracikan,
+                    'total' => $totalObat,
+                ], 410);
+            }
         }
 
         $flag = $kirimresep->flag;
