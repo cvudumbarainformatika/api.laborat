@@ -539,7 +539,7 @@ class PersiapanOperasiController extends Controller
             $rinci = $request->rinci;
             $user = FormatingHelper::session_user();
             $kode = $user['kodesimrs'];
-
+            $data = [];
             // pastikan ada data
             if (count($rinci) > 0) {
                 $data = [];
