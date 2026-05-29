@@ -225,7 +225,9 @@ class IgdController extends Controller
                 },
                 'historyperkawinan',
                 'historykehamilan',
-                'anamnesekebidanan',
+                'anamnesekebidanan' => function ($pegx) {
+                    $pegx->with('pegawai');
+                },
                 'transradiologi' => function ($transradiologi) {
                     $transradiologi->with('relmasterpemeriksaan')->where('rs26', 'POL014');
                 },
