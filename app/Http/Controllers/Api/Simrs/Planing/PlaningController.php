@@ -696,6 +696,14 @@ class PlaningController extends Controller
 
     public static function simpansuratkontrol($request, $nosuratkontrol)
     {
+        $keterangan = '';
+        if (filled($request->keterangan) && filled($request->keterangan2)) {
+            $keterangan = $request->keterangan . ', ' . $request->keterangan2;
+        } elseif (filled($request->keterangan)) {
+            $keterangan = $request->keterangan;
+        } elseif (filled($request->keterangan2)) {
+            $keterangan = $request->keterangan2;
+        }
         $dokter = Pegawai::where('kddpjp', $request->kodedokterdpjp)->first();
         $simpansuratkontrol = Simpansuratkontrol::firstOrCreate(
             [
@@ -714,7 +722,7 @@ class PlaningController extends Controller
                 'nama' => $request->nama,
                 'kelamin' => $request->kelamin,
                 'tglLahir' => $request->tgllahir,
-                'keterangan' => $request->keterangan . ' ' . $request->keterangan2,
+                'keterangan' => $keterangan,
                 'user_id' => auth()->user()->pegawai_id
             ]
         );
