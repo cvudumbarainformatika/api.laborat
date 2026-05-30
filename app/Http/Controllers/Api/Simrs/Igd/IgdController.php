@@ -113,7 +113,7 @@ class IgdController extends Controller
             })
             ->with(
                 [
-                    'generalcons:norm,ttdpasien,ttdpetugas,hubunganpasien',
+                    'generalcons:norm,ttdpasien,ttdpetugas,hubunganpasien,nama',
                     'planheder' => function ($planheder) {
                         $planheder->with([
                             'planranap' => function ($planranap) {
