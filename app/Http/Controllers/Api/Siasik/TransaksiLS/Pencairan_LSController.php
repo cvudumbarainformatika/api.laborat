@@ -94,6 +94,13 @@ class Pencairan_LSController extends Controller
                 'tglentrycair' => $time,
             ]);
 
+            NpkLS_rinci::where('nonpk', $request->nonpk)
+            ->update([
+                'nopencairan' => $nopencairan,
+                'userentrycair' => $pegawai,
+                'tglentrycair' => $time,
+            ]);
+            
             NpdLS_heder::where('nonpk', $request->nonpk)
             ->update([
                 'nopencairan' => $nopencairan,
