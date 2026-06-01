@@ -277,8 +277,8 @@ class TindakanController extends Controller
             $adaTarifBerubah = MtindakanSementara::whereDate('tgl_mulai_berlaku', date('Y-m-d'))->get();
             if ($adaTarifBerubah) {
                 foreach ($adaTarifBerubah as $baru) {
-                    $data = Mtindakan::where('rs1', $baru['rs1'])->first();
-                    $dataSudahHapus = Mtindakan::onlyTrashed()->where('rs1', $baru['rs1'])->first();
+                    $data = Mtindakan::where('rs1', $baru['rs1'])->lockForUpdate()->first();
+                    $dataSudahHapus = Mtindakan::onlyTrashed()->where('rs1', $baru['rs1'])->lockForUpdate()->first();
                     $simpantindakan = Mtindakan::withTrashed()->updateOrCreate(
                         [
                             'rs1' => $baru['rs1']
