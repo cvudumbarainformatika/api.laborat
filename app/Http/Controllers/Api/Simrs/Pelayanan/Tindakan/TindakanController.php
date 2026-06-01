@@ -64,7 +64,10 @@ class TindakanController extends Controller
                     ->orWhere('prosedur_mapping.icd9', 'Like', '%' . request('tindakan') . '%');
             })
             ->where('rs30.rs1', '<>', 'T00075')
-            ->where('rs30.hidden', '<>', '1')
+            ->where(function ($query) {
+                $query->whereNull('rs30.hidden')
+                    ->orWhere('rs30.hidden', '<>', '1');
+            })
             // ->where('rs30.rs4')
             ->get();
         return new JsonResponse($dialogtindakanpoli);
