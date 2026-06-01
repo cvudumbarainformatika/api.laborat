@@ -39,7 +39,10 @@ class TindakanController extends Controller
                 $query->where('rs30.rs2', 'Like', '%' . request('tindakan') . '%')
                     ->orWhere('prosedur_mapping.icd9', 'Like', '%' . request('tindakan') . '%');
             })
-            // ->where('rs30.rs2', 'Like', '%' . request('kdpoli') . '%')
+           ->where(function ($query) {
+                $query->whereNull('rs30.hidden')
+                    ->orWhere('rs30.hidden', '<>', '1');
+            })
             // ->where('rs30.rs4')
             ->get();
         return new JsonResponse($dialogtindakanpoli);
@@ -93,7 +96,10 @@ class TindakanController extends Controller
                 $r->where('rs30.js_hc', '>', 0)
                     ->orWhere('rs30.jp_hc', '>', 0);
             })
-            // ->where('rs30.rs2', 'Like', '%' . request('kdpoli') . '%')
+            ->where(function ($query) {
+                $query->whereNull('rs30.hidden')
+                    ->orWhere('rs30.hidden', '<>', '1');
+            })
             // ->where('rs30.rs4')
             ->get();
         return new JsonResponse($dialogtindakanpoli);
