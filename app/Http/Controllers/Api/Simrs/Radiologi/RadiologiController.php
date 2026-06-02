@@ -133,7 +133,13 @@ class RadiologiController extends Controller
 
 
         $q = $select
-            ->with(['rinciansementara.relmasterpemeriksaan'])
+            ->with([
+                'rinciansementara' => function ($query) {
+                    $query->with(['relmasterpemeriksaan' => function ($q) {
+                        $q->withTrashed();
+                    }]);
+                }
+            ])
             ->whereBetween('rs106.rs3', [$tgl, $tglx])
             ->where('rs106.rs2', '!=', '')
             ->whereNotNull('rs106.rs2')
