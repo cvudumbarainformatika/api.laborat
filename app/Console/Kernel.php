@@ -48,8 +48,8 @@ class Kernel extends ConsoleKernel
         //     Artisan::call('cache:clear'); // you can move this part to Job
         // })
         // ->dailyAt('01:00');
-        $schedule->command('tarif:cek')
-            ->dailyAt('00:20');
+        // $schedule->command('tarif:cek')
+        //     ->dailyAt('00:20');
 
 
 
