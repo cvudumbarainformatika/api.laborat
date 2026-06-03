@@ -50,7 +50,7 @@ class LaboratController extends Controller
                 'nilainormal',
                 'satuan',
                 'hidden'
-            )->where('rs25', '1')->orwhere('rs25', '')
+            )->where('rs25', '1')->orwhere('rs25', '')->orWhereNull('rs25')
                 ->where('rs1', '!=', 'LAB126')
                 ->where('hidden', '!=', '1')
                 ->orderBy('rs2')->get();

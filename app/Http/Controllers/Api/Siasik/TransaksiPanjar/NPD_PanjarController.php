@@ -80,7 +80,7 @@ class NPD_PanjarController extends Controller
                     'kegiatan' => 'PELAYANAN DAN PENUNJANG PELAYANAN BLUD',
                     'kodekegiatanblud' => $validated['kodekegiatanblud'],
                     'kegiatanblud' => $validated['kegiatanblud'],
-                    'userentry' => $pegawai,
+                    'userentry' => $kodepegawai,
                     'tglentry' => $time,
                     'kodebidang' => $validated['kodebidang'],
                     'bidang' => $validated['bidang'],
@@ -93,8 +93,8 @@ class NPD_PanjarController extends Controller
                     'nopp' => $request->nopp,
                     'koderek50' => $request->koderek50,
                     'rincianbelanja50' => $request->rincianbelanja50,
-                    'koderek108' => $request->koderek108,
-                    'uraian108' => $request->uraian108,
+                    'koderek108' => $request->koderek108 ?? '',
+                    'uraian108' => $request->uraian108 ?? '',
                     'itembelanja' => $request->itembelanja,
                     'volume' => $request->volume,
                     'harga' => $request->harga,
@@ -117,4 +117,52 @@ class NPD_PanjarController extends Controller
                 return new JsonResponse(['status' => 'error', 'message' => 'Data gagal disimpan: ' . $e->getMessage()], 500);
             }
     }
+
+    public function delete(Request $request)
+    {
+        $header = NpdPanjar_Header::
+        where('nonpdpanjar', $request->nonpdpanjar)
+        ->where('kunci', '!=', '')
+        ->where('verif', '!=', '')
+        ->get();
+        if(count($header) > 0){
+            return new JsonResponse(['message' => 'Nota Dinas Masih Terkunci dan Terverifikasi'], 500);
+        }
+
+
+        if ($request->id) {
+            $findrinci = NpdPanjar_Rinci::where('id', $request->id)->first();
+        } else {
+            $findrinci = NpdPanjar_Rinci::where('nonpdpanjar', $request->nonpdpanjar)->first();
+        }
+
+        if (!$findrinci) {
+            return new JsonResponse(['message' => 'Data tidak ditemukan'], 404);
+        }
+        else {
+            $findrinci->delete();
+        
+            $rinciAll = NpdPanjar_Rinci::where('nonpdpanjar', $request->nonpdpanjar)->get();
+            if(count($rinciAll) === 0){
+                $header = NpdPanjar_Header::where('nonpdpanjar', $request->nonpdpanjar)->first();
+
+                if ($header) {
+                    $header->delete();
+                    return new JsonResponse([
+                        'message' => 'Data Berhasil dihapus',
+                        'data' => []
+                    ], 200);
+                } else {
+                    return new JsonResponse([
+                        'message' => 'Data header tidak ditemukan',
+                    ], 404);
+                }
+            }
+            return new JsonResponse([
+                'message' => 'Data Berhasil dihapus',
+                'data' => $rinciAll
+            ]);
+        }
+    }
+
 }

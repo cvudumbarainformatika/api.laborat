@@ -299,8 +299,8 @@ class PostKunjunganHDHerlper
             ->orderby('rs17.rs3', 'ASC')
             ->first();
 
-        // return $data;
-        return self::kirimKunjungan($data);
+        return $data;
+        // return self::kirimKunjungan($data);
         // return self::rajal($data);
     }
 

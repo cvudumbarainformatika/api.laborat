@@ -8,7 +8,17 @@ Route::group([
   'middleware' => 'auth:api',
   'prefix' => 'simrs/penunjang/ok/monitoring'
 ], function () {
+  // selema
   Route::get('/selama/get', [MonitoringController::class, 'getSelama']);
   Route::post('/selama/simpan', [MonitoringController::class, 'simpanSelama']);
   Route::post('/selama/simpan-medikasi', [MonitoringController::class, 'simpanMedikasiSelama']);
+  // pasca
+  Route::get('/pasca/get', [MonitoringController::class, 'getLogPasca']);
+  Route::post('/pasca/simpan', [MonitoringController::class, 'simpanLogPasca']);
+  Route::post('/pasca/simpan-medikasi', [MonitoringController::class, 'simpanMedikasiPasca']);
+  // aldrete
+  Route::get('/aldrete/get', [MonitoringController::class, 'getLogAldrete']);
+  Route::post('/aldrete/simpan', [MonitoringController::class, 'simpanLogAldrete']);
+  Route::post('/aldrete/hapus', [MonitoringController::class, 'hapusLogAldrete']);
+  Route::post('/aldrete/simpan-keluar', [MonitoringController::class, 'simpanKeluarRuangPemulihan']);
 });

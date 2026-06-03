@@ -14,4 +14,7 @@ Route::group([
 
     Route::get('/cek-medication', [KunjunganController::class, 'medication']);
     Route::get('/cari-loinc', [KunjunganController::class, 'cari_loinc']);
+
+
+    Route::get('/coba-bundle', [KunjunganController::class, 'index']);
 });

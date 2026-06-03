@@ -194,18 +194,46 @@ class KeuanganController extends Controller
 								) as vBku order by tgl,urut");
 
         $targetPendapatan = AnggaranPendapatan::where('tahun', '=', request('year'))->sum('nilai');
-        $realisasiBelanja = DB::connection('siasik')->select(
-            "select sum(realisasi)-sum(kurangi) as realisasix from(
-				select '' as kode,'' as uraian,'' as anggaran,sum(npkls_rinci.total) as realisasi,'' as kurangi
-                from npkls_rinci,npkls_heder
-                where npkls_heder.nopencairan=npkls_rinci.nopencairan
-                and npkls_heder.tglpencairan >= '" . $tgl . "' and npkls_heder.tglpencairan <= '" . $tglx . "'
-															   union all
-															   select '' as kode,'' as uraian,'' as anggaran,sum(spjpanjar_rinci.jumlahbelanjapanjar) as realisasi,'' as kurangi
-															   from spjpanjar_heder,spjpanjar_rinci
-															   where spjpanjar_heder.nospjpanjar=spjpanjar_rinci.nospjpanjar and spjpanjar_heder.verif=1
-															   and spjpanjar_heder.tglspjpanjar >= '" . $tgl . "' and spjpanjar_heder.tglspjpanjar <= '" . $tglx . "') as total;"
-        );
+        $realisasiBelanja = DB::connection('siasik')->select("
+			SELECT 
+				SUM(realisasi) - SUM(kurangi) AS realisasix
+			FROM (
+
+				-- REALISASI NPKLS
+				SELECT 
+					0 AS kurangi,
+					SUM(npkls_rinci.total) AS realisasi
+				FROM npkls_rinci
+				JOIN npkls_heder 
+					ON npkls_heder.nopencairan = npkls_rinci.nopencairan
+				WHERE npkls_heder.tglpencairan >= '" . $tgl . "'
+				AND npkls_heder.tglpencairan <= '" . $tglx . "'
+
+				UNION ALL
+
+				-- REALISASI SPJ PANJAR
+				SELECT 
+					0 AS kurangi,
+					SUM(spjpanjar_rinci.jumlahbelanjapanjar) AS realisasi
+				FROM spjpanjar_heder
+				JOIN spjpanjar_rinci 
+					ON spjpanjar_heder.nospjpanjar = spjpanjar_rinci.nospjpanjar
+				WHERE spjpanjar_heder.verif = 1
+				AND spjpanjar_heder.tglspjpanjar >= '" . $tgl . "'
+				AND spjpanjar_heder.tglspjpanjar <= '" . $tglx . "'
+
+				UNION ALL
+
+				-- CONTRAPOST (PENGURANG)
+				SELECT 
+					SUM(contrapost.nominalcontrapost) AS kurangi,
+					0 AS realisasi
+				FROM contrapost
+				WHERE contrapost.tglcontrapost >= '" . $tgl . " 00:00:00'
+				AND contrapost.tglcontrapost <= '" . $tglx . " 23:59:59'
+
+			) AS total
+		");
 
         $anggaranBelanja = DB::connection('siasik')->select(
             "select sum(pagu) as anggaran from t_tampung where tgl= '" . request('year') . "'"

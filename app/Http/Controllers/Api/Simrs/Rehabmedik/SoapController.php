@@ -45,9 +45,24 @@ class SoapController extends Controller
         $hitung = $data->urut;
       } else {
         $data = new FisioSoap();
-        $count = FisioSoap::where('noreg', $request->noreg)->count();
-        $cekAwal = FisioSoap::where('noreg', $request->noreg)->where('awal', 1)->count();
-        $awal = $cekAwal === 0 ? 1 : 0;
+        // $count = FisioSoap::where('noreg', $request->noreg)
+        //   ->where('nakes', $pegawai->kdgroupnakes)
+        //   ->count();
+
+        // $cekAwal = FisioSoap::where('noreg', $request->noreg)
+        //   ->where('nakes', $pegawai->kdgroupnakes)
+        //   ->where('awal', 1)
+        //   ->count();
+
+        $nakes = $pegawai->kdgroupnakes;
+        $query = FisioSoap::where('noreg', $request->noreg)
+          ->where('nakes', $nakes);
+
+        $count = $query->count();
+        $cekAwal = (clone $query)->where('awal', 1)->exists();
+
+        // $awal = $cekAwal === 0 ? 1 : 0;
+        $awal = !$cekAwal ? 1 : 0;
         $hitung = (int)$count + 1;
       }
 

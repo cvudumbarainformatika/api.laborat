@@ -264,7 +264,7 @@ class BukubesarController extends Controller
 
         $saldoawalsebelum = SaldoAwal::select(
             'saldoawal.id as notrans',
-            'saldoawal.tglentry as tanggal',
+            'saldoawal.tanggal',
             'saldoawal.kodepsap13 as kode6',
             'saldoawal.uraianpsap13 as uraian',
             'saldoawal.debit',
@@ -286,7 +286,9 @@ class BukubesarController extends Controller
                 });
             })
         ->join('akun50_2024', 'akun50_2024.kodeall3', 'saldoawal.kodepsap13')
-        ->whereBetween('saldoawal.tglentry', [$thn.'-01-01'. ' 00:00:00', $sebelum. ' 23:59:59'])
+        ->whereBetween('saldoawal.tanggal', [$thn.'-01-01'. ' 00:00:00', $sebelum. ' 23:59:59'])
+        // ->where('saldoawal.tahun', '<=', $thn)
+
         ->get();
 
         $data = [

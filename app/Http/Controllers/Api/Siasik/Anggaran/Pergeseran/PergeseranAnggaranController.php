@@ -7,6 +7,7 @@ use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Header;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Anggaran\Perubahan_pak_header;
 use App\Models\Siasik\Anggaran\Perubahan_RincianBelanja;
+use App\Models\Siasik\Anggaran\Tampung_Pagu;
 use App\Models\Siasik\Anggaran\Tampungcopy;
 use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\Request;
@@ -138,7 +139,9 @@ class PergeseranAnggaranController extends Controller
         try {
             DB::beginTransaction();
 
-            $header = Penyesuaian_Prioritas_Header::where('notrans', $validated['notrans'])
+            // $header = Penyesuaian_Prioritas_Header::where('notrans', $validated['notrans'])
+            //     ->first();
+            $header = Tampung_Pagu::where('kodekegiatanblud', $validated['kodekegiatanblud'])
                 ->first();
             if (!$header) {
                 return response()->json([
@@ -149,17 +152,25 @@ class PergeseranAnggaranController extends Controller
 
             $paguHeader = (int) $header->pagu;
             // $totalPenetapan = PergeseranPaguRinci::where('notrans', $validated['notrans'])
-            $totalPenetapan = Tampungcopy::where('notrans', $validated['notrans'])
+            // $totalPenetapan = Tampungcopy::where('notrans', $validated['notrans'])
+            //     ->where('kodekegiatanblud', $validated['kodekegiatanblud'])
+            //     ->where('bidang', $validated['kodebidang'])
+            //     ->when($idpp, function ($q) use ($idpp) {
+            //         // jika edit jangan ikut dihitung data lama
+            //         $q->where('idpp', '!=', $idpp);
+            //     })
+            //     ->sum('pagu');
+            $query = Tampungcopy::where('notrans', $validated['notrans'])
                 ->where('kodekegiatanblud', $validated['kodekegiatanblud'])
-                ->where('bidang', $validated['kodebidang'])
-                ->when($idpp, function ($q) use ($idpp) {
-                    // jika edit jangan ikut dihitung data lama
-                    $q->where('idpp', '!=', $idpp);
-                })
-                ->sum('pagu');
+                ->where('bidang', $validated['kodebidang']);
+            $totalSemua = $query->sum('pagu');
+            if ($request->filled('idpp')) {
+                $totalPenetapan = $query->whereNot('idpp', $idpp)->sum('pagu');
+            } else {
+                $totalPenetapan = $totalSemua;
+            }
             $totalSetelahSimpan = $totalPenetapan + $totalbaru;
 
-            // VALIDASI
             if ($totalSetelahSimpan > $paguHeader) {
                 return response()->json([
                     'status' => 'error',
@@ -251,7 +262,11 @@ class PergeseranAnggaranController extends Controller
             return new JsonResponse(['status' => 'success', 'message' => 'Data berhasil disimpan', 'data' => $data]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return new JsonResponse(['status' => 'error', 'message' => 'Data gagal disimpan: ' . $e->getMessage()], 500);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data gagal disimpan: ' . $e->getMessage()
+            ], 500);
         }
     }
 

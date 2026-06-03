@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Api\Satusehat\Bundle\KunjunganController;
 use App\Http\Controllers\AutoUpdateRadiologiController;
 use Illuminate\Support\Facades\Route;
 

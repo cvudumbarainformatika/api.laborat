@@ -31,6 +31,7 @@ return [
     ],
     'orthanc' => [
         'url' => env('URL_WEBHOOK_ORTHANC'),
+        'api_key' => env('ORTHANC_API_KEY', 'BismillahRadiologi2026'),
     ],
 
 ];

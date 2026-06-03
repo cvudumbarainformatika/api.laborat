@@ -27,4 +27,5 @@ Route::group([
 
     // NPD PANJAR //
     Route::post('/savenpd', [NPD_PanjarController::class, 'save']);
+    Route::post('/delete', [NPD_PanjarController::class, 'delete']);
 });

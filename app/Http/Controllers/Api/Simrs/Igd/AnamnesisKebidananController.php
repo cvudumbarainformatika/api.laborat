@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Igd;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\AnamnesisKebidanan;
 use App\Models\Simrs\Anamnesis\HistoryKehamilan;
 use App\Models\Simrs\Anamnesis\HistoryPerkawinan;
@@ -64,6 +65,9 @@ class AnamnesisKebidananController extends Controller
 
     public function simpanananamesiskebidanan(Request $request)
     {
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->kdpegsimrs;
         $simpan = AnamnesisKebidanan::create(
             [
                 'noreg' => $request->noreg,
@@ -150,6 +154,7 @@ class AnamnesisKebidananController extends Controller
                 'periksaluarginekologi' => $request->periksaluarginekologi,
                 'inspekuloginekologi' => $request->inspekuloginekologi,
                 'periksadalamginekologi' => $request->periksadalamginekologi,
+                'userentry'=>$pegawai ?? '',
             ]
         );
         return new JsonResponse(['message' => 'Data Sudah Tersimpan...!!!','result' => $simpan], 200);

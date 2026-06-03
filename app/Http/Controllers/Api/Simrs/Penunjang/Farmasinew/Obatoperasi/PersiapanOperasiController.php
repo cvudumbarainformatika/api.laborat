@@ -539,7 +539,7 @@ class PersiapanOperasiController extends Controller
             $rinci = $request->rinci;
             $user = FormatingHelper::session_user();
             $kode = $user['kodesimrs'];
-
+            $data = [];
             // pastikan ada data
             if (count($rinci) > 0) {
                 $data = [];
@@ -1276,8 +1276,13 @@ class PersiapanOperasiController extends Controller
                     throw new \Exception('Distribusi Persiapan obat ' . $obat->nama_obat . ' untuk operasi tidak ditemukan');
                 }
                 $cek = Resepkeluarrinci::where('nopenerimaan', $dist[$index]->nopenerimaan)
-                    ->where('nobatch', $dist[$index]->nobatch)
                     ->where('noresep', $key['noresep'])
+                    ->when(!empty($dist[$index]->nobatch), function ($q) use ($dist, $index) {
+                        $q->where('nobatch', $dist[$index]->nobatch);
+                    })
+                    ->when(empty($dist[$index]->nobatch), function ($q) {
+                        $q->whereNull('nobatch');
+                    })
                     ->exists();
 
                 if ($cek) {
@@ -1360,16 +1365,15 @@ class PersiapanOperasiController extends Controller
     }
     public function terimaPengembalian(Request $request)
     {
-
         try {
-
             DB::connection('farmasi')->beginTransaction();
             $msg = 'Data berhasil disimpan, Obat masih ada yang belum kembali';
             $rinci = $request->rinci;
             $user = FormatingHelper::session_user();
             $kode = $user['kodesimrs'];
             $resepKeluar = [];
-            // GET data
+            $resepH = []; // FIX 2: Inisialisasi variabel
+
             // step 1 tulis persiapan operasi rinci
             foreach ($rinci as $item) {
                 if ((float)$item['jumlah_kembali'] > 0) {
@@ -1379,6 +1383,7 @@ class PersiapanOperasiController extends Controller
                     $dataRinci->save();
                 }
             }
+
             // step 2 cek apakah semua sudah kembali
             $flag = '3';
             $details = PersiapanOperasiRinci::where('nopermintaan', $request->nopermintaan)->get();
@@ -1390,21 +1395,21 @@ class PersiapanOperasiController extends Controller
 
                 if ($resep + $kem > $dist) {
                     $obat = Mobatnew::where('kd_obat', $detItem->kd_obat)->first();
-                    throw new \Exception("Jumlah kembali obat " . $obat->nm_obat . " melebihi jumlah distribusi");
+                    throw new \Exception("Jumlah kembali dan resep obat " . ($obat->nama_obat ?? '') . " melebihi jumlah distribusi");
                 }
                 if ($resep + $kem == $dist) {
                     $cek[] = '4';
-                } else $cek[] = '3';
+                } else {
+                    $cek[] = '3';
+                }
             }
             if (!empty($cek) && count(array_unique($cek)) === 1 && $cek[0] === '4') {
                 $flag = '4';
             }
+
             // jika semua obat sudah kembali maka lakukan
             if ($flag == '4') {
-                // step 3 isi retur dan tanggal retur di persiapan operasi distribusi
-                // step 4 bentuk array untuk simpan resep keluar
                 $listPasienOp = PermintaanOperasi::where('rs1', $request->noreg)->first();
-                // cari harga
                 $sistemBayar = 0;
                 if ($listPasienOp) {
                     $tmp = SistemBayar::select('groups')->where('rs1', $listPasienOp->rs14)->first();
@@ -1412,7 +1417,6 @@ class PersiapanOperasiController extends Controller
                 }
                 $gr = $sistemBayar ?? '';
 
-                $resepKeluar = [];
                 foreach ($details as $detItem) {
                     $kem = (float)$detItem->jumlah_kembali;
                     $resep = (float)$detItem->jumlah_resep;
@@ -1424,14 +1428,13 @@ class PersiapanOperasiController extends Controller
                             ->get();
                         foreach ($perDistA as $distItem) {
                             $distItem->tgl_retur = now();
+                            $distItem->jumlah_retur = 0; // Fix: Set jumlah_retur ke 0
                             $distItem->save();
                         }
                         continue;
                     }
 
                     $har = HargaHelper::getHarga($detItem->kd_obat, $gr);
-                    $res = $har['res'];
-
                     $hargajualx = $har['hargaJual'] ?? 0;
                     $harga = $har['harga'] ?? 0;
 
@@ -1443,14 +1446,13 @@ class PersiapanOperasiController extends Controller
                         ->get();
 
                     foreach ($perDist as $distItem) {
-
                         $jum = (float)$distItem->jumlah;
-
                         $retu = min($jum, $kem);
                         $hargaBeli = (float)$distItem->harga;
                         $distItem->tgl_retur = now();
                         $distItem->jumlah_retur = $retu;
                         $distItem->save();
+
                         if ($detItem->jumlah_resep > 0) {
                             if (!$hargaBeli) {
                                 $dfthrg = Stokreal::where('kdobat', $distItem->kd_obat)
@@ -1463,8 +1465,20 @@ class PersiapanOperasiController extends Controller
                                 $hargaBeli = $dfthrg->harga ?? 0;
                             }
                             $jmlResep = (int)$distItem->jumlah - (int)$retu;
-                            $ada = Resepkeluarrinci::where('noresep', $detItem->noresep)->where('kdobat', $distItem->kd_obat)->first();
-                            if (!$ada) {
+
+                            // FIX 3: Kriteria pengecekan disamakan
+                            $ada = Resepkeluarrinci::where('noresep', $detItem->noresep)
+                                ->where('kdobat', $distItem->kd_obat)
+                                ->where('nopenerimaan', $distItem->nopenerimaan)
+                                ->when(!empty($distItem->nobatch), function ($q) use ($distItem) {
+                                    $q->where('nobatch', $distItem->nobatch);
+                                })
+                                ->when(empty($distItem->nobatch), function ($q) {
+                                    $q->whereNull('nobatch');
+                                })
+                                ->exists();
+
+                            if (!$ada && $jmlResep > 0) {
                                 $rin = [
                                     'noreg' => $request->noreg,
                                     'noresep' => $detItem->noresep,
@@ -1499,21 +1513,45 @@ class PersiapanOperasiController extends Controller
                     }
                 }
 
-                // step 5 simpan resep keluar -> ini pake fungsi yang sudah ada
-                $nores = array_unique(array_column($resepKeluar, 'noresep'));
-                Resepkeluarrinci::insert($resepKeluar);
-                // step 6 ganti flag header resep dan isi tanggal selesai
+                // FIX 2: Pre-insert validation
+                $nores = [];
+                if (count($resepKeluar) > 0) {
+                    $validatedResepKeluar = [];
+                    foreach ($resepKeluar as $rin) {
+                        $exists = Resepkeluarrinci::where('noresep', $rin['noresep'])
+                            ->where('kdobat', $rin['kdobat'])
+                            ->where('nopenerimaan', $rin['nopenerimaan'])
+                            ->when(!empty($rin['nobatch']), function ($q) use ($rin) {
+                                $q->where('nobatch', $rin['nobatch']);
+                            }, function ($q) {
+                                $q->whereNull('nobatch');
+                            })
+                            ->exists();
+
+                        if (!$exists) {
+                            $validatedResepKeluar[] = $rin;
+                        }
+                    }
+
+                    if (count($validatedResepKeluar) > 0) {
+                        Resepkeluarrinci::insert($validatedResepKeluar);
+                        $nores = array_unique(array_column($validatedResepKeluar, 'noresep'));
+                    }
+                }
+
                 foreach ($nores as $nor) {
                     $temp = Resepkeluarheder::where('noresep', $nor)->first();
-                    $temp?->update([
-                        'flag' => '3',
-                        'tgl' => date('Y-m-d'),
-                        'tgl_selesai' => now(),
-                        'user' => $kode
-                    ]);
-                    $resepH[] = $temp;
+                    if ($temp) {
+                        $temp->update([
+                            'flag' => '3',
+                            'tgl' => date('Y-m-d'),
+                            'tgl_selesai' => now(),
+                            'user' => $kode
+                        ]);
+                        $resepH[] = $temp;
+                    }
                 }
-                // step 7 ganti flag persiapan_operasis
+
                 $head = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->first();
                 $head->update([
                     'flag' => $flag,
@@ -1523,16 +1561,12 @@ class PersiapanOperasiController extends Controller
                 $msg = 'Data berhasil disimpan, Permintaan Sudah Selesai';
             }
 
-
             DB::connection('farmasi')->commit();
             return new JsonResponse([
                 'rinci' => $rinci,
                 'head' => $head ?? null,
-                'kurang' => $kurang ?? 0,
                 'resepKeluar' => $resepKeluar,
-                'dataDistribusi' => $dataDistribusi ?? [],
                 'message' => $msg,
-                'req' => $request->all(),
             ]);
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
@@ -1540,14 +1574,6 @@ class PersiapanOperasiController extends Controller
                 'message' => 'Data Gagal Disimpan ' . $e->getMessage(),
                 'file' =>  $e->getFile(),
                 'line' =>  $e->getLine(),
-                'rinci' => $rinci ?? '',
-                'head' => $head ?? '',
-                'resepKeluar' => $resepKeluar ?? '',
-                'resepH' => $resepH ?? "",
-                'dataDistribusi' => $dataDistribusi ?? [],
-                'getDataDistribusi' => $getDataDistribusi ?? [],
-                'countDist' => $countDist ?? null,
-                'stok' => $stok ?? null,
             ], 410);
         }
     }
@@ -1610,19 +1636,39 @@ class PersiapanOperasiController extends Controller
                 'tgl_retur' => now()
             ]);
 
-            if ($alurNormal && count($resepKeluar)) {
-                $nores = array_unique(array_column($resepKeluar, 'noresep'));
-                Resepkeluarrinci::insert($resepKeluar);
+            if ($alurNormal && count($resepKeluar) > 0) {
+                $validatedResepKeluar = [];
+                foreach ($resepKeluar as $rin) {
+                    $exists = Resepkeluarrinci::where('noresep', $rin['noresep'])
+                        ->where('kdobat', $rin['kdobat'])
+                        ->where('nopenerimaan', $rin['nopenerimaan'])
+                        ->when(!empty($rin['nobatch']), function ($q) use ($rin) {
+                            $q->where('nobatch', $rin['nobatch']);
+                        }, function ($q) {
+                            $q->whereNull('nobatch');
+                        })
+                        ->exists();
 
-                foreach ($nores as $nor) {
-                    $temp = Resepkeluarheder::where('noresep', $nor)->first();
-                    $temp?->update([
-                        'flag' => '3',
-                        'tgl' => date('Y-m-d'),
-                        'tgl_selesai' => now(),
-                        'user' => $kode
-                    ]);
-                    $resepH[] = $temp;
+                    if (!$exists) {
+                        $validatedResepKeluar[] = $rin;
+                    }
+                }
+
+                if (count($validatedResepKeluar) > 0) {
+                    Resepkeluarrinci::insert($validatedResepKeluar);
+                    $nores = array_unique(array_column($validatedResepKeluar, 'noresep'));
+                    foreach ($nores as $nor) {
+                        $temp = Resepkeluarheder::where('noresep', $nor)->first();
+                        if ($temp) {
+                            $temp->update([
+                                'flag' => '3',
+                                'tgl' => date('Y-m-d'),
+                                'tgl_selesai' => now(),
+                                'user' => $kode
+                            ]);
+                            $resepH[] = $temp;
+                        }
+                    }
                 }
             }
 

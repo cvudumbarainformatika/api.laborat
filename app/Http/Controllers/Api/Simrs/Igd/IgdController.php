@@ -113,7 +113,7 @@ class IgdController extends Controller
             })
             ->with(
                 [
-                    'generalcons:norm,ttdpasien,ttdpetugas,hubunganpasien',
+                    'generalcons:norm,ttdpasien,ttdpetugas,hubunganpasien,nama',
                     'planheder' => function ($planheder) {
                         $planheder->with([
                             'planranap' => function ($planranap) {
@@ -225,7 +225,9 @@ class IgdController extends Controller
                 },
                 'historyperkawinan',
                 'historykehamilan',
-                'anamnesekebidanan',
+                'anamnesekebidanan' => function ($pegx) {
+                    $pegx->with('pegawai');
+                },
                 'transradiologi' => function ($transradiologi) {
                     $transradiologi->with('relmasterpemeriksaan')->where('rs26', 'POL014');
                 },

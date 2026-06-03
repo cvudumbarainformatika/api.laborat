@@ -40,30 +40,57 @@ class TindakanOperasiController extends Controller
             } else {
                 $kode = $request->rs1;
             }
-            $result['simpan'] = MasterOperasiSementara::updateOrCreate(
-                [
-                    'rs1' => $kode,
-                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
-                ],
-                [
-                    'rs2' => $request->rs2,
-                    'rs3' => 'OK#',
-                    'rs4' => $request->rs4 ?? '',
-                    'rs5' => $request->rs5 ?? '',
-                    'rs6' => $request->rs6 ?? 0,
-                    'rs7' => $request->rs7 ?? 0,
-                    'rs8' => $request->rs8 ?? 0,
-                    'rs9' => $request->rs9 ?? 0,
-                    'rs10' => $request->rs10 ?? 0,
-                    'rs11' => $request->rs11 ?? 0,
-                    'rs12' => $request->rs12 ?? 0,
-                    'rs13' => $request->rs13 ?? 0,
-                    'ssp' => $request->ssp ?? 0,
-                    'psp' => $request->psp ?? 0,
-                    'asp' => $request->asp ?? 0,
-                    'dasar_perubahan' => $request->dasar_perubahan,
-                ]
-            );
+            $cekData = MasterOperasiSementara::where('rs1', $kode)->whereDate('tgl_mulai_berlaku', '>', today())->first();
+            if (!$cekData) {
+                $result['simpan'] = MasterOperasiSementara::create(
+                    [
+                        'rs1' => $kode,
+                        'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
+                        'rs2' => $request->rs2,
+                        'rs3' => 'OK#',
+                        'rs4' => $request->rs4 ?? '',
+                        'rs5' => $request->rs5 ?? '',
+                        'rs6' => $request->rs6 ?? 0,
+                        'rs7' => $request->rs7 ?? 0,
+                        'rs8' => $request->rs8 ?? 0,
+                        'rs9' => $request->rs9 ?? 0,
+                        'rs10' => $request->rs10 ?? 0,
+                        'rs11' => $request->rs11 ?? 0,
+                        'rs12' => $request->rs12 ?? 0,
+                        'rs13' => $request->rs13 ?? 0,
+                        'rs15' => $request->rs15 ?? 0,
+                        'ssp' => $request->ssp ?? 0,
+                        'psp' => $request->psp ?? 0,
+                        'asp' => $request->asp ?? 0,
+                        'dasar_perubahan' => $request->dasar_perubahan,
+                    ]
+                );
+            } else {
+                $result['simpan'] = $cekData->update(
+                    [
+                        'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
+                        'rs2' => $request->rs2,
+                        'rs3' => 'OK#',
+                        'rs4' => $request->rs4 ?? '',
+                        'rs5' => $request->rs5 ?? '',
+                        'rs6' => $request->rs6 ?? 0,
+                        'rs7' => $request->rs7 ?? 0,
+                        'rs8' => $request->rs8 ?? 0,
+                        'rs9' => $request->rs9 ?? 0,
+                        'rs10' => $request->rs10 ?? 0,
+                        'rs11' => $request->rs11 ?? 0,
+                        'rs12' => $request->rs12 ?? 0,
+                        'rs13' => $request->rs13 ?? 0,
+                        'rs15' => $request->rs15 ?? 0,
+                        'rs14' => '',
+                        'ssp' => $request->ssp ?? 0,
+                        'psp' => $request->psp ?? 0,
+                        'asp' => $request->asp ?? 0,
+                        'dasar_perubahan' => $request->dasar_perubahan,
+                        'tgl_hapus' => null,
+                    ]
+                );
+            }
             $result['message'] = 'Data Berhasil Disimpan';
             DB::commit();
             return new JsonResponse($result);
@@ -80,16 +107,28 @@ class TindakanOperasiController extends Controller
     }
     public function hidden(Request $request)
     {
-        $data = MasterOperasiSementara::where('rs1', $request->kode)->first();
-        $data->tgl_hapus = $request->tgl_mulai_berlaku;
-        $data->rs14 = '1';
-        $data->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
-        $data->save();
-        return new JsonResponse(['message' => 'ok'], 200);
+
+        $cekNull = MasterOperasiSementara::where('idx', $request->idx)->first();
+        if ($request->action == 'delete') {
+            if ($cekNull->tgl_mulai_berlaku == null) return new JsonResponse(['message' => 'Data Ini tidak boleh dihapus'], 410);
+            $data = MasterOperasiSementara::where('idx', $request->idx)->whereNotNull('tgl_mulai_berlaku')->first();
+            if (!$data) return new JsonResponse(['message' => 'Data Tidak ditemukan'], 410);
+            $data->delete();
+            return new JsonResponse(['message' => 'Data Dihapus'], 200);
+        } else {
+            if ($cekNull->tgl_mulai_berlaku == null) return new JsonResponse(['message' => 'Data Ini tidak boleh dijadikan sebagai dasar penghapusan. silahkan edit data terlebih dahulu, kemudian jadikan data tersebut sebagai dasar penghapusan'], 410);
+            $data = MasterOperasiSementara::where('idx', $request->idx)->whereNotNull('tgl_mulai_berlaku')->first();
+            if (!$data) return new JsonResponse(['message' => 'Data Tidak ditemukan'], 410);
+            $data->tgl_hapus = $request->tgl_mulai_berlaku;
+            $data->rs14 = '1';
+            $data->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
+            $data->save();
+            return new JsonResponse(['message' => 'Data menjadi Dasar penghapusan tarif'], 200);
+        }
     }
     public function showAgain(Request $request)
     {
-        $data = MasterOperasiSementara::where('rs1', $request->kode)->first();
+        $data = MasterOperasiSementara::where('idx', $request->idx)->first();
         $data->tgl_hapus = null;
         $data->rs14 = '';
         $data->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
@@ -121,6 +160,7 @@ class TindakanOperasiController extends Controller
                             'rs11' => $baru['rs11'],
                             'rs12' => $baru['rs12'],
                             'rs13' => $baru['rs13'],
+                            'rs15' => $baru['rs15'],
                             'rs14' => $baru['rs14'],
                             'ssp' => $baru['ssp'],
                             'psp' => $baru['psp'],
