@@ -69,7 +69,10 @@ class TindakanController extends Controller
             'tgl_hapus',
             'tgl_mulai_berlaku',
             'dasar_perubahan',
-        )->where('rs2', 'like', '%' . request('nmtindakan') . '%')
+        )->where(function ($q) {
+            $q->where('rs2', 'like', '%' . request('nmtindakan') . '%')
+                ->orwhere('rs1', 'like', '%' . request('nmtindakan') . '%');
+        })
             // ->orderBy('rs2', 'ASC')
             ->paginate(request('per_page'));
         return new JsonResponse($listtindakan);
