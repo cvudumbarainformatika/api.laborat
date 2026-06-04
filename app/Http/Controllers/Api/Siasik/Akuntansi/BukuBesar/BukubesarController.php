@@ -48,9 +48,14 @@ class BukubesarController extends Controller
             $level = request('levelberapa');
             if (isset($levelRinci[$level])) {
                 $length = $levelRinci[$level];
-                $query->whereRaw('LENGTH(TRIM(kodeall3)) = ?', [$length]);
-            } else {
-                Log::warning('Levelberapa tidak valid: ' . $level);
+
+                $query->where(function ($q) use ($level, $length) {
+                    if ($level == '17') {
+                        $q->whereRaw('LENGTH(TRIM(kodeall3)) >= ?', [$length]);
+                    } else {
+                        $q->whereRaw('LENGTH(TRIM(kodeall3)) = ?', [$length]);
+                    }
+                });
             }
         }
 
