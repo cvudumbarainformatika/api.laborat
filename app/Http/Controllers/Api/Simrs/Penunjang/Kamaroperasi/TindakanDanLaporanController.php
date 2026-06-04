@@ -115,7 +115,7 @@ class TindakanDanLaporanController extends Controller
                     'rs20' => $request->total_split,
                 ]
             );
-            if (!$data) throw ('Data gagal disimpan');
+            if (!$data) throw new \Exception('Data gagal disimpan');
             DB::commit();
             $data->load('mastertindakanoperasi', 'laporanoperasi');
             return new JsonResponse([
@@ -140,11 +140,11 @@ class TindakanDanLaporanController extends Controller
         try {
             DB::beginTransaction();
             $data = Kamaroperasi::find($request->id);
-            if (!$data) throw ('Data tidak ditmukan');
+            if (!$data) throw new \Exception('Data tidak ditmukan');
             $data->delete();
             DB::commit();
             return new JsonResponse([
-                'message' => 'Sudah Disimpan',
+                'message' => 'Sudah Dihapus',
                 'data' => $data
             ]);
         } catch (\Throwable $e) {
@@ -193,7 +193,7 @@ class TindakanDanLaporanController extends Controller
 
                 ]
             );
-            if (!$data) throw ('Data gagal disimpan');
+            if (!$data) throw new \Exception('Data gagal disimpan');
             DB::commit();
             // $data->load('mastertindakanoperasi', 'laporanoperasi');
             return new JsonResponse([
@@ -215,7 +215,7 @@ class TindakanDanLaporanController extends Controller
         try {
             DB::beginTransaction();
             $data = LaporanOperasi::find($request->id);
-            if (!$data) throw ('Data tidak ditmukan');
+            if (!$data) throw new \Exception('Data tidak ditmukan');
             $data->delete();
             DB::commit();
             return new JsonResponse([
