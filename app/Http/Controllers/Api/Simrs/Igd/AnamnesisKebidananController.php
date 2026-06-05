@@ -19,7 +19,12 @@ class AnamnesisKebidananController extends Controller
                 'noreg' => $request->noreg,
                 'norm' => $request->norm,
                 'suami_ke' => $request->suamike,
-                'lamapernikahan' => $request->lamapernikahan
+                'lamapernikahan' => $request->lamapernikahan,
+                'namasuami' => $request->namasuami,
+                'pekerjaansuami' => $request->pekerjaansuami,
+                'pendidikansuami' => $request->pendidikansuami,
+                'agamasuami' => $request->agamasuami,
+                'goldarahsuami' => $request->goldarahsuami,
             ]
         );
         return new JsonResponse(['message' => 'Data Sudah Tersimpan...!!!','result' => $simpan], 200);
