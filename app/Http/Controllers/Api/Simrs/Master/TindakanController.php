@@ -69,7 +69,10 @@ class TindakanController extends Controller
             'tgl_hapus',
             'tgl_mulai_berlaku',
             'dasar_perubahan',
-        )->where('rs2', 'like', '%' . request('nmtindakan') . '%')
+        )->where(function ($q) {
+            $q->where('rs2', 'like', '%' . request('nmtindakan') . '%')
+                ->orwhere('rs1', 'like', '%' . request('nmtindakan') . '%');
+        })
             // ->orderBy('rs2', 'ASC')
             ->paginate(request('per_page'));
         return new JsonResponse($listtindakan);
@@ -148,6 +151,7 @@ class TindakanController extends Controller
             if (!$caritindakan) return new JsonResponse(['message' => 'Data Tidak ditemukan'], 410);
             $caritindakan->tgl_hapus = $request->tgl_mulai_berlaku;
             $caritindakan->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
+            $caritindakan->hidden = '1';
             $caritindakan->save();
             return new JsonResponse(['message' => 'Data menjadi Dasar penghapusan tarif'], 200);
         }
@@ -156,6 +160,7 @@ class TindakanController extends Controller
     {
         $caritindakan = MtindakanSementara::where('idx', $request->idx)->first();
         $caritindakan->tgl_hapus = null;
+        $caritindakan->hidden = null;
         $caritindakan->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
         $caritindakan->save();
         return new JsonResponse(['message' => 'ok'], 200);
@@ -220,6 +225,7 @@ class TindakanController extends Controller
                     'jp_hc' => $request->jp_hc,
                     'habispake_hc' => $request->habispake_hc,
                     'tgl_hapus' => null,
+                    'hidden' => null,
                     'rs4' => $request->ruangan ?? '',
                 ]
             );
@@ -260,6 +266,7 @@ class TindakanController extends Controller
                     'jp_hc' => $request->jp_hc,
                     'habispake_hc' => $request->habispake_hc,
                     'tgl_hapus' => null,
+                    'hidden' => null,
                     'rs4' => $request->ruangan,
                 ]
             );
@@ -316,6 +323,7 @@ class TindakanController extends Controller
                             'jp_hc' => $baru['jp_hc'],
                             'habispake_hc' => $baru['habispake_hc'],
                             'rs4' => $baru['rs4'],
+                            'hidden' => $baru['hidden'],
                         ]
                     );
                     if ($data && $baru['tgl_hapus'] != null && !$dataSudahHapus) {
