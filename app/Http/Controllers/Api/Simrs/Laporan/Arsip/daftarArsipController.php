@@ -7,7 +7,7 @@ use App\Models\Simrs\UnitPengelolahArsip\MapHeder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class daftarberkasController extends Controller
+class daftarArsipController extends Controller
 {
     public function getdata()
     {
@@ -15,7 +15,8 @@ class daftarberkasController extends Controller
         $tahunSampai = request('tahunSampai');
         $statusArsip = request('inactive'); // AKTIF / INAKTIF / kosong
 
-        $data = MapHeder::with(['unitpengolah', 'kabinet'])
+        $data = MapHeder::with(['unitpengolah', 'kabinet',
+            'rinciandalammap.dataarsip'])
             ->join('master_kode', 'kelompokMap_H.kodeklasifikasi', '=', 'master_kode.kode')
             ->select([
                 'kelompokMap_H.*',
@@ -31,7 +32,6 @@ class daftarberkasController extends Controller
                     ELSE "INAKTIF"
                 END as status_arsip
             ')
-            ->withCount('rinciandalammap')
             ->whereBetween('kelompokMap_H.tahunMap', [$tahunDari, $tahunSampai])
             ->when($statusArsip, function ($q) use ($statusArsip) {
                 $q->having('status_arsip', '=', $statusArsip);

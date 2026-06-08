@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Simrs\Laporan\Arsip\daftarArsipController;
 use App\Http\Controllers\Api\Simrs\Laporan\Arsip\daftarberkasController;
 use Illuminate\Support\Facades\Route;
 
@@ -9,4 +10,5 @@ Route::group([
     'prefix' => 'simrs/laporan/arsip/daftarberkas'
 ], function () {
     Route::get('/get-data', [daftarberkasController::class, 'getData']);
+    Route::get('/get-datax', [daftarArsipController::class, 'getData']);
 });
