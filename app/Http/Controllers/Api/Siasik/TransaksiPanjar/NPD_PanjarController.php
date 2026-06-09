@@ -14,6 +14,56 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class NPD_PanjarController extends Controller
 {
+    public function listdata(Request $request)
+    {
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->nip;
+        $sa = $pg->kdpegsimrs;
+        $tahunawal=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
+        $tahun=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
+        $data = NpdPanjar_Header::wherebetween('tglnpdpanjar', [$tahunawal.'-01-01', $tahun.'-12-31']);
+        if ($sa !== 'sa' && $sa !== '1619' && $sa !== '38' && $sa !== '39' && $sa !== '81_X' && $sa !== '1215') {
+                $data->where('kodepptk', $pegawai);
+            }
+        $data->when(request('q'), function ($query) {
+                $query->where('nonpdpanjar', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('pptk', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('bidang', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('kegiatanblud', 'LIKE', '%' . request('q') . '%');
+            });
+
+        $npdpanjar = $data->with(['npdpjr_rinci' => function($realisasi) {
+            $realisasi->with([
+                        'tampung' => function ($tampung) {
+                            $tampung->with([
+                                'realisasi_spjpanjar' => function ($q) {
+                                    $q->select(
+                                        'spjpanjar_rinci.iditembelanjanpd',
+                                        'spjpanjar_rinci.jumlahbelanjapanjar'
+                                    );
+                                },
+                                'realisasi' => function ($q) {
+                                    $q->select(
+                                        'npdls_rinci.idserahterima_rinci',
+                                        'npdls_rinci.nominalpembayaran'
+                                    );
+                                },
+                                'contrapost' => function ($q) {
+                                    $q->select(
+                                        'contrapost.idpp',
+                                        'contrapost.nominalcontrapost'
+                                    );
+                                }
+                            ]);
+                        }
+                    ]);
+        }])
+        ->orderBy('id', 'desc')
+        ->get();
+        return new JsonResponse(['status' => 'success', 'message' => 'Data berhasil diambil', 'data' => $npdpanjar]);
+    }
+
     public function save(Request $request)
     {
         $validated = $request->validate([
@@ -163,6 +213,37 @@ class NPD_PanjarController extends Controller
                 'data' => $rinciAll
             ]);
         }
+    }
+
+    public function kunci(Request $request)
+    {
+        try {
+            $time = date('Y-m-d H:i:s');
+            $data = NpdPanjar_Header::where('nonpdpanjar', $request->nonpdpanjar)->first();
+            if (!$data) {
+                return new JsonResponse(['status' => 'error', 'message' => 'Data Tidak Ditemukan'], 404);
+            }
+            if ($data->kunci == '1') {
+                $user = auth()->user()->pegawai_id;
+                $pg = Pegawai::find($user);
+                 if (!$pg || $pg->kdpegsimrs !== 'sa') {
+                    return response()->json(['message' => 'Anda tidak Memiliki Izin Membuka Kunci Data ini, Silahkan Hubungi Admin'], 403);
+                }
+                if (!empty($data->verif || $data->buktiCreateSpm)) {
+                    return response()->json(['message' => 'Data Sudah Terverifikasi'], 400);
+                }
+                $data->kunci = '';
+                $data->save();
+                return new JsonResponse(['message' => 'Kunci Berhasil Dibuka'],200);
+            } else {
+                $data->kunci = '1';
+                // $data->tgl_kunci = $time;
+                $data->save();
+                return new JsonResponse(['message' => 'Data Berhasil Dikunci'],200);
+            }
+        } catch (\Exception $e) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Data Gagal Dikunci: ' . $e->getMessage()], 500);
+        }   
     }
 
 }
