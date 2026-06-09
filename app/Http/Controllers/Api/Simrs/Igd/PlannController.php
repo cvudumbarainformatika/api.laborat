@@ -150,6 +150,11 @@ class PlannController extends Controller
                         'norm' => $request->norm,
                         'id_heder' => $simpan['id'] ?? '',
                         'atas_dasar' => $request->atasdasarpulang,
+                        'nama_penanggungjawab' => $request->nama_penanggungjawab,
+                        'umur_penanggungjawab' => $request->umur_penanggungjawab,
+                        'kelamin_penanggungjawab' => $request->kelamin_penanggungjawab,
+                        'alamat_penanggungjawab' => $request->alamat_penanggungjawab,
+                        'identitas_penanggungjawab' => $request->identitas_penanggungjawab,
                         ]
                     );
                 }
