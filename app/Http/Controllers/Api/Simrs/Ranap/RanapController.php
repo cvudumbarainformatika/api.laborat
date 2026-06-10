@@ -564,7 +564,7 @@ class RanapController extends Controller
                         'rs23',
                         'rs24',
                     )
-                        ->where('rs22', '!=', 'POL014')
+                        ->whereNotIn('rs22', ['POL014', 'PEN001'])
                         ->with(['mastertindakan:rs1,rs2', 'sambungan:rs73_id,ket'])
                         ->orderBy('id', 'DESC');
                 },
