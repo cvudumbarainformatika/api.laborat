@@ -314,6 +314,16 @@ class KamaroperasiController extends Controller
                         ->with(['mastertindakan:rs1,rs2', 'sambungan:rs73_id,ket'])
                         ->orderBy('id', 'DESC');
                 },
+                'laborats' => function ($q) {
+
+                    $q->with('details.pemeriksaanlab')->orderBy('id', 'DESC')
+                        ->where('unit_pengirim', '!=', 'POL014')
+                        ->where('unit_pengirim', '!=', 'PEN005'); // tambahan HD
+                },
+                'laboratold' => function ($t) {
+                    $t->with('pemeriksaanlab')
+                        ->orderBy('id', 'DESC');
+                },
             ])
             ->first();
         return new JsonResponse([
