@@ -242,14 +242,16 @@ class NPK_LSController extends Controller
         ]);
 
         try {
+            $user = auth()->user()->pegawai_id;
+            $pg = Pegawai::find($user);
+            $time = date('Y-m-d H:i:s');
             $header = NpkLS_heder::where('nonpk', $request->nonpk)->first();
             if (!$header) {
                 return response()->json(['message' => 'Data tidak ditemukan'], 404);
             }
             if ($header->kunci == '1') {
                 // Buka kunci → harus superadmin
-                $user = auth()->user()->pegawai_id;
-                $pg = Pegawai::find($user);
+              
 
                 if (!$pg || $pg->kdpegsimrs !== 'sa') {
                     return response()->json(['message' => 'Anda tidak Memiliki Izin Membuka Kunci Data ini, Silahkan Hubungi Admin'], 403);
@@ -265,6 +267,8 @@ class NPK_LSController extends Controller
                 return response()->json(['message' => 'Kunci berhasil dibuka'], 200);
             } else {
                 $header->kunci = '1';
+                $header->tglkunci = $time;
+                $header->userkunci = $pg->kdpegsimrs;
                 $header->save();
 
                 return response()->json(['message' => 'Data berhasil dikunci'], 200);
