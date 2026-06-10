@@ -19,7 +19,7 @@ class Transradiologi extends Model
 
     public function relmasterpemeriksaan()
     {
-        return $this->belongsTo(Mpemeriksaanradiologi::class, 'rs4','rs1');
+        return $this->belongsTo(Mpemeriksaanradiologi::class, 'rs4', 'rs1');
     }
 
     public function getSubtotalAttribute()
@@ -27,7 +27,7 @@ class Transradiologi extends Model
         $harga1 = (int) $this->rs6;
         $harga2 = (int) $this->rs8;
         $jumlah = (int) $this->rs24;
-        $biaya = $harga1+$harga2;
-        return ($biaya*$jumlah);
+        $biaya = $harga1 + $harga2;
+        return ($biaya * $jumlah);
     }
 }
