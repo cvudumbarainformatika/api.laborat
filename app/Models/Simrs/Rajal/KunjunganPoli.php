@@ -65,6 +65,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
 use App\Models\Simrs\Penunjang\Farmasinew\TelaahResep;
 use App\Models\Simrs\Penunjang\Fisioterapi\FisioSambung;
+use App\Models\Simrs\Penunjang\Fisioterapi\FisioSoap;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Hemodialisa\Intradialitik;
 use App\Models\Simrs\Penunjang\Hemodialisa\PengkajianHemodialisa;
@@ -648,5 +649,9 @@ class KunjunganPoli extends Model
     public function planningdokter()
     {
         return $this->hasOne(Planningdokter::class, 'noreg', 'rs1');
+    }
+    public function soap()
+    {
+        return $this->hasMany(FisioSoap::class, 'noreg', 'link_noreg');
     }
 }

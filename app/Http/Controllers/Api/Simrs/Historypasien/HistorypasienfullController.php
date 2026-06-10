@@ -277,6 +277,7 @@ class HistorypasienfullController extends Controller
                 'rs9.rs2 as sistembayar',
                 'memodiagnosadokter.diagnosa as memo',
                 'memodiagnosadokter.diagnosa as memodiagnosa',
+                'sambung.link_noreg'
 
             )
                 ->leftJoin('rs19', 'rs19.rs1', '=', 'rs17.rs8')
@@ -284,6 +285,7 @@ class HistorypasienfullController extends Controller
                 ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
                 ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2')
                 ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+                ->leftjoin('rs201_sambung as sambung', 'sambung.noreg', '=', 'rs17.rs1')
                 ->where('rs17.rs1', $noreg)
                 ->with(
                     [
@@ -311,16 +313,6 @@ class HistorypasienfullController extends Controller
                         'transradiologi:rs1,rs4',
                         'transradiologi.relmasterpemeriksaan:rs1,rs2,rs3,kdmeta',
                         'hasilradiologi',
-                        // 'apotekranap',
-                        // 'apotekranap.masterobat',
-                        // 'apotekranaplalu',
-                        // 'apotekranaplalu.masterobat',
-                        // 'apotekranapracikanheder',
-                        // 'apotekranapracikanheder.apotekranapracikanrinci',
-                        // 'apotekranapracikanheder.apotekranapracikanrinci.masterobat',
-                        // 'apotekranapracikanhederlalu',
-                        // 'apotekranapracikanhederlalu.apotekranapracikanrincilalu',
-                        // 'apotekranapracikanhederlalu.apotekranapracikanrincilalu.masterobat',
                         'apotekrajal',
                         'apotekrajal.masterobat',
                         'apotekrajalpolilalu.masterobat',
@@ -391,6 +383,22 @@ class HistorypasienfullController extends Controller
                             )->whereIn('flag', ['3', '4'])
                                 ->orderBy('tgl_permintaan', 'DESC');
                         },
+                        'soap' => function ($t) {
+                            $t->select('fisio_soap.*')->with([
+                                'petugas:kdpegsimrs,nama,nik,kdgroupnakes',
+                            ]);
+                        },
+
+                        // 'kunjungan_rehab' => function ($t) {
+                        //     $t->select('rs201_sambung.*', 'rs17.rs3 as tgl_kunjungan', 'rs222.rs8 as sep')
+                        //         ->leftJoin('rs17', 'rs17.rs1', '=', 'rs201_sambung.noreg')
+                        //         ->leftJoin('rs222', 'rs222.rs1', '=', 'rs201_sambung.noreg');
+                        //     $t->with([
+                        //         'tindakan' => function ($a) {
+                        //             $a->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs');
+                        //         },
+                        //     ]);
+                        // }
                     ]
                 )->first();
         }
