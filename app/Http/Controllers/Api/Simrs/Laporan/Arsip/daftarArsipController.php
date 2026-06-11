@@ -30,7 +30,11 @@ class daftarArsipController extends Controller
                     WHEN (YEAR(CURDATE()) - kelompokMap_H.tahunMap) < master_kode.retensi
                     THEN "AKTIF"
                     ELSE "INAKTIF"
-                END as status_arsip
+                END as status_arsip,(
+                    kelompokMap_H.tahunMap
+                    + master_kode.retensi
+                    + COALESCE(master_kode.retensi_inaktif,0)
+                ) as akhir_retensi_inaktif
             ')
             ->whereBetween('kelompokMap_H.tahunMap', [$tahunDari, $tahunSampai])
             ->when($statusArsip, function ($q) use ($statusArsip) {
