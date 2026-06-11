@@ -324,6 +324,28 @@ class KamaroperasiController extends Controller
                     $t->with('pemeriksaanlab')
                         ->orderBy('id', 'DESC');
                 },
+                'bankdarah' => function ($q) {
+                    $q->orderBy('id', 'DESC')
+                        ->where('rs11', '=', 'PEN001'); // tambahan OK
+                },
+                'radiologi' => function ($q) {
+                    $q->with([
+                        'rincians' => function ($r) {
+                            $r->leftJoin('rs151', function ($join) {
+                                $join->on('rs48.rs2', '=', 'rs151.rs5')
+                                    ->on('rs48.rs1', '=', 'rs151.rs1')
+                                    ->on('rs48.rs4', '=', 'rs151.kode');
+                            })
+                                ->select('rs48.*', 'rs151.hasil', 'rs151.rs3 as kesimpulan', 'rs151.hasilhtml', 'rs151.kesimpulanhtml', 'rs151.rs4 as pelaksana');
+                        },
+                        'rincians.relmasterpemeriksaan',
+                        'dokter:nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
+                    ])->orderBy('id', 'DESC')
+                        ->where('rs10', '!=', 'PEN001'); // OK IBS saja
+                },
+                'hasilradiologi' => function ($q) {
+                    $q->orderBy('id', 'DESC');
+                },
             ])
             ->first();
         return new JsonResponse([

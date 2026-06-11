@@ -571,8 +571,10 @@ class RanapController extends Controller
                 'laborats' => function ($q) {
 
                     $q->with('details.pemeriksaanlab')->orderBy('id', 'DESC')
-                        ->where('unit_pengirim', '!=', 'POL014')
-                        ->where('unit_pengirim', '!=', 'PEN005'); // tambahan HD
+                        ->whereNotIn('unit_pengirim', ['POL014', 'PEN005', 'PEN001']);
+                    // ->where('unit_pengirim', '!=', 'POL014')
+                    // ->where('unit_pengirim', '!=', 'PEN005'); // tambahan HD
+                    // ->where('unit_pengirim', '!=', 'PEN001'); // tambahan OK IBS
                 },
                 'laboratold' => function ($t) {
                     $t->with('pemeriksaanlab')
@@ -591,8 +593,9 @@ class RanapController extends Controller
                         'rincians.relmasterpemeriksaan',
                         'dokter:nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
                     ])->orderBy('id', 'DESC')
-                        ->where('rs10', '!=', 'POL014')
-                        ->where('rs10', '!=', 'PEN005'); // tambahan HD
+                        ->whereNotIn('rs10', ['POL014', 'PEN005', 'PEN001']);
+                    // ->where('rs10', '!=', 'POL014')
+                    // ->where('rs10', '!=', 'PEN005'); // tambahan HD
                 },
                 'hasilradiologi' => function ($q) {
                     $q->orderBy('id', 'DESC');
@@ -611,8 +614,10 @@ class RanapController extends Controller
                 // },
                 'bankdarah' => function ($q) {
                     $q->orderBy('id', 'DESC')
-                        ->where('rs11', '!=', 'POL014')
-                        ->where('rs11', '!=', 'PEN005'); // tambahan HD
+                        ->whereNotIn('rs11', ['POL014', 'PEN005', 'PEN001']);
+                    // ->where('rs11', '!=', 'POL014')
+                    // ->where('rs11', '!=', 'PEN005') // tambahan HD
+                    // ->where('rs11', '!=', 'PEN001'); // tambahan OK IBS
                 },
                 'apheresis' => function ($q) {
                     $q->orderBy('id', 'DESC');
