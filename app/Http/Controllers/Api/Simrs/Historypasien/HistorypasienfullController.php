@@ -110,66 +110,17 @@ class HistorypasienfullController extends Controller
             'rs17.rs3 as tanggal',
             'rs19.rs2 as ruangan',
             'rs21.rs2 as dpjp',
-            'memodiagnosadokter.diagnosa as memo'
+            'md.diagnosa as memo'
 
         )
             ->join('rs19', 'rs19.rs1', '=', 'rs17.rs8')
             ->join('rs21', 'rs21.rs1', '=', 'rs17.rs9')
-            ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
-            ->where('rs17.rs2', $norm)
-            // ->with(
-            //     [
-            //         'anamnesis',
-            //         'pemeriksaanfisik' => function ($p) {
-            //             $p->with(['gambars', 'detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
-            //                 ->orderBy('id', 'DESC');
-            //         },
-            //         'diagnosa' => function ($a) {
-            //             $a->with(['masterdiagnosa'])
-            //                 ->orderBy('id', 'DESC');
-            //         },
-            //         //    'diagnosa.masterdiagnosa:rs1,rs4',
-            //         'tindakan' => function ($t) {
-            //             $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url', 'sambungan:rs73_id,ket')
-            //                 ->orderBy('id', 'DESC');
-            //         },
-            //         //    'tindakan.mastertindakan:rs1,rs2',
-            //         'laborat' => function ($a) {
-            //             $a->with(['pemeriksaanlab'])
-            //                 ->orderBy('id', 'DESC');
-            //         },
-            //         //    'laborat.pemeriksaanlab:rs1,rs2,rs21,nilainormal,satuan',
-            //         'laborats',
-            //         'transradiologi:rs1,rs4',
-            //         'transradiologi.relmasterpemeriksaan:rs1,rs2,rs3,kdmeta',
-            //         'hasilradiologi',
-            //         // 'apotekranap',
-            //         // 'apotekranap.masterobat',
-            //         // 'apotekranaplalu',
-            //         // 'apotekranaplalu.masterobat',
-            //         // 'apotekranapracikanheder',
-            //         // 'apotekranapracikanheder.apotekranapracikanrinci',
-            //         // 'apotekranapracikanheder.apotekranapracikanrinci.masterobat',
-            //         // 'apotekranapracikanhederlalu',
-            //         // 'apotekranapracikanhederlalu.apotekranapracikanrincilalu',
-            //         // 'apotekranapracikanhederlalu.apotekranapracikanrincilalu.masterobat',
-            //         'apotekrajal',
-            //         'apotekrajal.masterobat',
-            //         'apotekrajalpolilalu.masterobat',
-            //         'apotekracikanrajal',
-            //         'apotekracikanrajal.masterobat',
-            //         'apotekracikanrajallalu',
-            //         'apotekracikanrajallalu.masterobat',
-            //         'dokumenluar' => function ($a) {
-            //             $a->with(['pegawai:id,nama']);
-            //         },
-            //         'kamaroperasi' => function ($kamaroperasi) {
-            //             $kamaroperasi->with(['mastertindakanoperasi']);
-            //         },
-            //         'praanastesi'
-            //     ]
-            // )
-        ;
+            // ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
+            ->leftJoin('memodiagnosadokter as md', function ($join) {
+                $join->on('md.noreg', '=', 'rs17.rs1')
+                    ->on('md.kdruang', '=', 'rs17.rs8');
+            })
+            ->where('rs17.rs2', $norm);
 
 
         $history = Kunjunganranap::select(
@@ -179,65 +130,16 @@ class HistorypasienfullController extends Controller
             'rs23.rs3 as tanggal',
             'rs24.rs2 as ruangan',
             'rs21.rs2 as dpjp',
-            'memodiagnosadokter.diagnosa as memo'
+            'md.diagnosa as memo'
         )
             ->join('rs24', 'rs24.rs1', '=', 'rs23.rs5')
             ->join('rs21', 'rs21.rs1', '=', 'rs23.rs10')
-            ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs23.rs1')
-            ->where('rs23.rs2', $norm)
-            // ->with(
-            //     [
-            //         'anamnesis',
-            //         'pemeriksaanfisik' => function ($p) {
-            //             $p->with(['gambars', 'detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
-            //                 ->orderBy('id', 'DESC');
-            //         },
-            //         'diagnosa' => function ($a) {
-            //             $a->with(['masterdiagnosa'])
-            //                 ->orderBy('id', 'DESC');
-            //         },
-            //         //    'diagnosa.masterdiagnosa:rs1,rs4',
-            //         'tindakan' => function ($t) {
-            //             $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url', 'sambungan:rs73_id,ket')
-            //                 ->orderBy('id', 'DESC');
-            //         },
-            //         //    'tindakan.mastertindakan:rs1,rs2',
-            //         'laborat' => function ($a) {
-            //             $a->with(['pemeriksaanlab'])
-            //                 ->orderBy('id', 'DESC');
-            //         },
-            //         //    'laborat.pemeriksaanlab:rs1,rs2,rs21,nilainormal,satuan',
-            //         'laborats',
-            //         'transradiologi:rs1,rs4',
-            //         'transradiologi.relmasterpemeriksaan:rs1,rs2,rs3,kdmeta',
-            //         'hasilradiologi',
-            //         'apotekranap',
-            //         'apotekranap.masterobat',
-            //         'apotekranaplalu',
-            //         'apotekranaplalu.masterobat',
-            //         'apotekranapracikanheder',
-            //         'apotekranapracikanheder.apotekranapracikanrinci',
-            //         'apotekranapracikanheder.apotekranapracikanrinci.masterobat',
-            //         'apotekranapracikanhederlalu',
-            //         'apotekranapracikanhederlalu.apotekranapracikanrincilalu',
-            //         'apotekranapracikanhederlalu.apotekranapracikanrincilalu.masterobat',
-            //         // 'apotekrajal',
-            //         // 'apotekrajal.masterobat',
-            //         // 'apotekrajalpolilalu.masterobat',
-            //         // 'apotekracikanrajal',
-            //         // 'apotekracikanrajal.masterobat',
-            //         // 'apotekracikanrajallalu',
-            //         // 'apotekracikanrajallalu.masterobat',
-            //         'dokumenluar' => function ($a) {
-            //             $a->with(['pegawai:id,nama']);
-            //         },
-            //         'kamaroperasi' => function ($kamaroperasi) {
-            //             $kamaroperasi->with(['mastertindakanoperasi']);
-            //         },
-            //         'praanastesi'
-            //     ]
-            // )
-        ;
+            // ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs23.rs1')
+            ->leftJoin('memodiagnosadokter as md', function ($join) {
+                $join->on('md.noreg', '=', 'rs23.rs1')
+                    ->whereNull('md.kdruang');
+            })
+            ->where('rs23.rs2', $norm);
 
         $rawQuery = $history->unionAll($historyx);
         // Lanjutkan dengan eager load setelah di-wrap dalam query builder
@@ -245,128 +147,6 @@ class HistorypasienfullController extends Controller
             ->mergeBindings($rawQuery->getQuery()) // penting!
             ->orderBy('tanggal', 'DESC')
             ->get();
-        // // ->orderby('tanggal', 'DESC')
-        // ->get();
-        //->paginate(request('per_page'));
-        // $historyxData = $historyx->get();
-        // $historyData = $history->get();
-
-        // $merged = $historyxData->merge($historyData)->sortByDesc('tanggal')->values();
-        // $rawQuery = $history->unionAll($historyx);
-
-        // $results = DB::table(DB::raw("({$rawQuery->toSql()}) as sub"))
-        //     ->mergeBindings($rawQuery->getQuery())
-        //     ->orderBy('tanggal', 'DESC')
-        //     ->pluck('noreg'); // ambil daftar noreg
-
-        // // Ambil ulang data Eloquent berdasarkan daftar noreg
-        // $kunjunganPoli = KunjunganPoli::whereIn('rs1', $results)->with(
-        //     [
-        //         'anamnesis',
-        //         'pemeriksaanfisik' => function ($p) {
-        //             $p->with(['gambars', 'detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
-        //                 ->orderBy('id', 'DESC');
-        //         },
-        //         'diagnosa' => function ($a) {
-        //             $a->with(['masterdiagnosa'])
-        //                 ->orderBy('id', 'DESC');
-        //         },
-        //         //    'diagnosa.masterdiagnosa:rs1,rs4',
-        //         'tindakan' => function ($t) {
-        //             $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url', 'sambungan:rs73_id,ket')
-        //                 ->orderBy('id', 'DESC');
-        //         },
-        //         //    'tindakan.mastertindakan:rs1,rs2',
-        //         'laborat' => function ($a) {
-        //             $a->with(['pemeriksaanlab'])
-        //                 ->orderBy('id', 'DESC');
-        //         },
-        //         //    'laborat.pemeriksaanlab:rs1,rs2,rs21,nilainormal,satuan',
-        //         'laborats',
-        //         'transradiologi:rs1,rs4',
-        //         'transradiologi.relmasterpemeriksaan:rs1,rs2,rs3,kdmeta',
-        //         'hasilradiologi',
-        //         // 'apotekranap',
-        //         // 'apotekranap.masterobat',
-        //         // 'apotekranaplalu',
-        //         // 'apotekranaplalu.masterobat',
-        //         // 'apotekranapracikanheder',
-        //         // 'apotekranapracikanheder.apotekranapracikanrinci',
-        //         // 'apotekranapracikanheder.apotekranapracikanrinci.masterobat',
-        //         // 'apotekranapracikanhederlalu',
-        //         // 'apotekranapracikanhederlalu.apotekranapracikanrincilalu',
-        //         // 'apotekranapracikanhederlalu.apotekranapracikanrincilalu.masterobat',
-        //         'apotekrajal',
-        //         'apotekrajal.masterobat',
-        //         'apotekrajalpolilalu.masterobat',
-        //         'apotekracikanrajal',
-        //         'apotekracikanrajal.masterobat',
-        //         'apotekracikanrajallalu',
-        //         'apotekracikanrajallalu.masterobat',
-        //         'dokumenluar' => function ($a) {
-        //             $a->with(['pegawai:id,nama']);
-        //         },
-        //         'kamaroperasi' => function ($kamaroperasi) {
-        //             $kamaroperasi->with(['mastertindakanoperasi']);
-        //         },
-        //         'praanastesi'
-        //     ]
-        // )->get();
-        // $kunjunganRanap = Kunjunganranap::whereIn('rs1', $results)->with(
-        //     [
-        //         'anamnesis',
-        //         'pemeriksaanfisik' => function ($p) {
-        //             $p->with(['gambars', 'detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
-        //                 ->orderBy('id', 'DESC');
-        //         },
-        //         'diagnosa' => function ($a) {
-        //             $a->with(['masterdiagnosa'])
-        //                 ->orderBy('id', 'DESC');
-        //         },
-        //         //    'diagnosa.masterdiagnosa:rs1,rs4',
-        //         'tindakan' => function ($t) {
-        //             $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url', 'sambungan:rs73_id,ket')
-        //                 ->orderBy('id', 'DESC');
-        //         },
-        //         //    'tindakan.mastertindakan:rs1,rs2',
-        //         'laborat' => function ($a) {
-        //             $a->with(['pemeriksaanlab'])
-        //                 ->orderBy('id', 'DESC');
-        //         },
-        //         //    'laborat.pemeriksaanlab:rs1,rs2,rs21,nilainormal,satuan',
-        //         'laborats',
-        //         'transradiologi:rs1,rs4',
-        //         'transradiologi.relmasterpemeriksaan:rs1,rs2,rs3,kdmeta',
-        //         'hasilradiologi',
-        //         'apotekranap',
-        //         'apotekranap.masterobat',
-        //         'apotekranaplalu',
-        //         'apotekranaplalu.masterobat',
-        //         'apotekranapracikanheder',
-        //         'apotekranapracikanheder.apotekranapracikanrinci',
-        //         'apotekranapracikanheder.apotekranapracikanrinci.masterobat',
-        //         'apotekranapracikanhederlalu',
-        //         'apotekranapracikanhederlalu.apotekranapracikanrincilalu',
-        //         'apotekranapracikanhederlalu.apotekranapracikanrincilalu.masterobat',
-        //         // 'apotekrajal',
-        //         // 'apotekrajal.masterobat',
-        //         // 'apotekrajalpolilalu.masterobat',
-        //         // 'apotekracikanrajal',
-        //         // 'apotekracikanrajal.masterobat',
-        //         // 'apotekracikanrajallalu',
-        //         // 'apotekracikanrajallalu.masterobat',
-        //         'dokumenluar' => function ($a) {
-        //             $a->with(['pegawai:id,nama']);
-        //         },
-        //         'kamaroperasi' => function ($kamaroperasi) {
-        //             $kamaroperasi->with(['mastertindakanoperasi']);
-        //         },
-        //         'praanastesi'
-        //     ]
-        // )->get();
-
-        // // Gabungkan dan urutkan
-        // $final = $kunjunganPoli->merge($kunjunganRanap)->sortByDesc('tanggal')->values();
 
         $opoo = new JsonResponse(['data' => $final], 200);
         return $opoo;
@@ -440,7 +220,7 @@ class HistorypasienfullController extends Controller
                         'dokumenluar' => function ($a) {
                             $a->with(['pegawai:id,nama']);
                         },
-                        
+
                         'kamaroperasi' => function ($kamaroperasi) {
                             $kamaroperasi->with(['mastertindakanoperasi']);
                         },
@@ -476,7 +256,11 @@ class HistorypasienfullController extends Controller
                 )->first();
         } else {
             $data = KunjunganPoli::select(
-                'rs17.rs2', 'rs17.rs3', 'rs17.rs4', 'rs17.rs9', 'rs17.rs19',
+                'rs17.rs2',
+                'rs17.rs3',
+                'rs17.rs4',
+                'rs17.rs9',
+                'rs17.rs19',
                 'rs17.rs1',
                 'rs17.rs1 as noreg',
                 'rs17.rs2 as norm',
@@ -493,6 +277,7 @@ class HistorypasienfullController extends Controller
                 'rs9.rs2 as sistembayar',
                 'memodiagnosadokter.diagnosa as memo',
                 'memodiagnosadokter.diagnosa as memodiagnosa',
+                'sambung.link_noreg'
 
             )
                 ->leftJoin('rs19', 'rs19.rs1', '=', 'rs17.rs8')
@@ -500,6 +285,7 @@ class HistorypasienfullController extends Controller
                 ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
                 ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2')
                 ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+                ->leftjoin('rs201_sambung as sambung', 'sambung.noreg', '=', 'rs17.rs1')
                 ->where('rs17.rs1', $noreg)
                 ->with(
                     [
@@ -527,16 +313,6 @@ class HistorypasienfullController extends Controller
                         'transradiologi:rs1,rs4',
                         'transradiologi.relmasterpemeriksaan:rs1,rs2,rs3,kdmeta',
                         'hasilradiologi',
-                        // 'apotekranap',
-                        // 'apotekranap.masterobat',
-                        // 'apotekranaplalu',
-                        // 'apotekranaplalu.masterobat',
-                        // 'apotekranapracikanheder',
-                        // 'apotekranapracikanheder.apotekranapracikanrinci',
-                        // 'apotekranapracikanheder.apotekranapracikanrinci.masterobat',
-                        // 'apotekranapracikanhederlalu',
-                        // 'apotekranapracikanhederlalu.apotekranapracikanrincilalu',
-                        // 'apotekranapracikanhederlalu.apotekranapracikanrincilalu.masterobat',
                         'apotekrajal',
                         'apotekrajal.masterobat',
                         'apotekrajalpolilalu.masterobat',
@@ -557,10 +333,13 @@ class HistorypasienfullController extends Controller
                                 'rekomdpjp' => function ($q) {
                                     $q->orderBy('id', 'DESC');
                                 },
-                                'transrujukan.diagnosa:rs1,rs4', 
-                                'listkonsul'=> function ($q) {
-                                    $q->select('listkonsulanpoli.*', DB::raw('pa.rs2 as poliasal'),
-                                        DB::raw('pt.rs2 as politujuan'))
+                                'transrujukan.diagnosa:rs1,rs4',
+                                'listkonsul' => function ($q) {
+                                    $q->select(
+                                        'listkonsulanpoli.*',
+                                        DB::raw('pa.rs2 as poliasal'),
+                                        DB::raw('pt.rs2 as politujuan')
+                                    )
                                         ->leftJoin('rs19 as pa', 'listkonsulanpoli.kdpoli_asal', '=', 'pa.rs1')
                                         ->leftJoin('rs19 as pt', 'listkonsulanpoli.kdpoli_tujuan', '=', 'pt.rs1');
                                 },
@@ -604,6 +383,22 @@ class HistorypasienfullController extends Controller
                             )->whereIn('flag', ['3', '4'])
                                 ->orderBy('tgl_permintaan', 'DESC');
                         },
+                        'soap' => function ($t) {
+                            $t->select('fisio_soap.*')->with([
+                                'petugas:kdpegsimrs,nama,nik,kdgroupnakes',
+                            ]);
+                        },
+
+                        // 'kunjungan_rehab' => function ($t) {
+                        //     $t->select('rs201_sambung.*', 'rs17.rs3 as tgl_kunjungan', 'rs222.rs8 as sep')
+                        //         ->leftJoin('rs17', 'rs17.rs1', '=', 'rs201_sambung.noreg')
+                        //         ->leftJoin('rs222', 'rs222.rs1', '=', 'rs201_sambung.noreg');
+                        //     $t->with([
+                        //         'tindakan' => function ($a) {
+                        //             $a->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs');
+                        //         },
+                        //     ]);
+                        // }
                     ]
                 )->first();
         }

@@ -437,15 +437,15 @@ class PengunjungController extends Controller
 
                 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp',
                 'diagnosa', // ini berhubungan dengan resep
-                // 'newapotekrajal' => function ($q) {
-                //     $q->with([
-                //         'dokter:nama,kdpegsimrs',
-                //         'permintaanresep.mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan',
-                //         'permintaanracikan.mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan',
-                //         'sistembayar'
-                //     ])
-                //         ->orderBy('id', 'DESC');
-                // },
+                'newapotekrajal' => function ($q) {
+                    $q->with([
+                        'dokter:nama,kdpegsimrs',
+                        'permintaanresep.mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan',
+                        'permintaanracikan.mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan',
+                        'sistembayar'
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
                 'transradiologi' => function ($transradiologi) {
                     $transradiologi->with('relmasterpemeriksaan');
                 },
@@ -457,12 +457,13 @@ class PengunjungController extends Controller
                                 $join->on('rs48.rs2', '=', 'rs151.rs5')
                                     ->on('rs48.rs1', '=', 'rs151.rs1')
                                     ->on('rs48.rs4', '=', 'rs151.kode');
-                            })
+                            })->leftJoin('rs47 as master', 'rs48.rs4', '=', 'master.rs1')
                                 ->select(
                                     'rs48.*',
                                     'rs151.hasil',
                                     'rs151.rs3 as kesimpulan',
-                                    'rs151.rs4 as pelaksana'
+                                    'rs151.rs4 as pelaksana',
+                                    'master.rs2 as pemeriksaan'
                                 );
                         },
                         'rincians.relmasterpemeriksaan',

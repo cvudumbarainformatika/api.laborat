@@ -11,6 +11,7 @@ use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Rajal\Memodiagnosadokter;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Mruangranap;
+use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -96,5 +97,10 @@ class PermintaanOperasi extends Model
     public function pra_induksi()
     {
         return $this->belongsTo(AssasmentPraInduksi::class, 'rs2', 'nota');
+    }
+
+    public function tindakan()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 }

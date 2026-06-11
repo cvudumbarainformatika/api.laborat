@@ -287,6 +287,33 @@ class KamaroperasiController extends Controller
                 'tindakanop' => function ($q) {
                     $q->with('mastertindakanoperasi', 'laporanoperasi');
                 },
+                'tindakan' => function ($q) {
+                    $q->select(
+                        'id',
+                        'rs1',
+                        'rs2',
+                        'rs4',
+                        'rs1 as noreg',
+                        'rs2 as nota',
+                        'rs3',
+
+                        'rs4',
+                        'rs5',
+                        'rs6',
+                        'rs7',
+                        'rs8',
+                        'rs9',
+                        'rs13',
+                        'rs14',
+                        'rs20',
+                        'rs22',
+                        'rs23',
+                        'rs24',
+                    )
+                        ->where('rs22', '=', 'PEN001')
+                        ->with(['mastertindakan:rs1,rs2', 'sambungan:rs73_id,ket'])
+                        ->orderBy('id', 'DESC');
+                },
             ])
             ->first();
         return new JsonResponse([
