@@ -108,4 +108,26 @@ class PermintaanOperasi extends Model
     {
         return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
+    public function laborats()
+    {
+        return $this->hasMany(LaboratMeta::class, 'noreg', 'rs1');
+    }
+    public function laboratold()
+    {
+        return $this->hasMany(Laboratpemeriksaan::class, 'rs1', 'rs1');
+    }
+
+    public function bankdarah()
+    {
+        return $this->hasMany(PermintaanBankdarah::class, 'rs1', 'rs1');
+    }
+
+    public function radiologi()
+    {
+        return $this->hasMany(Transpermintaanradiologi::class, 'rs1', 'rs1');
+    }
+    public function hasilradiologi()
+    {
+        return $this->hasMany(PembacaanradiologiController::class, 'rs1', 'rs1');
+    }
 }
