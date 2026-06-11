@@ -22,6 +22,8 @@ class daftarberkasController extends Controller
                 'master_kode.nama as keterangan_kode',
                 'master_kode.kode as kode_master',
                 'master_kode.retensi as retensi',
+                'master_kode.retensi_inaktif as retensi_inaktif',
+                'master_kode.penyelesaian_akhir as penyelesaian_akhir',
             ])
             ->selectRaw('
                 YEAR(CURDATE()) - kelompokMap_H.tahunMap as umur_berkas,
@@ -29,7 +31,11 @@ class daftarberkasController extends Controller
                     WHEN (YEAR(CURDATE()) - kelompokMap_H.tahunMap) < master_kode.retensi
                     THEN "AKTIF"
                     ELSE "INAKTIF"
-                END as status_arsip
+                END as status_arsip,(
+                    kelompokMap_H.tahunMap
+                    + master_kode.retensi
+                    + COALESCE(master_kode.retensi_inaktif,0)
+                ) as akhir_retensi_inaktif
             ')
             ->withCount('rinciandalammap')
             ->whereBetween('kelompokMap_H.tahunMap', [$tahunDari, $tahunSampai])

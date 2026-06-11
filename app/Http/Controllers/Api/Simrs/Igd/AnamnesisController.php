@@ -43,6 +43,14 @@ class AnamnesisController extends Controller
                     // 'keteranganscorenyeri' => $request->keteranganscorenyeri ?? '',
                     'riwayat_pekerjaan_yang_berhubungan_dengan_zat_berbahaya' => $request->riwayatpekerjaan,
                     //    'keteranganscorenyeri' => $request->riwayatpekerjaan ?? '',
+                    'sempoyongan' => $request->sempoyongan,
+                    'penopangx' => $request->penopang,
+                    'gelisah' => $request->gelisah,
+                    'restrain' => $request->restrain,
+                    'restrainlainnya' => $request->restrainlainnya,
+                    'diberitaukankedokterjikaya' => $request->diberitaukankedokterjikaya,
+                    'keterangan' => $request->keterangan,
+                    'hasil_resiko_pasien_jatuh' => $request->hasil_resiko_pasien_jatuh,
                     'user'  => $kdpegsimrs,
                 ]
             );
@@ -220,6 +228,14 @@ class AnamnesisController extends Controller
                         'scorenyeri' => $request->skornyeri ?? 0,
                         'keteranganscorenyeri' => $request->keteranganscorenyeri ?? '',
                         'kdruang' => 'POL014',
+                        'sempoyongan' => $request->sempoyongan,
+                        'penopangx' => $request->penopang,
+                        'gelisah' => $request->gelisah,
+                        'restrain' => $request->restrain,
+                        'restrainlainnya' => $request->restrainlainnya,
+                        'diberitaukankedokterjikaya' => $request->diberitaukankedokterjikaya,
+                        'hasil_resiko_pasien_jatuh' => $request->hasil_resiko_pasien_jatuh,
+                        'keterangan' => $request->keterangan,
                         'user'  => $kdpegsimrs,
                     ]
                 );
