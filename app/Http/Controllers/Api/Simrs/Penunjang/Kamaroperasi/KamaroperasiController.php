@@ -314,8 +314,6 @@ class KamaroperasiController extends Controller
                         ->with(['mastertindakan:rs1,rs2', 'sambungan:rs73_id,ket'])
                         ->orderBy('id', 'DESC');
                 },
-<<<<<<< HEAD
-=======
                 'laborats' => function ($q) {
 
                     $q->with('details.pemeriksaanlab')->orderBy('id', 'DESC')
@@ -348,7 +346,6 @@ class KamaroperasiController extends Controller
                 'hasilradiologi' => function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
->>>>>>> 4d881e546775f6373e165a298de9bafbe05c05c0
             ])
             ->first();
         return new JsonResponse([

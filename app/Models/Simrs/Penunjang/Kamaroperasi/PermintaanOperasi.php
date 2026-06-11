@@ -108,9 +108,6 @@ class PermintaanOperasi extends Model
     {
         return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
-<<<<<<< HEAD
-=======
-
     public function laborats()
     {
         return $this->hasMany(LaboratMeta::class, 'noreg', 'rs1');
@@ -133,5 +130,4 @@ class PermintaanOperasi extends Model
     {
         return $this->hasMany(PembacaanradiologiController::class, 'rs1', 'rs1');
     }
->>>>>>> 4d881e546775f6373e165a298de9bafbe05c05c0
 }
