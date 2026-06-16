@@ -201,7 +201,8 @@ class IgdController extends Controller
                         'rs251.rs7 as jalannafas',
                         'rs251.rs9 as pernapasan',
                         'rs251.rs19 as sirkulasi',
-                        'rs251.rs20 as disability'
+                        'rs251.rs20 as disability',
+                        'rs250.hasil_gda'
                     )->leftjoin('rs251', 'rs250.rs1', 'rs251.rs1')->groupBy('id');
                 },
                 'penilaiananamnesis' => function ($penilaiananamnesis) {
