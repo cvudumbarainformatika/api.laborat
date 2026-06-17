@@ -14,6 +14,8 @@ Route::group([
     Route::get('/coba', [LRAController::class, 'coba']);
     Route::get('/pendapatan', [LRAController::class, 'pendapatan']);
 
+    Route::get('/datalra', [LRAController::class, 'newlra']);
+
 
     Route::get('/getlra', [LRAjurnalController::class, 'get_lra']);
 

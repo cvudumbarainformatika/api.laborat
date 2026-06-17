@@ -151,6 +151,12 @@ class LRAjurnalController extends Controller
                 })
         ->where('t_tampung.pagu', '!=', 0)
         ->where('t_tampung.tgl',  $thn)
+        ->when(request('bidang'),function($x) {
+            $x->where('t_tampung.bidang', request('bidang'));
+        })->when(request('kegiatan'),function($y) {
+            $y->where('t_tampung.bidang', request('bidang'))
+            ->where('t_tampung.kodekegiatanblud', request('kegiatan'));
+        })
         ->groupBy('t_tampung.koderek50')
         ->get();
 
