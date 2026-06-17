@@ -10,6 +10,11 @@ use Illuminate\Http\Request;
 
 class AssasementController extends Controller
 {
+    public function ambil()
+    {
+        $data = AssasemenPraBedah::where('nota', request('nota'))->first();
+        return new JsonResponse($data);
+    }
     // pra pra_bedah
     public function simpan(Request $request)
     {

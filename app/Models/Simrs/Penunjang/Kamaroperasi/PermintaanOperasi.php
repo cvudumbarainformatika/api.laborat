@@ -97,7 +97,7 @@ class PermintaanOperasi extends Model
     }
     public function pra_bedah()
     {
-        return $this->belongsTo(AssasemenPraBedah::class, 'rs2', 'nota');
+        return $this->hasMany(AssasemenPraBedah::class, 'rs1', 'noreg');
     }
     public function pra_induksi()
     {
