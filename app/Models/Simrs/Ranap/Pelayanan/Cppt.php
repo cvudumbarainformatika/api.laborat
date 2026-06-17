@@ -7,12 +7,13 @@ use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanUmum;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\Penilaian;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Cppt extends Model
 {
-   use HasFactory;
+   use HasFactory, LogsActivity;
    protected $connection = 'mysql';
    protected $table = 'cppts';
    protected $guarded = ['id'];

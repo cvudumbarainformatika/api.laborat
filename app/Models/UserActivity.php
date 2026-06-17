@@ -16,11 +16,13 @@ class UserActivity extends Model
         'ip_address',
         'user_agent',
         'source',
+        'noreg',
+        'layanan',
     ];
 
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(\App\Models\Simpeg\Petugas::class, 'user_id', 'id');
     }
 }

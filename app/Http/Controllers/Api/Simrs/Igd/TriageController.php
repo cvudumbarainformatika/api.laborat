@@ -82,7 +82,8 @@ class TriageController extends Controller
                             'gangguanperilaku' => $request->gangguanperilaku,
                             'falsetriage' => $request->falsetriage,
                             'meninggaldiluarrs' => $request->meninggaldiluarrs,
-                            'barulahirmeninggal' => $request->barulahirmeninggal
+                            'barulahirmeninggal' => $request->barulahirmeninggal,
+                            'hasil_gda' => $request->hasil_gda
                         ]
                     );
 
@@ -151,6 +152,7 @@ class TriageController extends Controller
                         'kategoritriage' => $simpan['rs16'],
                         'hasilprimarusurve' => $simpan['hasilprimarusurve'],
                         'hasilsecondsurve' => $simpan['hasilsecondsurve'],
+                        'hasil_gda' => $simpan['hasil_gda'],
 
                         'gangguanperilaku' => $simpan['gangguanperilaku'],
                         'falsetriage' => $simpan['falsetriage'] === false ? '0' : '1',
@@ -248,6 +250,7 @@ class TriageController extends Controller
                         'falsetriage' => $request->falsetriage,
                         'meninggaldiluarrs' => $request->meninggaldiluarrs,
                         'barulahirmeninggal' => $request->barulahirmeninggal,
+                        'hasil_gda' => $request->hasil_gda
                     ]
                 );
 
@@ -316,6 +319,7 @@ class TriageController extends Controller
                     'kategoritriage' => $simpan['rs16'],
                     'hasilprimarusurve' => $simpan['hasilprimarusurve'],
                     'hasilsecondsurve' => $simpan['hasilsecondsurve'],
+                    'hasil_gda' => $simpan['hasil_gda'],
 
                     'gangguanperilaku' => $simpan['gangguanperilaku'],
                     'falsetriage' => $simpan['falsetriage'] === false ? '0' : '1',
@@ -396,7 +400,7 @@ class TriageController extends Controller
             'rs250.sistole',
             'rs250.diastole',
             'rs250.kesadarans as kesadaran','rs250.scorediastole','rs250.scoresistole','rs250.scorekesadaran','rs250.scorelochea','rs250.scorenadi','rs250.scorenyeri',
-            'rs250.scorepernapasanx','rs250.scoreproteinurin','rs250.scorespo2','rs250.scoresuhu','rs250.totalscore','rs250.rs16 as kategoritriage','rs250.hasilprimarusurve',
+            'rs250.scorepernapasanx','rs250.scoreproteinurin','rs250.scorespo2','rs250.scoresuhu','rs250.totalscore','rs250.rs16 as kategoritriage','rs250.hasilprimarusurve', 'rs250.hasil_gda',
             'rs250.hasilsecondsurve','rs250.meninggaldiluarrs','rs250.barulahirmeninggal',
             'rs251.rs14 as eye',
             'rs251.rs15 as verbal',
