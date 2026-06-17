@@ -30,6 +30,8 @@ trait LogsActivity
         try {
             $changes = self::getModelChanges($event, $model);
             $source = self::getActionSource();
+            $noreg = self::getNoreg($model);
+            $layanan = self::getLayanan($model);
 
             UserActivity::create([
                 'user_id'     => auth()->user()->pegawai_id ?? null,
@@ -38,6 +40,8 @@ trait LogsActivity
                 'ip_address'  => request()?->ip(),
                 'user_agent'  => request()?->header('User-Agent'),
                 'source'      => $source ?? null,
+                'noreg'       => $noreg,
+                'layanan'     => $layanan,
             ]);
         } catch (\Throwable $e) {
             report($e); // Use Laravel's error reporting
@@ -100,32 +104,22 @@ trait LogsActivity
             ? $caller['class'] . '@' . ($caller['function'] ?? '') . ' (line ' . ($caller['line'] ?? '-') . ')'
             : str_replace(base_path() . '/', '', $caller['file']) . ' (line ' . ($caller['line'] ?? '-') . ')';
     }
-}
-    //         if ($event === 'created') {
-    //             $after = $model->getAttributes();
-    //         } elseif ($event === 'updated') {
-    //             $before = array_intersect_key($model->getOriginal(), $model->getChanges());
-    //             $after  = $model->getChanges();
-    //         } elseif ($event === 'deleted') {
-    //             $before = $model->getOriginal();
-    //         }
 
-    //         UserActivity::create([
-    //             'user_id'     => Auth::id(),
-    //             'action'      => class_basename($model) . ' ' . $event,
-    //             'description' => json_encode([
-    //                 'before' => $before,
-    //                 'after'  => $after,
-    //             ], JSON_UNESCAPED_UNICODE),
-    //             'ip_address'  => request()?->ip(),
-    //             'user_agent'  => request()?->header('User-Agent'),
-    //         ]);
-    //     } catch (\Throwable $e) {
-    //         Log::warning('Failed to log user activity', [
-    //             'event' => $event,
-    //             'model' => class_basename($model),
-    //             'message' => $e->getMessage(),
-    //         ]);
-    //     }
-    // }
-// }
+    protected static function getNoreg(Model $model): ?string
+    {
+        return $model->noreg 
+            ?? $model->getAttribute('noreg') 
+            ?? $model->getOriginal('noreg') 
+            ?? $model->rs1
+            ?? $model->getAttribute('rs1')
+            ?? $model->getOriginal('rs1')
+            ?? request('noreg')
+            ?? request('rs1')
+            ?? null;
+    }
+
+    protected static function getLayanan(Model $model): ?string
+    {
+        return class_basename($model);
+    }
+}

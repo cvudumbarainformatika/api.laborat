@@ -9,4 +9,5 @@ Route::group([
     'prefix' => 'simrs/farmasinew/activity'
 ], function () {
     Route::get('/list', [LogActivityController::class, 'list']);
+    Route::get('/by-noreg', [LogActivityController::class, 'byNoreg']);
 });

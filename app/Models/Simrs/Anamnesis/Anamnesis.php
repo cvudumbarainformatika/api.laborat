@@ -4,12 +4,13 @@ namespace App\Models\Simrs\Anamnesis;
 
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Simpeg\Petugas;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Anamnesis extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $connection = 'mysql';
     protected $table = 'rs209';
     protected $guarded = ['id'];
