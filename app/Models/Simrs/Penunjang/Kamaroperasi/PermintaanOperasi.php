@@ -97,7 +97,7 @@ class PermintaanOperasi extends Model
     }
     public function pra_bedah()
     {
-        return $this->hasMany(AssasemenPraBedah::class, 'rs1', 'noreg');
+        return $this->hasMany(AssasemenPraBedah::class, 'noreg', 'rs1');
     }
     public function pra_induksi()
     {
