@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Kamaroperasi;
 
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Laporan\Operasi\PermintaanOperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\AssasemenPraBedah;
@@ -33,6 +34,9 @@ class AssasementController extends Controller
                 'norm' => 'required',
             ]
         );
+        $inputData = $request->except(['_token', '_method']);
+        $user = FormatingHelper::session_user();
+        $inputData['user_input'] = $user['kodesimrs'];
 
         $data = AssasemenPraBedah::updateOrCreate(
             [
@@ -40,13 +44,13 @@ class AssasementController extends Controller
                 'nota' => $request->nota,
                 'norm' => $request->norm,
             ],
-            $request->all()
+            $inputData
         );
 
         return new JsonResponse([
             'message' => 'Data Berhasil Disimpan',
             'data' => $data,
-            'req' => $request->all()
+            // 'req' => $request->all()
         ]);
     }
     public function simpanPraInduksi(Request $request)
