@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Kamaroperasi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Laporan\Operasi\PermintaanOperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\AssasemenPraBedah;
 use App\Models\Simrs\Penunjang\Kamaroperasi\AssasmentPraInduksi;
 use Illuminate\Http\JsonResponse;
@@ -10,6 +11,13 @@ use Illuminate\Http\Request;
 
 class AssasementController extends Controller
 {
+    public function getnota()
+    {
+        $nota = PermintaanOperasi::select('rs2 as nota')->where('rs1', request('noreg'))
+            ->where('rs10', request('ruang'))
+            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+        return new JsonResponse($nota);
+    }
     public function ambil()
     {
         $data = AssasemenPraBedah::where('nota', request('nota'))->first();
