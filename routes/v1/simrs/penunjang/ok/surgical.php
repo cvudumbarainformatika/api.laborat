@@ -8,6 +8,10 @@ Route::group([
   // 'middleware' => 'jwt.verify',
   'prefix' => 'simrs/penunjang/surgical'
 ], function () {
+  Route::get('/get-sign-in', [SurgicalSafetyController::class, 'getNakes']);
+  Route::get('/get-time-out', [SurgicalSafetyController::class, 'getNakes']);
+  Route::get('/get-sign-out', [SurgicalSafetyController::class, 'getNakes']);
+
   Route::get('/get-nakes', [SurgicalSafetyController::class, 'getNakes']);
   Route::post('/simpan', [SurgicalSafetyController::class, 'store']);
   // implant

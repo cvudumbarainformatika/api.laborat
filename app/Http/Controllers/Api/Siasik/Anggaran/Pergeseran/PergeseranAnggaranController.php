@@ -338,8 +338,11 @@ class PergeseranAnggaranController extends Controller
     {
         $rkaawal = Penyesuaian_Prioritas_Header::where('penyesesuaianperioritas_heder.notrans', request('notrans'))
             ->with(['rinciantampung' => function($query) {
-                $query->join('akun50_2024', 'akun50_2024.kodeall2', '=', 't_tampung.koderek50')
-                    ->select(
+                $query->leftJoin('akun50_2024', function ($join) {
+                        $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })->select(
                         't_tampung.idpp',
                         't_tampung.notrans',
                         't_tampung.usulan',
@@ -362,9 +365,36 @@ class PergeseranAnggaranController extends Controller
                         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 5) LIMIT 1) as uraian5'),
                         'akun50_2024.uraian as uraian6'
                     );
+                // ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 't_tampung.koderek50')
+                //     ->select(
+                //         't_tampung.idpp',
+                //         't_tampung.notrans',
+                //         't_tampung.usulan',
+                //         't_tampung.koderek108',
+                //         't_tampung.uraian108',
+                //         't_tampung.volume',
+                //         't_tampung.harga',
+                //         't_tampung.pagu as total',
+                //         't_tampung.satuan',
+                //         DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
+                //         DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
+                //         DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+                //         DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
+                //         DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'),
+                //         'akun50_2024.kodeall3 as kode6',
+                //         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 1) LIMIT 1) as uraian1'),
+                //         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 2) LIMIT 1) as uraian2'),
+                //         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 3) LIMIT 1) as uraian3'),
+                //         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 4) LIMIT 1) as uraian4'),
+                //         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 5) LIMIT 1) as uraian5'),
+                //         'akun50_2024.uraian as uraian6'
+                //     );
             }, 'rincianpergeseran' => function($query) {
-                $query->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'perubahanrincianbelanja.koderek50')
-                    ->select(
+                $query->leftJoin('akun50_2024', function ($join) {
+                        $join->on('perubahanrincianbelanja.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('perubahanrincianbelanja.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })->select(
                         'perubahanrincianbelanja.id',
                         'perubahanrincianbelanja.idpp',
                         'perubahanrincianbelanja.notrans',
@@ -389,6 +419,32 @@ class PergeseranAnggaranController extends Controller
                         'akun50_2024.uraian as uraian6'
                     )
                     ->havingRaw('perubahanrincianbelanja.id = (SELECT MAX(id) FROM perubahanrincianbelanja prb2 WHERE prb2.idpp = perubahanrincianbelanja.idpp)');
+                // ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'perubahanrincianbelanja.koderek50')
+                //     ->select(
+                //         'perubahanrincianbelanja.id',
+                //         'perubahanrincianbelanja.idpp',
+                //         'perubahanrincianbelanja.notrans',
+                //         'perubahanrincianbelanja.usulan',
+                //         'perubahanrincianbelanja.koderek108',
+                //         'perubahanrincianbelanja.uraian108',
+                //         'perubahanrincianbelanja.satuan',
+                //         'perubahanrincianbelanja.volumebaru',
+                //         'perubahanrincianbelanja.hargabaru',
+                //         'perubahanrincianbelanja.totalbaru',
+                //         DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
+                //         DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
+                //         DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+                //         DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
+                //         DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'),
+                //         'akun50_2024.kodeall3 as kode6',
+                //         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(perubahanrincianbelanja.koderek50, ".", 1) LIMIT 1) as uraian1'),
+                //         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(perubahanrincianbelanja.koderek50, ".", 2) LIMIT 1) as uraian2'),
+                //         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(perubahanrincianbelanja.koderek50, ".", 3) LIMIT 1) as uraian3'),
+                //         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(perubahanrincianbelanja.koderek50, ".", 4) LIMIT 1) as uraian4'),
+                //         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(perubahanrincianbelanja.koderek50, ".", 5) LIMIT 1) as uraian5'),
+                //         'akun50_2024.uraian as uraian6'
+                //     )
+                //     ->havingRaw('perubahanrincianbelanja.id = (SELECT MAX(id) FROM perubahanrincianbelanja prb2 WHERE prb2.idpp = perubahanrincianbelanja.idpp)');
             }])
             ->get();
 
@@ -495,7 +551,13 @@ class PergeseranAnggaranController extends Controller
 
         $datapak = Perubahan_pak_header::where('usulanHonor_h_pak.notrans', request('notrans'))
             ->with(['rincipak' => function($query){
-                $query->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'usulanHonor_r_pak.koderek50')
+                $query->leftJoin('akun50_2024', function ($join) {
+                        $join->on('usulanHonor_r_pak.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('usulanHonor_r_pak.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
+                
+                // ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'usulanHonor_r_pak.koderek50')
                     ->select(
                         'usulanHonor_r_pak.idpp',
                         'usulanHonor_r_pak.notrans',
@@ -520,7 +582,12 @@ class PergeseranAnggaranController extends Controller
                         'akun50_2024.uraian as uraian6'
                     );
             }, 'pergeseranpak' => function($query) {
-                $query->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'perubahanrincianbelanja.koderek50')
+                $query->leftJoin('akun50_2024', function ($join) {
+                        $join->on('perubahanrincianbelanja.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('perubahanrincianbelanja.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
+                ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'perubahanrincianbelanja.koderek50')
                     ->select(
                         'perubahanrincianbelanja.id',
                         'perubahanrincianbelanja.idpp',
@@ -552,167 +619,167 @@ class PergeseranAnggaranController extends Controller
         // Menggabungkan rincian dan rincianpergeseran ke hasilpergeseran
        
 
-    // Membuat objek baru perubahanpak berdasarkan rincipak dan hasilpergeseran
-    $finalData = collect($combinedData)->map(function ($item) use ($datapak) {
-       
-        $rincianData = collect($item['hasilpergeseran'])->keyBy('idpp')->all();
+        // Membuat objek baru perubahanpak berdasarkan rincipak dan hasilpergeseran
+        $finalData = collect($combinedData)->map(function ($item) use ($datapak) {
+        
+            $rincianData = collect($item['hasilpergeseran'])->keyBy('idpp')->all();
 
-    // --- Data rincipak
-    $rincipakData = $datapak->isNotEmpty() ? $datapak->flatMap(function ($pakItem) {
-        return $pakItem->rincipak->map(function ($rincipak) {
-            $data = $rincipak->toArray();
-            $data['idpp'] = (string) $rincipak->idpp;
-            return $data;
-        });
-    })->keyBy('idpp')->all() : [];
+        // --- Data rincipak
+        $rincipakData = $datapak->isNotEmpty() ? $datapak->flatMap(function ($pakItem) {
+            return $pakItem->rincipak->map(function ($rincipak) {
+                $data = $rincipak->toArray();
+                $data['idpp'] = (string) $rincipak->idpp;
+                return $data;
+            });
+        })->keyBy('idpp')->all() : [];
 
-    // --- Data pergeseranpak (RELASI BARU)
-    $pergeseranPakData = $datapak->isNotEmpty() ? $datapak->flatMap(function ($pakItem) {
-        return $pakItem->pergeseranpak->map(function ($pgs) {
-            $data = $pgs->toArray();
-            $data['idpp'] = (string) $pgs->idpp;
-            return $data;
-        });
-    })->keyBy('idpp')->all() : [];
+        // --- Data pergeseranpak (RELASI BARU)
+        $pergeseranPakData = $datapak->isNotEmpty() ? $datapak->flatMap(function ($pakItem) {
+            return $pakItem->pergeseranpak->map(function ($pgs) {
+                $data = $pgs->toArray();
+                $data['idpp'] = (string) $pgs->idpp;
+                return $data;
+            });
+        })->keyBy('idpp')->all() : [];
 
 
-    $perubahanpak = [];
+        $perubahanpak = [];
 
-    foreach ($rincianData as $idpp => $rincian) {
+        foreach ($rincianData as $idpp => $rincian) {
 
-        $rincipak  = $rincipakData[$idpp] ?? null;
-        $pergespak = $pergeseranPakData[$idpp] ?? null;
-
-        $perubahanpak[] = [
-            'idpp' => $idpp,
-            'usulan' => $rincian['usulan'] ?? '',
-
-            'koderek108' => $rincian['koderek108'] ?? '',
-            'uraian108' => $rincian['uraian108'] ?? '',
-
-            // nilai dasar RKA/hasilpergeseran
-            'volume' => $rincian['volumebaru'] ?? 0,
-            'harga'  => $rincian['hargabaru'] ?? 0,
-            'total'  => $rincian['totalbaru'] ?? 0,
-            'satuan' => $rincian['satuan'] ?? '',
-
-            // NILAI HASIL PERUBAHAN PAK (PRIORITAS: pergeseranpak → rincipak)
-            'volumebaru' => $pergespak['volumebaru'] ?? $rincipak['volume'] ?? 0,
-            'hargabaru'  => $pergespak['hargabaru']  ?? $rincipak['harga']  ?? 0,
-            'totalbaru'  => $pergespak['totalbaru']  ?? $rincipak['total']  ?? 0,
-
-            // mapping kode akun
-            'kode1' => $rincian['kode1'] ?? '',
-            'kode2' => $rincian['kode2'] ?? '',
-            'kode3' => $rincian['kode3'] ?? '',
-            'kode4' => $rincian['kode4'] ?? '',
-            'kode5' => $rincian['kode5'] ?? '',
-            'kode6' => $rincian['kode6'] ?? '',
-            'uraian1' => $rincian['uraian1'] ?? '',
-            'uraian2' => $rincian['uraian2'] ?? '',
-            'uraian3' => $rincian['uraian3'] ?? '',
-            'uraian4' => $rincian['uraian4'] ?? '',
-            'uraian5' => $rincian['uraian5'] ?? '',
-            'uraian6' => $rincian['uraian6'] ?? '',
-        ];
-    }
-
-    // Tambahkan rincipak yang belum ada di rincianData
-    foreach ($rincipakData as $idpp => $rincipak) {
-        if (!isset($rincianData[$idpp])) {
-
+            $rincipak  = $rincipakData[$idpp] ?? null;
             $pergespak = $pergeseranPakData[$idpp] ?? null;
 
             $perubahanpak[] = [
                 'idpp' => $idpp,
-                'usulan' => $rincipak['usulan'] ?? '',
-                'koderek108' => $rincipak['koderek108'] ?? '',
-                'uraian108' => $rincipak['uraian108'] ?? '',
+                'usulan' => $rincian['usulan'] ?? '',
 
-                'volume' => 0,
-                'harga'  => 0,
-                'total'  => 0,
-                'satuan' => $rincipak['satuan'] ?? '',
+                'koderek108' => $rincian['koderek108'] ?? '',
+                'uraian108' => $rincian['uraian108'] ?? '',
 
+                // nilai dasar RKA/hasilpergeseran
+                'volume' => $rincian['volumebaru'] ?? 0,
+                'harga'  => $rincian['hargabaru'] ?? 0,
+                'total'  => $rincian['totalbaru'] ?? 0,
+                'satuan' => $rincian['satuan'] ?? '',
+
+                // NILAI HASIL PERUBAHAN PAK (PRIORITAS: pergeseranpak → rincipak)
                 'volumebaru' => $pergespak['volumebaru'] ?? $rincipak['volume'] ?? 0,
                 'hargabaru'  => $pergespak['hargabaru']  ?? $rincipak['harga']  ?? 0,
                 'totalbaru'  => $pergespak['totalbaru']  ?? $rincipak['total']  ?? 0,
 
-                'kode1' => $rincipak['kode1'] ?? '',
-                'kode2' => $rincipak['kode2'] ?? '',
-                'kode3' => $rincipak['kode3'] ?? '',
-                'kode4' => $rincipak['kode4'] ?? '',
-                'kode5' => $rincipak['kode5'] ?? '',
-                'kode6' => $rincipak['kode6'] ?? '',
-                'uraian1' => $rincipak['uraian1'] ?? '',
-                'uraian2' => $rincipak['uraian2'] ?? '',
-                'uraian3' => $rincipak['uraian3'] ?? '',
-                'uraian4' => $rincipak['uraian4'] ?? '',
-                'uraian5' => $rincipak['uraian5'] ?? '',
-                'uraian6' => $rincipak['uraian6'] ?? '',
+                // mapping kode akun
+                'kode1' => $rincian['kode1'] ?? '',
+                'kode2' => $rincian['kode2'] ?? '',
+                'kode3' => $rincian['kode3'] ?? '',
+                'kode4' => $rincian['kode4'] ?? '',
+                'kode5' => $rincian['kode5'] ?? '',
+                'kode6' => $rincian['kode6'] ?? '',
+                'uraian1' => $rincian['uraian1'] ?? '',
+                'uraian2' => $rincian['uraian2'] ?? '',
+                'uraian3' => $rincian['uraian3'] ?? '',
+                'uraian4' => $rincian['uraian4'] ?? '',
+                'uraian5' => $rincian['uraian5'] ?? '',
+                'uraian6' => $rincian['uraian6'] ?? '',
             ];
         }
-    }
 
-    // Tambahkan pergeseranpak yang tidak ada di rincipak dan rincianData
-    foreach ($pergeseranPakData as $idpp => $pergespak) {
-        if (!isset($rincipakData[$idpp]) && !isset($rincianData[$idpp])) {
+        // Tambahkan rincipak yang belum ada di rincianData
+        foreach ($rincipakData as $idpp => $rincipak) {
+            if (!isset($rincianData[$idpp])) {
 
-            $perubahanpak[] = [
-                'idpp' => $idpp,
-                'usulan' => $pergespak['usulan'] ?? '',
-                'koderek108' => $pergespak['koderek108'] ?? '',
-                'uraian108' => $pergespak['uraian108'] ?? '',
+                $pergespak = $pergeseranPakData[$idpp] ?? null;
 
-                'volume' => 0,
-                'harga'  => 0,
-                'total'  => 0,
-                'satuan' => $pergespak['satuan'] ?? '',
+                $perubahanpak[] = [
+                    'idpp' => $idpp,
+                    'usulan' => $rincipak['usulan'] ?? '',
+                    'koderek108' => $rincipak['koderek108'] ?? '',
+                    'uraian108' => $rincipak['uraian108'] ?? '',
 
-                'volumebaru' => $pergespak['volumebaru'] ?? 0,
-                'hargabaru'  => $pergespak['hargabaru']  ?? 0,
-                'totalbaru'  => $pergespak['totalbaru']  ?? 0,
+                    'volume' => 0,
+                    'harga'  => 0,
+                    'total'  => 0,
+                    'satuan' => $rincipak['satuan'] ?? '',
 
-                'kode1' => $pergespak['kode1'] ?? '',
-                'kode2' => $pergespak['kode2'] ?? '',
-                'kode3' => $pergespak['kode3'] ?? '',
-                'kode4' => $pergespak['kode4'] ?? '',
-                'kode5' => $pergespak['kode5'] ?? '',
-                'kode6' => $pergespak['kode6'] ?? '',
-                'uraian1' => $pergespak['uraian1'] ?? '',
-                'uraian2' => $pergespak['uraian2'] ?? '',
-                'uraian3' => $pergespak['uraian3'] ?? '',
-                'uraian4' => $pergespak['uraian4'] ?? '',
-                'uraian5' => $pergespak['uraian5'] ?? '',
-                'uraian6' => $pergespak['uraian6'] ?? '',
-            ];
+                    'volumebaru' => $pergespak['volumebaru'] ?? $rincipak['volume'] ?? 0,
+                    'hargabaru'  => $pergespak['hargabaru']  ?? $rincipak['harga']  ?? 0,
+                    'totalbaru'  => $pergespak['totalbaru']  ?? $rincipak['total']  ?? 0,
+
+                    'kode1' => $rincipak['kode1'] ?? '',
+                    'kode2' => $rincipak['kode2'] ?? '',
+                    'kode3' => $rincipak['kode3'] ?? '',
+                    'kode4' => $rincipak['kode4'] ?? '',
+                    'kode5' => $rincipak['kode5'] ?? '',
+                    'kode6' => $rincipak['kode6'] ?? '',
+                    'uraian1' => $rincipak['uraian1'] ?? '',
+                    'uraian2' => $rincipak['uraian2'] ?? '',
+                    'uraian3' => $rincipak['uraian3'] ?? '',
+                    'uraian4' => $rincipak['uraian4'] ?? '',
+                    'uraian5' => $rincipak['uraian5'] ?? '',
+                    'uraian6' => $rincipak['uraian6'] ?? '',
+                ];
+            }
         }
-    }
-        
 
-        return [
-            'id' => $item['id'],
-            'notrans' => $item['notrans'],
-            'kodepptk' => $item['kodepptk'],
-            'pptk' => $item['pptk'],
-            'kodebidang' => $item['kodebidang'],
-            'namabidang' => $item['namabidang'],
-            'kodekegiatan' => $item['kodekegiatan'],
-            'kegiatan' => $item['kegiatan'],
-            'capaianprogram' => $item['capaianprogram'],
-            'masukan' => $item['masukan'],
-            'keluaran' => $item['keluaran'],
-            'hasil' => $item['hasil'],
-            'targetcapaian' => $item['targetcapaian'],
-            'targetkeluaran' => $item['targetkeluaran'],
-            'targethasil' => $item['targethasil'],
-            'hasilpergeseran' => $item['hasilpergeseran'],
-            'perubahanpak' => $perubahanpak,
+        // Tambahkan pergeseranpak yang tidak ada di rincipak dan rincianData
+        foreach ($pergeseranPakData as $idpp => $pergespak) {
+            if (!isset($rincipakData[$idpp]) && !isset($rincianData[$idpp])) {
+
+                $perubahanpak[] = [
+                    'idpp' => $idpp,
+                    'usulan' => $pergespak['usulan'] ?? '',
+                    'koderek108' => $pergespak['koderek108'] ?? '',
+                    'uraian108' => $pergespak['uraian108'] ?? '',
+
+                    'volume' => 0,
+                    'harga'  => 0,
+                    'total'  => 0,
+                    'satuan' => $pergespak['satuan'] ?? '',
+
+                    'volumebaru' => $pergespak['volumebaru'] ?? 0,
+                    'hargabaru'  => $pergespak['hargabaru']  ?? 0,
+                    'totalbaru'  => $pergespak['totalbaru']  ?? 0,
+
+                    'kode1' => $pergespak['kode1'] ?? '',
+                    'kode2' => $pergespak['kode2'] ?? '',
+                    'kode3' => $pergespak['kode3'] ?? '',
+                    'kode4' => $pergespak['kode4'] ?? '',
+                    'kode5' => $pergespak['kode5'] ?? '',
+                    'kode6' => $pergespak['kode6'] ?? '',
+                    'uraian1' => $pergespak['uraian1'] ?? '',
+                    'uraian2' => $pergespak['uraian2'] ?? '',
+                    'uraian3' => $pergespak['uraian3'] ?? '',
+                    'uraian4' => $pergespak['uraian4'] ?? '',
+                    'uraian5' => $pergespak['uraian5'] ?? '',
+                    'uraian6' => $pergespak['uraian6'] ?? '',
+                ];
+            }
+        }
             
-        ];
-    })->all();
 
-        return new JsonResponse($finalData);
+            return [
+                'id' => $item['id'],
+                'notrans' => $item['notrans'],
+                'kodepptk' => $item['kodepptk'],
+                'pptk' => $item['pptk'],
+                'kodebidang' => $item['kodebidang'],
+                'namabidang' => $item['namabidang'],
+                'kodekegiatan' => $item['kodekegiatan'],
+                'kegiatan' => $item['kegiatan'],
+                'capaianprogram' => $item['capaianprogram'],
+                'masukan' => $item['masukan'],
+                'keluaran' => $item['keluaran'],
+                'hasil' => $item['hasil'],
+                'targetcapaian' => $item['targetcapaian'],
+                'targetkeluaran' => $item['targetkeluaran'],
+                'targethasil' => $item['targethasil'],
+                'hasilpergeseran' => $item['hasilpergeseran'],
+                'perubahanpak' => $perubahanpak,
+                
+            ];
+        })->all();
+
+            return new JsonResponse($finalData);
     }
     
 }

@@ -56,7 +56,11 @@ class LapOperasionalController extends Controller
                         WHERE kodeall3 = SUBSTRING_INDEX(CONCAT('7', SUBSTRING(t_tampung_pendapatan.koderekeningblud, 2)), '.', 5) 
                         LIMIT 1) as uraian5")
                 )
-        ->join('akun50_2024', 'akun50_2024.kodeall3', '=', DB::raw("CONCAT('7', SUBSTRING(t_tampung_pendapatan.koderekeningblud, 2))"))
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', '=', DB::raw("CONCAT('7', SUBSTRING(t_tampung_pendapatan.koderekeningblud, 2))"))
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on(DB::raw("CONCAT('7', SUBSTRING(t_tampung_pendapatan.koderekeningblud, 2))"), '=', 'akun50_2024.kodeall2')
+                            ->orOn(DB::raw("CONCAT('7', SUBSTRING(t_tampung_pendapatan.koderekeningblud, 2))"), '=', 'akun50_2024.kodeall3');
+                    })
         ->groupBy('t_tampung_pendapatan.koderekeningblud')
         ->get();
 
@@ -87,11 +91,19 @@ class LapOperasionalController extends Controller
                         WHERE kodeall3 = SUBSTRING_INDEX(CONCAT('7', SUBSTRING(t_tampung_pendapatan.koderekeningblud, 2)), '.', 5) 
                         LIMIT 1) as uraian5")
                 )
-        ->join('akun50_2024', 'akun50_2024.kodeall3', '=', DB::raw("CONCAT('7', SUBSTRING(t_tampung_pendapatan.koderekeningblud, 2))"))
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', '=', DB::raw("CONCAT('7', SUBSTRING(t_tampung_pendapatan.koderekeningblud, 2))"))
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on(DB::raw("CONCAT('7', SUBSTRING(t_tampung_pendapatan.koderekeningblud, 2))"), '=', 'akun50_2024.kodeall2')
+                            ->orOn(DB::raw("CONCAT('7', SUBSTRING(t_tampung_pendapatan.koderekeningblud, 2))"), '=', 'akun50_2024.kodeall3');
+                    })
         ->groupBy('t_tampung_pendapatan.koderekeningblud')
         ->get();
 
-        $pendapatan = Create_JurnalPosting::join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
+        $pendapatan = Create_JurnalPosting::leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3');
+                    })
+        // join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
          ->select(
             'jurnal_postingotom.tanggal',
             'akun50_2024.kodeall3 as kode6',
@@ -118,7 +130,11 @@ class LapOperasionalController extends Controller
         ->groupBy( 'kode6')
         ->orderBy('kode6', 'asc')
         ->get();
-        $pendapatan_lalu = Create_JurnalPosting::join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
+        $pendapatan_lalu = Create_JurnalPosting::leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3');
+                    })
+        // join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
          ->select(
             'jurnal_postingotom.tanggal',
             'akun50_2024.kodeall3 as kode6',
@@ -172,7 +188,11 @@ class LapOperasionalController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
        
-        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall3');
+                    })
         ->groupBy( 'jurnalumum_rinci.kodepsap13')
         ->get();
 
@@ -202,13 +222,20 @@ class LapOperasionalController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
        
-        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall3');
+                    })
         ->groupBy( 'jurnalumum_rinci.kodepsap13')
         ->get();
 
 
-        $bebanotom = Create_JurnalPosting::
-        join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
+        $bebanotom = Create_JurnalPosting::leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3');
+                    })
+        // join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
         ->select(
             'akun50_2024.kodeall3 as kode6',
             'akun50_2024.uraian',
@@ -238,8 +265,11 @@ class LapOperasionalController extends Controller
         ->orderBy('kode6', 'asc')
         ->get();
 
-        $bebanotom_lalu = Create_JurnalPosting::
-        join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
+        $bebanotom_lalu = Create_JurnalPosting::leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3');
+                    })
+        // join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
         ->select(
             'akun50_2024.kodeall3 as kode6',
             'akun50_2024.uraian',
@@ -297,7 +327,11 @@ class LapOperasionalController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
       
-        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall3');
+                    })
         ->groupBy( 'jurnalumum_rinci.kodepsap13')
         ->get();
 
@@ -325,7 +359,11 @@ class LapOperasionalController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) LIMIT 1) as uraian3'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
-        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall3');
+                    })
         ->groupBy( 'jurnalumum_rinci.kodepsap13')
         ->get();
 
@@ -349,8 +387,11 @@ class LapOperasionalController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) LIMIT 1) as uraian3'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
-       
-        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall3');
+                    })
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
         ->groupBy( 'jurnalumum_rinci.kodepsap13')
         ->get();
         if ($surplusnonoperasional->isEmpty()) {
@@ -416,7 +457,11 @@ class LapOperasionalController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
        
-        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall3');
+                    })
         ->groupBy( 'jurnalumum_rinci.kodepsap13')
         ->get();
         if ($surplusnonoperasional_lalu->isEmpty()) {
@@ -482,7 +527,11 @@ class LapOperasionalController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
        
-        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall3');
+                    })
         ->groupBy( 'jurnalumum_rinci.kodepsap13')
         ->get();
         if ($defisitnonoperasional->isEmpty()) {
@@ -548,7 +597,11 @@ class LapOperasionalController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
        
-        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall3');
+                    })
         ->groupBy( 'jurnalumum_rinci.kodepsap13')
         ->get();
         if ($defisitnonoperasional_lalu->isEmpty()) {
@@ -614,7 +667,11 @@ class LapOperasionalController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
        
-        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall3');
+                    })
         ->groupBy( 'jurnalumum_rinci.kodepsap13')
         ->get();
         if ($pendapatanluarbiasa->isEmpty()) {
@@ -680,7 +737,11 @@ class LapOperasionalController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
        
-        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall3');
+                    })
         ->groupBy( 'jurnalumum_rinci.kodepsap13')
         ->get();
         if ($pendapatanluarbiasa_lalu->isEmpty()) {
@@ -748,7 +809,11 @@ class LapOperasionalController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
        
-        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall3');
+                    })
         ->groupBy( 'jurnalumum_rinci.kodepsap13')
         ->get();
 
@@ -815,7 +880,11 @@ class LapOperasionalController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
        
-        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall2')
+                            ->orOn('jurnalumum_rinci.kodepsap13', '=', 'akun50_2024.kodeall3');
+                    })
         ->groupBy( 'jurnalumum_rinci.kodepsap13')
         ->get();
 
