@@ -310,7 +310,7 @@ class KamaroperasiController extends Controller
                         'rs23',
                         'rs24',
                     )
-                        ->where('rs22', '=', 'PEN001')
+                        ->where('rs22', '=', 'OPERASI')
                         ->with(['mastertindakan:rs1,rs2', 'sambungan:rs73_id,ket'])
                         ->orderBy('id', 'DESC');
                 },
@@ -325,8 +325,8 @@ class KamaroperasiController extends Controller
                         ->orderBy('id', 'DESC');
                 },
                 'bankdarah' => function ($q) {
-                    $q->orderBy('id', 'DESC')
-                        ->where('rs11', '=', 'PEN001'); // tambahan OK
+                    $q->orderBy('id', 'DESC');
+                    // ->where('rs11', '=', 'PEN001'); // tambahan OK
                 },
                 'radiologi' => function ($q) {
                     $q->with([
