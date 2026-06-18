@@ -15,6 +15,11 @@ class RBAController extends Controller
         $thn = request('tahun', 'Y');
         $anggaran = PergeseranPaguRinci::where('tgl', $thn)
         ->where('t_tampung.pagu', '!=', 0)
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
         ->select(
             't_tampung.usulan',
             't_tampung.pagu',
@@ -45,14 +50,20 @@ class RBAController extends Controller
             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 3) LIMIT 1) as uraian3'),
             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 4) LIMIT 1) as uraian4'),
             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 5) LIMIT 1) as uraian5')
-        )->join('akun50_2024', 'akun50_2024.kodeall2', '=', 't_tampung.koderek50')
+        )
+        // ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 't_tampung.koderek50')
         ->join('mappingpptkkegiatan', 'mappingpptkkegiatan.kodekegiatan', '=', 't_tampung.kodekegiatanblud')
         ->orderBy('kode', 'asc')
         ->get();
 
         $anggaranawal = Penyesuaian_Prioritas_Header::whereBetween('penyesesuaianperioritas_heder.tgltrans', [$thn.'-01-01', $thn.'-12-31'])
             ->leftJoin('penyesesuaianperioritas_rinci', 'penyesesuaianperioritas_rinci.notrans', '=', 'penyesesuaianperioritas_heder.notrans')
-            ->leftJoin('akun50_2024', 'akun50_2024.kodeall2', '=', 'penyesesuaianperioritas_rinci.koderek50')
+            // ->leftJoin('akun50_2024', 'akun50_2024.kodeall2', '=', 'penyesesuaianperioritas_rinci.koderek50')
+            ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('penyesesuaianperioritas_rinci.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('penyesesuaianperioritas_rinci.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
             ->select(
                 'penyesesuaianperioritas_heder.notrans',
                 'penyesesuaianperioritas_heder.namabidang as bidang',

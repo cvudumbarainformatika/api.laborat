@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Siasik\Laporan;
 
+use App\Http\Controllers\Api\Siasik\Akuntansi\Laporan\LRAjurnalController;
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Siasik\Akuntansi\Jurnal\Create_JurnalPosting;
@@ -44,6 +45,220 @@ class LRAController extends Controller
         return new JsonResponse($bidang);
 
     }
+    public function newlra() {
+        $thn=Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
+        $awal = $thn.'-01-01';
+        $akhir=request('tglx', 'Y-m-d');
+        $awalx=request('tgl', 'Y-m-d');
+        $sebelum = Carbon::createFromFormat('Y-m-d', $awalx)->subDay();
+        $thnakhir =Carbon::createFromFormat('Y-m-d', request('tglx'))->format('Y');
+        if($thn !== $thnakhir){
+         return response()->json(['message' => 'Tahun Tidak Sama'], 500);
+        }
+
+        // PENDAATAN
+        // AMBIL DARI CONTROLLER JURNAL
+        $response_lraJurnal = app(LRAjurnalController::class)->get_lra();
+        $data = $response_lraJurnal->getData(true); // true => hasilnya array
+        $pagupendapatan = $data['pagupendapatan'];
+        $realisasi_pendapatan_sebelum = $data['pendapatansblm'];
+        $realisasi_pendapatan = $data['pendapatan'];
+        $reklas_pendapatan_sebelum = $data['datareklas_sblm'];
+        $reklas_pendapatan = $data['datareklas'];
+        
+
+        //PEMBIAYAAN
+        $pembiayaan = Akun50_2024::select('akun50_2024.kodeall2',
+        'akun50_2024.uraian', 'akun50_2024.kodeall3'
+        )->whereIn('akun50_2024.kodeall3', ['6',
+                                        '6.1',
+                                        '6.1.01',
+                                        '6.1.01.08',
+                                        '6.1.01.08.01',
+                                        '6.1.01.08.01.0001'])
+        ->get();
+
+        $silpa = SisaAnggaran::where('tahun', $thn)->select('silpa.koderek50',
+        'silpa.kode79',
+        'silpa.tanggal',
+        'silpa.nominal')->get();
+
+
+        // BELANJA
+        $belanja = PergeseranPaguRinci::select(
+            't_tampung.koderek50',
+            't_tampung.idpp',
+            't_tampung.usulan',
+            't_tampung.koderek108',
+            't_tampung.uraian50 as uraian',
+            't_tampung.tgl as tanggal',
+            // 'npdls_rinci.koderek50',
+            // 'npdls_rinci.rincianbelanja',
+            // 'npdls_heder.nonpdls',
+            // 'npkls_heder.nonpk',
+            // 'npkls_rinci.nonpk',
+            // 'npkls_heder.tglpindahbuku',
+            'akun50_2024.kodeall3 as kode6',
+            // DB::raw('sum(npdls_rinci.nominalpembayaran) as realisasi'),
+            DB::raw('sum(t_tampung.pagu) as pagu'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode1, ".", 1) LIMIT 1) as uraian1'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode2, ".", 2) LIMIT 1) as uraian2'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode3, ".", 3) LIMIT 1) as uraian3'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode4, ".", 4) LIMIT 1) as uraian4'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode5, ".", 5) LIMIT 1) as uraian5'))
+        // ->join('akun50_2024', 'akun50_2024.kodeall2', 't_tampung.koderek50')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
+        ->where('t_tampung.pagu', '!=', 0)
+        ->where('t_tampung.tgl',  $thn)
+        ->when(request('bidang'),function($x) {
+            $x->where('t_tampung.bidang', request('bidang'));
+        })->when(request('kegiatan'),function($y) {
+            $y->where('t_tampung.bidang', request('bidang'))
+            ->where('t_tampung.kodekegiatanblud', request('kegiatan'));
+        })
+        ->with(['realisasi' => function ($npdls) use ($awal, $akhir){
+            $npdls->select('npdls_rinci.nonpdls',
+                        'npdls_rinci.koderek50',
+                        'npdls_rinci.rincianbelanja',
+                        'npdls_rinci.nominalpembayaran as realisasi',
+                        'npdls_rinci.idserahterima_rinci')
+                        // ->groupBy('npdls_rinci.koderek50')
+            ->join('npdls_heder', 'npdls_heder.nonpdls', '=', 'npdls_rinci.nonpdls')
+            ->join('npkls_rinci', 'npkls_rinci.nonpdls', '=', 'npdls_heder.nonpdls')
+            ->join('npkls_heder', 'npkls_heder.nonpk', '=', 'npkls_rinci.nonpk')
+            ->where('npdls_heder.nopencairan', '!=', '')
+            ->when(request('bidang'),function($x) {
+                    $x->where('npdls_heder.kodebidang', request('bidang'));
+                })->when(request('kegiatan'),function($y) {
+                    $y->where('npdls_heder.kodebidang', request('bidang'))
+                    ->where('npdls_heder.kodekegiatanblud', request('kegiatan'));
+                })
+            ->whereBetween('npkls_heder.tglpindahbuku', [$awal, $akhir]);
+
+        }, 'realisasi_spjpanjar' => function ($spj_panjar) use ($awal, $akhir){
+            $spj_panjar->select('spjpanjar_rinci.nospjpanjar',
+                        'spjpanjar_rinci.koderek50',
+                        'spjpanjar_rinci.rincianbelanja50',
+                        'spjpanjar_rinci.sisapanjar',
+                        'spjpanjar_rinci.jumlahbelanjapanjar',
+                        'spjpanjar_rinci.iditembelanjanpd')
+            ->join('spjpanjar_heder','spjpanjar_heder.nospjpanjar', '=', 'spjpanjar_rinci.nospjpanjar')
+            ->whereBetween('spjpanjar_heder.tglspjpanjar', [$awal, $akhir]);
+        }, 'contrapost' => function($tgl) use ($awal, $akhir){
+            $tgl->select('contrapost.nocontrapost',
+                        'contrapost.tglcontrapost',
+                        'contrapost.idpp',
+                        'contrapost.kodekegiatanblud',
+                        'contrapost.kegiatanblud',
+                        'contrapost.koderek50',
+                        'contrapost.rincianbelanja',
+                        'contrapost.nominalcontrapost')
+            ->whereBetween('tglcontrapost', [$awal. ' 00:00:00', $akhir. ' 23:59:59']);
+        
+        }])
+        ->groupBy('t_tampung.idpp')
+        ->get();
+
+        $belanja_sebelum = PergeseranPaguRinci::select(
+            't_tampung.koderek50',
+            't_tampung.idpp',
+            't_tampung.usulan',
+            't_tampung.koderek108',
+            't_tampung.uraian50 as uraian',
+            't_tampung.tgl as tanggal',
+            'akun50_2024.kodeall3 as kode6',
+            DB::raw('sum(t_tampung.pagu) as pagu'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode1, ".", 1) LIMIT 1) as uraian1'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode2, ".", 2) LIMIT 1) as uraian2'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode3, ".", 3) LIMIT 1) as uraian3'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode4, ".", 4) LIMIT 1) as uraian4'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode5, ".", 5) LIMIT 1) as uraian5'))
+        // ->join('akun50_2024', 'akun50_2024.kodeall2', 't_tampung.koderek50')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
+        ->where('t_tampung.pagu', '!=', 0)
+        ->where('t_tampung.tgl',  $thn)
+        ->when(request('bidang'),function($x) {
+            $x->where('t_tampung.bidang', request('bidang'));
+        })->when(request('kegiatan'),function($y) {
+            $y->where('t_tampung.bidang', request('bidang'))
+            ->where('t_tampung.kodekegiatanblud', request('kegiatan'));
+        })
+        ->with(['realisasi' => function ($npdls) use ($awalx, $sebelum){
+            $npdls->select('npdls_rinci.nonpdls',
+                        'npdls_rinci.koderek50',
+                        'npdls_rinci.rincianbelanja',
+                        'npdls_rinci.nominalpembayaran as realisasi',
+                        'npdls_rinci.idserahterima_rinci')
+                        // ->groupBy('npdls_rinci.koderek50')
+            ->join('npdls_heder', 'npdls_heder.nonpdls', '=', 'npdls_rinci.nonpdls')
+            ->join('npkls_rinci', 'npkls_rinci.nonpdls', '=', 'npdls_heder.nonpdls')
+            ->join('npkls_heder', 'npkls_heder.nonpk', '=', 'npkls_rinci.nonpk')
+            ->where('npdls_heder.nopencairan', '!=', '')
+            ->when(request('bidang'),function($x) {
+                    $x->where('npdls_heder.kodebidang', request('bidang'));
+                })->when(request('kegiatan'),function($y) {
+                    $y->where('npdls_heder.kodebidang', request('bidang'))
+                    ->where('npdls_heder.kodekegiatanblud', request('kegiatan'));
+                })
+            ->whereBetween('npkls_heder.tglpindahbuku', [$awalx, $sebelum]);
+
+        }, 'realisasi_spjpanjar' => function ($spj_panjar) use ($awalx, $sebelum){
+            $spj_panjar->select('spjpanjar_rinci.nospjpanjar',
+                        'spjpanjar_rinci.koderek50',
+                        'spjpanjar_rinci.rincianbelanja50',
+                        'spjpanjar_rinci.sisapanjar',
+                        'spjpanjar_rinci.jumlahbelanjapanjar',
+                        'spjpanjar_rinci.iditembelanjanpd')
+            ->join('spjpanjar_heder','spjpanjar_heder.nospjpanjar', '=', 'spjpanjar_rinci.nospjpanjar')
+            ->whereBetween('spjpanjar_heder.tglspjpanjar', [$awalx, $sebelum]);
+        }, 'contrapost' => function($tgl) use ($awalx, $sebelum){
+            $tgl->select('contrapost.nocontrapost',
+                        'contrapost.tglcontrapost',
+                        'contrapost.idpp',
+                        'contrapost.kodekegiatanblud',
+                        'contrapost.kegiatanblud',
+                        'contrapost.koderek50',
+                        'contrapost.rincianbelanja',
+                        'contrapost.nominalcontrapost')
+            ->whereBetween('tglcontrapost', [$awalx. ' 00:00:00', $sebelum. ' 23:59:59']);
+        
+        }])
+        ->groupBy('t_tampung.idpp')
+        ->get();
+
+        $lra = [
+            'pagupendapatan' => $pagupendapatan,
+            'realisasi_pendapatan_sebelum' => $realisasi_pendapatan_sebelum,
+            'realisasi_pendapatan' => $realisasi_pendapatan,
+            'reklas_pendapatan_sebelum' => $reklas_pendapatan_sebelum,
+            'reklas_pendapatan' => $reklas_pendapatan,
+
+            'pembiayaan' => $pembiayaan,
+            'silpa' => $silpa,
+
+            'belanja' => $belanja,
+            'belanja_sebelum' => $belanja_sebelum,
+        ];
+        return new JsonResponse ($lra);
+    }
 
     public function laplra(){
         $thn=Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
@@ -85,10 +300,11 @@ class LRAController extends Controller
                             $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
                             })
         // ->join('t_tampung', 't_tampung.koderek50', '=', 'akun50_2024.kodeall2')
-        ->join('t_tampung as akun', function ($join) {
-                $join->on('akun.koderek50', '=', 'akun50_2024.kodeall2')
-                        ->orOn('akun.koderek50', '=', 'akun50_2024.kodeall3');
-                })
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
         ->where('tgl', $thn)
         ->where('pagu', '!=', '0' )
         ->when(request('bidang'),function($x) {
