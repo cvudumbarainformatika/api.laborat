@@ -35,6 +35,11 @@ class CetakAnggaranController extends Controller
         ->where('t_tampung.pagu', '!=', 0)
         ->where('t_tampung.bidang', request('bidang'))
         ->where('t_tampung.kodekegiatanblud', request('kegiatan'))
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
         ->select(
             't_tampung.usulan',
             't_tampung.pagu',
@@ -60,7 +65,8 @@ class CetakAnggaranController extends Controller
                     DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 3) as kode3'),
                     DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 4) as kode4'),
                     DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 5) as kode5'))
-        ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 't_tampung.koderek50')
+        // ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 't_tampung.koderek50')
+
         ->join('penyesesuaianperioritas_heder', 'penyesesuaianperioritas_heder.kodekegiatan', '=', 't_tampung.kodekegiatanblud')
         ->with(['lvl1' => function($sel){
             $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
@@ -135,7 +141,12 @@ class CetakAnggaranController extends Controller
             ->where('penyesesuaianperioritas_heder.kodebidang', request('bidang'))
             ->where('penyesesuaianperioritas_heder.kodekegiatan', request('kegiatan'))
             ->with(['rincian' => function($query) {
-                $query->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'penyesesuaianperioritas_rinci.koderek50')
+                $query->leftJoin('akun50_2024', function ($join) {
+                        $join->on('penyesesuaianperioritas_rinci.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('penyesesuaianperioritas_rinci.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
+                // ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'penyesesuaianperioritas_rinci.koderek50')
                     ->select(
                         'penyesesuaianperioritas_rinci.id as idpp',
                         'penyesesuaianperioritas_rinci.notrans',
@@ -160,7 +171,12 @@ class CetakAnggaranController extends Controller
                         'akun50_2024.uraian as uraian6'
                     );
             }, 'rincianpergeseran' => function($query) {
-                $query->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'perubahanrincianbelanja.koderek50')
+                $query->leftJoin('akun50_2024', function ($join) {
+                        $join->on('perubahanrincianbelanja.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('perubahanrincianbelanja.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
+                // ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'perubahanrincianbelanja.koderek50')
                     ->select(
                         'perubahanrincianbelanja.id',
                         'perubahanrincianbelanja.idpp',
@@ -295,7 +311,12 @@ class CetakAnggaranController extends Controller
             ->where('usulanHonor_h_pak.kodebagian', request('bidang'))
             ->where('usulanHonor_h_pak.kodeKegiatan', request('kegiatan'))
             ->with(['rincipak' => function($query){
-                $query->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'usulanHonor_r_pak.koderek50')
+                $query->leftJoin('akun50_2024', function ($join) {
+                        $join->on('usulanHonor_r_pak.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('usulanHonor_r_pak.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
+                // ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'usulanHonor_r_pak.koderek50')
                     ->select(
                         'usulanHonor_r_pak.idpp',
                         'usulanHonor_r_pak.notrans',
@@ -320,7 +341,12 @@ class CetakAnggaranController extends Controller
                         'akun50_2024.uraian as uraian6'
                     );
             }, 'pergeseranpak' => function($query) {
-                $query->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'perubahanrincianbelanja.koderek50')
+                $query->leftJoin('akun50_2024', function ($join) {
+                        $join->on('perubahanrincianbelanja.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('perubahanrincianbelanja.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
+                // ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'perubahanrincianbelanja.koderek50')
                     ->select(
                         'perubahanrincianbelanja.id',
                         'perubahanrincianbelanja.idpp',

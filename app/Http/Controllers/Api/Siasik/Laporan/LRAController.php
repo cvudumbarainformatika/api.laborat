@@ -112,10 +112,11 @@ class LRAController extends Controller
             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode4, ".", 4) LIMIT 1) as uraian4'),
             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode5, ".", 5) LIMIT 1) as uraian5'))
         // ->join('akun50_2024', 'akun50_2024.kodeall2', 't_tampung.koderek50')
-        ->join('akun50_2024', function ($join) {
-                $join->on('akun50_2024.kodeall3', '=', 't_tampung.koderek50')
-                        ->orOn('akun50_2024.kodeall2', '=', 't_tampung.koderek50');
-                })
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
         ->where('t_tampung.pagu', '!=', 0)
         ->where('t_tampung.tgl',  $thn)
         ->when(request('bidang'),function($x) {
@@ -187,10 +188,11 @@ class LRAController extends Controller
             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode4, ".", 4) LIMIT 1) as uraian4'),
             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode5, ".", 5) LIMIT 1) as uraian5'))
         // ->join('akun50_2024', 'akun50_2024.kodeall2', 't_tampung.koderek50')
-        ->join('akun50_2024', function ($join) {
-                $join->on('akun50_2024.kodeall3', '=', 't_tampung.koderek50')
-                        ->orOn('akun50_2024.kodeall2', '=', 't_tampung.koderek50');
-                })
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
         ->where('t_tampung.pagu', '!=', 0)
         ->where('t_tampung.tgl',  $thn)
         ->when(request('bidang'),function($x) {
@@ -298,10 +300,11 @@ class LRAController extends Controller
                             $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
                             })
         // ->join('t_tampung', 't_tampung.koderek50', '=', 'akun50_2024.kodeall2')
-        ->join('t_tampung as akun', function ($join) {
-                $join->on('akun.koderek50', '=', 'akun50_2024.kodeall2')
-                        ->orOn('akun.koderek50', '=', 'akun50_2024.kodeall3');
-                })
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
         ->where('tgl', $thn)
         ->where('pagu', '!=', '0' )
         ->when(request('bidang'),function($x) {
