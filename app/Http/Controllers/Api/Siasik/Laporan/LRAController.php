@@ -120,6 +120,8 @@ class LRAController extends Controller
                             ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
                             
                     })
+        ->where('akun50_2024.akun', '=', '5')
+        ->where('akun50_2024.subrincian_objek', '!=', '')
         ->where('t_tampung.pagu', '!=', 0)
         ->where('t_tampung.tgl',  $thn)
         ->when(request('bidang'),function($x) {
@@ -199,6 +201,8 @@ class LRAController extends Controller
                             ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
                             
                     })
+        ->where('akun50_2024.akun', '=', '5')
+        ->where('akun50_2024.subrincian_objek', '!=', '')
         ->where('t_tampung.pagu', '!=', 0)
         ->where('t_tampung.tgl',  $thn)
         ->when(request('bidang'),function($x) {
