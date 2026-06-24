@@ -13,4 +13,8 @@ Route::group([
   Route::post('/tindakan-op/hapus', [TindakanDanLaporanController::class, 'hapusTindakanOp']);
   Route::post('/laporan-op/simpan', [TindakanDanLaporanController::class, 'simpanLaporan']);
   Route::post('/laporan-op/hapus', [TindakanDanLaporanController::class, 'hapusLaporannOp']);
+
+  Route::post('/tindakan/simpan', [TindakanDanLaporanController::class, 'simpantindakanranap']);
+  Route::get('/tindakan/listtindakan', [TindakanDanLaporanController::class, 'getTindakanRanap']); // fixed
+  Route::get('/tindakan/nota', [TindakanDanLaporanController::class, 'notatindakanok']); // fixed
 });

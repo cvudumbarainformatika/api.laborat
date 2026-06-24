@@ -5,10 +5,23 @@ namespace App\Traits;
 use App\Models\UserActivity;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin \Illuminate\Database\Eloquent\Model
+ *
+ * @method static void creating(callable $callback)
+ * @method static void created(callable $callback)
+ * @method static void updating(callable $callback)
+ * @method static void updated(callable $callback)
+ * @method static void deleting(callable $callback)
+ * @method static void deleted(callable $callback)
+ * @method static void saving(callable $callback)
+ * @method static void saved(callable $callback)
+ */
 trait LogsActivity
 {
     public static function bootLogsActivity()
     {
+
         static::created(function ($model) {
             self::log('created', $model);
         });
@@ -107,9 +120,9 @@ trait LogsActivity
 
     protected static function getNoreg(Model $model): ?string
     {
-        return $model->noreg 
-            ?? $model->getAttribute('noreg') 
-            ?? $model->getOriginal('noreg') 
+        return $model->noreg
+            ?? $model->getAttribute('noreg')
+            ?? $model->getOriginal('noreg')
             ?? $model->rs1
             ?? $model->getAttribute('rs1')
             ?? $model->getOriginal('rs1')
