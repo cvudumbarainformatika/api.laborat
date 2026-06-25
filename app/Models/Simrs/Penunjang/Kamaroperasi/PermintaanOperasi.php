@@ -65,7 +65,7 @@ class PermintaanOperasi extends Model
     }
     public function surgical()
     {
-        return $this->hasMany(SurgicalSafety::class, 'noreg', 'rs1');
+        return $this->hasMany(SurgicalSafety::class, 'nota', 'rs2');
     }
     public function ruangranap()
     {
