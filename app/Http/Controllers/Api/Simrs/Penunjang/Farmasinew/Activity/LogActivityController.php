@@ -22,6 +22,7 @@ class LogActivityController extends Controller
             'to' => request('to') ?? null,
         ];
         $raw = UserActivity::query()
+            ->with(['user:id,nip,nama,kdgroupnakes,kdpegsimrs'])
             ->when(request('q'), function ($q) {
                 $q->where('action', 'like', '%' . request('q') . '%')
                     ->orWhere('description', 'like', '%' . request('q') . '%');
@@ -36,5 +37,33 @@ class LogActivityController extends Controller
 
         $resp = ResponseHelper::responseGetSimplePaginate($data, $req, $totalCount);
         return new JsonResponse($resp);
+    }
+
+    public function byNoreg(Request $request)
+    {
+        $noreg = $request->noreg;
+        if (!$noreg) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Parameter noreg wajib diisi.'
+            ], 400);
+        }
+
+        $orderBy = $request->order_by ?? 'created_at';
+        $sort = $request->sort ?? 'desc';
+
+        $data = UserActivity::query()
+            ->with(['user:id,nip,nama,kdgroupnakes,kdpegsimrs'])
+            ->where('noreg', $noreg)
+            ->when($request->q, function ($q) {
+                $q->where(function ($q2) {
+                    $q2->where('action', 'like', '%' . request('q') . '%')
+                        ->orWhere('description', 'like', '%' . request('q') . '%');
+                });
+            })
+            ->orderBy($orderBy, $sort)
+            ->get();
+
+        return new JsonResponse($data);
     }
 }

@@ -5,12 +5,13 @@ namespace App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaan_Psikologoldll;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PemeriksaanUmum extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $connection = 'mysql';
     protected $table = 'rs253';
     protected $guarded = ['id'];

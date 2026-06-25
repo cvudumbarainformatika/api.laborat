@@ -159,6 +159,16 @@ class AnamnesisKebidananController extends Controller
                 'periksaluarginekologi' => $request->periksaluarginekologi,
                 'inspekuloginekologi' => $request->inspekuloginekologi,
                 'periksadalamginekologi' => $request->periksadalamginekologi,
+
+                'sempoyongan' => $request->sempoyongan ?? '',
+                'penopang' => $request->penopang ?? '',
+                'gelisah' => $request->gelisah ?? '',
+                'restrain' => $request->restrain ?? '',
+                'restrainlainnya' => $request->restrainlainnya ?? '',
+                'diberitaukankedokterjikaya' => $request->diberitaukankedokterjikaya ?? '',
+                'hasil_resiko_pasien_jatuh' => $request->hasil_resiko_pasien_jatuh ?? '',
+                'keterangan' => $request->keterangan ?? '',
+
                 'userentry'=>$pegawai ?? '',
             ]
         );
