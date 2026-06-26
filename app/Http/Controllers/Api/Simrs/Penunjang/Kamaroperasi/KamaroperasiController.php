@@ -230,7 +230,7 @@ class KamaroperasiController extends Controller
     }
     public function bukaLayanan(Request $request)
     {
-        $data = PermintaanOperasi::where('rs1', $request->noreg)
+        $data = PermintaanOperasi::where('rs1', $request->noreg)->where('rs2', $request->nota)
             ->with([
                 'manymemo',
                 'kunjunganranap.masterpasien',
