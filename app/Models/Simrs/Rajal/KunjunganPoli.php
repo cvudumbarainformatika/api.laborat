@@ -11,6 +11,7 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Anamnesis\AnamnesisKebidanan;
+use App\Models\Simrs\Anamnesis\AnamnesisSkrinig;
 use App\Models\Simrs\Anamnesis\HistoryKehamilan;
 use App\Models\Simrs\Anamnesis\HistoryPerkawinan;
 use App\Models\Simrs\Edukasi\ImplementasiEdukasi;
@@ -176,6 +177,10 @@ class KunjunganPoli extends Model
     public function anamnesis()
     {
         return $this->hasMany(Anamnesis::class, 'rs1', 'rs1');
+    }
+    public function anamnesis_skrining()
+    {
+        return $this->hasMany(AnamnesisSkrinig::class, 'noreg', 'rs1');
     }
     public function anamnesisAwalHd()
     {

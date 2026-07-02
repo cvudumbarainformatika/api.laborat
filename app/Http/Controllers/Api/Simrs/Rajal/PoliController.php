@@ -517,6 +517,7 @@ class PoliController extends Controller
         $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3', 'rs4', 'rs9', 'rs19')->where('rs1', $request->noreg)
             ->with([
                 'anamnesis',
+                'anamnesis_skrining',
                 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
                 'gambars',
                 'fisio',
@@ -650,7 +651,7 @@ class PoliController extends Controller
                 },
                 'intradialitikhd',
                 'suratketerangandokter' => function ($suratketerangandokter) {
-                    $suratketerangandokter->with(['dokter:nama,kdpegsimrs','tindakaanbilling'])
+                    $suratketerangandokter->with(['dokter:nama,kdpegsimrs', 'tindakaanbilling'])
                         ->orderBy('id', 'DESC');
                 },
                 // ini buat satset
