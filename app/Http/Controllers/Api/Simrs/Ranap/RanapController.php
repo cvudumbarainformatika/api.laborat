@@ -20,6 +20,79 @@ class RanapController extends Controller
         $total = self::query_table()->get()->count();
         $data = self::query_table()->simplePaginate(25);
 
+        $norms = $data->pluck('norm')->filter()->unique()->toArray();
+        $alergis = [];
+        if (!empty($norms)) {
+            $alergis = DB::table('rs209')
+                ->select('rs2 as norm', 'riwayatalergi', 'keteranganalergi')
+                ->whereIn('rs2', $norms)
+                ->whereNotNull('riwayatalergi')
+                ->where('riwayatalergi', '!=', '')
+                ->where('riwayatalergi', '!=', '[]')
+                ->where('riwayatalergi', 'not like', '%tidak ada%')
+                ->where('riwayatalergi', 'not like', '%tdk ada%')
+                ->whereNotNull('keteranganalergi')
+                ->where('keteranganalergi', '!=', '')
+                ->where('keteranganalergi', 'not like', '%tidak ada%')
+                ->where('keteranganalergi', 'not like', '%tdk ada%')
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy('norm');
+        }
+
+        $noregs = $data->pluck('noreg')->filter()->unique()->toArray();
+        $penilaians = [];
+        if (!empty($noregs)) {
+            $penilaians = DB::table('penilaian')
+                ->select(
+                    'id',
+                    'rs1 as noreg',
+                    'barthel',
+                    'norton',
+                    'humpty_dumpty',
+                    'morse_fall',
+                    'ontario'
+                )
+                ->whereIn('rs1', $noregs)
+                ->where(function ($q) {
+                    $q->where('humpty_dumpty', 'like', '%"kuning":true%')
+                      ->orWhere('humpty_dumpty', 'like', '%"kuning": true%')
+                      ->orWhere('morse_fall', 'like', '%"kuning":true%')
+                      ->orWhere('morse_fall', 'like', '%"kuning": true%')
+                      ->orWhere('ontario', 'like', '%"kuning":true%')
+                      ->orWhere('ontario', 'like', '%"kuning": true%');
+                })
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy('noreg');
+        }
+
+        $data->getCollection()->transform(function ($item) use ($alergis, $penilaians) {
+            $item->alergis = isset($alergis[$item->norm])
+                ? $alergis[$item->norm]->take(5)->map(function ($al) {
+                    return [
+                        'riwayatalergi' => json_decode($al->riwayatalergi) ?? $al->riwayatalergi,
+                        'keteranganalergi' => $al->keteranganalergi
+                    ];
+                })->values()->all()
+                : [];
+
+            $item->resiko_jatuh = isset($penilaians[$item->noreg])
+                ? $penilaians[$item->noreg]->map(function ($pen) {
+                    return [
+                        'id' => $pen->id,
+                        'barthel' => json_decode($pen->barthel),
+                        'norton' => json_decode($pen->norton),
+                        'humpty_dumpty' => json_decode($pen->humpty_dumpty),
+                        'morse_fall' => json_decode($pen->morse_fall),
+                        'ontario' => json_decode($pen->ontario)
+                    ];
+                })->all()
+                : [];
+
+            return $item;
+        });
+
         $response = (object)[
             'total' => $total,
             'data' => $data
@@ -376,6 +449,79 @@ class RanapController extends Controller
             ->orderby('rs23.rs3', 'DESC')
             ->groupBy('rs23.rs1')
             ->paginate(25);
+
+        $norms = $data->pluck('norm')->filter()->unique()->toArray();
+        $alergis = [];
+        if (!empty($norms)) {
+            $alergis = DB::table('rs209')
+                ->select('rs2 as norm', 'riwayatalergi', 'keteranganalergi')
+                ->whereIn('rs2', $norms)
+                ->whereNotNull('riwayatalergi')
+                ->where('riwayatalergi', '!=', '')
+                ->where('riwayatalergi', '!=', '[]')
+                ->where('riwayatalergi', 'not like', '%tidak ada%')
+                ->where('riwayatalergi', 'not like', '%tdk ada%')
+                ->whereNotNull('keteranganalergi')
+                ->where('keteranganalergi', '!=', '')
+                ->where('keteranganalergi', 'not like', '%tidak ada%')
+                ->where('keteranganalergi', 'not like', '%tdk ada%')
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy('norm');
+        }
+
+        $noregs = $data->pluck('noreg')->filter()->unique()->toArray();
+        $penilaians = [];
+        if (!empty($noregs)) {
+            $penilaians = DB::table('penilaian')
+                ->select(
+                    'id',
+                    'rs1 as noreg',
+                    'barthel',
+                    'norton',
+                    'humpty_dumpty',
+                    'morse_fall',
+                    'ontario'
+                )
+                ->whereIn('rs1', $noregs)
+                ->where(function ($q) {
+                    $q->where('humpty_dumpty', 'like', '%"kuning":true%')
+                      ->orWhere('humpty_dumpty', 'like', '%"kuning": true%')
+                      ->orWhere('morse_fall', 'like', '%"kuning":true%')
+                      ->orWhere('morse_fall', 'like', '%"kuning": true%')
+                      ->orWhere('ontario', 'like', '%"kuning":true%')
+                      ->orWhere('ontario', 'like', '%"kuning": true%');
+                })
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy('noreg');
+        }
+
+        $data->getCollection()->transform(function ($item) use ($alergis, $penilaians) {
+            $item->alergis = isset($alergis[$item->norm])
+                ? $alergis[$item->norm]->take(5)->map(function ($al) {
+                    return [
+                        'riwayatalergi' => json_decode($al->riwayatalergi) ?? $al->riwayatalergi,
+                        'keteranganalergi' => $al->keteranganalergi
+                    ];
+                })->values()->all()
+                : [];
+
+            $item->resiko_jatuh = isset($penilaians[$item->noreg])
+                ? $penilaians[$item->noreg]->map(function ($pen) {
+                    return [
+                        'id' => $pen->id,
+                        'barthel' => json_decode($pen->barthel),
+                        'norton' => json_decode($pen->norton),
+                        'humpty_dumpty' => json_decode($pen->humpty_dumpty),
+                        'morse_fall' => json_decode($pen->morse_fall),
+                        'ontario' => json_decode($pen->ontario)
+                    ];
+                })->all()
+                : [];
+
+            return $item;
+        });
 
         return new JsonResponse($data);
     }
