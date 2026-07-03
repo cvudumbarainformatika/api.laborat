@@ -517,7 +517,7 @@ class PoliController extends Controller
         $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3', 'rs4', 'rs9', 'rs19')->where('rs1', $request->noreg)
             ->with([
                 'anamnesis',
-                'anamnesis_skrining',
+                'anamnesis_skrining.user_input:nama,kdpegsimrs',
                 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
                 'gambars',
                 'fisio',
