@@ -187,6 +187,12 @@ class CpptController extends Controller
 
     $penilaian = PemeriksaanPenilaianController::store((object) $request->penilaian);
     $penilaianId = null;
+    \Log::info('[saveCppt] penilaian result', [
+      'success' => $penilaian['success'] ?? 'key_missing',
+      'idPenilaian' => $penilaian['idPenilaian'] ?? 'key_missing',
+      'message' => $penilaian['message'] ?? '-',
+      'result_error' => $penilaian['result'] ?? null,
+    ]);
     if ($penilaian['success'] === true) {
       $penilaianId = $penilaian['idPenilaian'];
     }
@@ -820,24 +826,43 @@ class CpptController extends Controller
 
 
       //penilaian
+      $penilaianId = $request->penilaian['id'] ?? null;
+      $existingPenilaian = $penilaianId ? Penilaian::find($penilaianId) : null;
 
-      Penilaian::where('id', $request->penilaian['id'])->update(
-        [
-          'barthel' => $request->penilaian['barthel'],
-          'norton' => $request->penilaian['norton'],
+      if ($existingPenilaian) {
+        // Update jika sudah ada
+        $existingPenilaian->update([
+          'barthel'       => $request->penilaian['barthel'],
+          'norton'        => $request->penilaian['norton'],
           'humpty_dumpty' => $request->penilaian['humpty_dumpty'],
-          'morse_fall' => $request->penilaian['morse_fall'],
-          'ontario' => $request->penilaian['ontario'],
-
-
-          'user'  => $kdpegsimrs,
-          'group_nakes'  => $user->kdgroupnakes,
-        ]
-      );
+          'morse_fall'    => $request->penilaian['morse_fall'],
+          'ontario'       => $request->penilaian['ontario'],
+          'user'          => $kdpegsimrs,
+          'group_nakes'   => $user->kdgroupnakes,
+        ]);
+        $savedPenilaianId = $existingPenilaian->id;
+      } else {
+        // Create baru jika belum ada
+        $newPenilaian = Penilaian::create([
+          'rs1'           => $request->noreg,
+          'rs2'           => $request->norm,
+          'rs3'           => date('Y-m-d H:i:s'),
+          'barthel'       => $request->penilaian['barthel'],
+          'norton'        => $request->penilaian['norton'],
+          'humpty_dumpty' => $request->penilaian['humpty_dumpty'],
+          'morse_fall'    => $request->penilaian['morse_fall'],
+          'ontario'       => $request->penilaian['ontario'],
+          'kdruang'       => $request->kdruang,
+          'user'          => $kdpegsimrs,
+          'group_nakes'   => $user->kdgroupnakes,
+        ]);
+        $savedPenilaianId = $newPenilaian->id;
+      }
 
       if ($data->id) {
         Cppt::find($request->id_cppt)->update([
-          'rs253_id' => $data->id,
+          'rs253_id'    => $data->id,
+          'penilaian_id' => $savedPenilaianId,
         ]);
       }
 

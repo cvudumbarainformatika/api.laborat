@@ -43,6 +43,7 @@ class RanapController extends Controller
         $noregs = $data->pluck('noreg')->filter()->unique()->toArray();
         $penilaians = [];
         $resusitasi = [];
+        $mppSkrinings = [];
         if (!empty($noregs)) {
             $penilaians = DB::table('penilaian')
                 ->select(
@@ -66,12 +67,61 @@ class RanapController extends Controller
                 ->orderBy('id', 'desc')
                 ->get()
                 ->groupBy('noreg');
+
+            $mppSkrinings = DB::table('mpp_skrinings')
+                ->select('id', 'noreg', 'skrining')
+                ->whereIn('noreg', $noregs)
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy('noreg');
         }
 
         $kdruangans = $data->pluck('kdruangan')->filter()->unique()->toArray();
         $namaSamaMap = self::getNamaSamaMap($kdruangans);
 
-        $data->getCollection()->transform(function ($item) use ($alergis, $penilaians, $resusitasi, $namaSamaMap) {
+        $data->getCollection()->transform(function ($item) use ($alergis, $penilaians, $resusitasi, $namaSamaMap, $mppSkrinings) {
+            $item->pasien_mpp = false;
+            if (isset($mppSkrinings[$item->noreg])) {
+                $mpp = $mppSkrinings[$item->noreg]->first();
+                if ($mpp && $mpp->skrining) {
+                    $skrining = json_decode($mpp->skrining, true);
+                    if (is_array($skrining)) {
+                        $score = 0;
+                        $keys = [
+                            'usia',
+                            'kognitif_rendah',
+                            'resiko_tinggi',
+                            'potensi_komplain',
+                            'kasus_penyakit',
+                            'keterbatasan_adl',
+                            'pakai_alat_medis',
+                            'riwayat_psikologis',
+                            'readmisi',
+                            'biaya_tinggi',
+                            'pembiayaan_komplek',
+                            'melebihi_los',
+                            'transfer_rujukan',
+                            'kerjasama_sektor',
+                            'kontinuitas_pelayanan'
+                        ];
+                        foreach ($keys as $key) {
+                            if (
+                                isset($skrining[$key]) &&
+                                $skrining[$key] !== null &&
+                                $skrining[$key] !== false &&
+                                $skrining[$key] !== '' &&
+                                $skrining[$key] !== []
+                            ) {
+                                $score++;
+                            }
+                        }
+                        if ($score >= 3) {
+                            $item->pasien_mpp = true;
+                        }
+                    }
+                }
+            }
+
             $item->alergis = isset($alergis[$item->norm])
                 ? $alergis[$item->norm]->take(5)->map(function ($al) {
                     return [

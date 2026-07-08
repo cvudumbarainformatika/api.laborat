@@ -70,11 +70,8 @@ class PemeriksaanPenilaianController extends Controller
                   'group_nakes'  => $user->kdgroupnakes,
                 ]
             );
-            if ($hasil === 1) {
-                $simpan = Penilaian::where('id', $request->id)->first();
-            } else {
-                $simpan = null;
-            }
+            // update() mengembalikan 0 jika tidak ada perubahan nilai (bukan berarti gagal)
+            $simpan = Penilaian::where('id', $request->id)->first();
         } else {
           $simpan = Penilaian::create(
             [
