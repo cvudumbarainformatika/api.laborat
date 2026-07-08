@@ -334,16 +334,19 @@ class PengembalianPinjamanController extends Controller
             $allBack = true;
             $penerimaanR = PenerimaanRinci::where('nopenerimaan', $header->nopenerimaan_asal)->get();
             foreach ($penerimaanR as $key) {
-                $kem = PengembalianRinciFifo::selectRaw('sum(jml_dikembalikan) as jumlah')->where('id_rincipenerimaan', $key->id)->first();
-                if ($kem->jumlah != $key->jml_terima_k) {
+                $totalDikembalikan = PengembalianRinciFifo::where('id_rincipenerimaan', $key->id)->sum('jml_dikembalikan');
+                if ($totalDikembalikan != $key->jml_terima_k) {
                     $allBack = false;
+                    break;
                 }
             }
             if ($allBack) {
                 $penerimaanH = PenerimaanHeder::where('nopenerimaan', $header->nopenerimaan_asal)->first();
-                $penerimaanH->update([
-                    'flag_bayar' => '1',
-                ]);
+                if ($penerimaanH) {
+                    $penerimaanH->update([
+                        'flag_bayar' => '1',
+                    ]);
+                }
             }
             DB::connection('farmasi')->commit();
             return new JsonResponse([
@@ -354,7 +357,7 @@ class PengembalianPinjamanController extends Controller
                 'rinci' => $rinci,
                 'stok' => $stok,
                 'penerimaanR' => $penerimaanR,
-                'kem' => $kem,
+                // 'kem' => $kem,
                 'allBack' => $allBack,
             ]);
         } catch (\Exception $e) {
