@@ -187,12 +187,6 @@ class CpptController extends Controller
 
     $penilaian = PemeriksaanPenilaianController::store((object) $request->penilaian);
     $penilaianId = null;
-    \Log::info('[saveCppt] penilaian result', [
-      'success' => $penilaian['success'] ?? 'key_missing',
-      'idPenilaian' => $penilaian['idPenilaian'] ?? 'key_missing',
-      'message' => $penilaian['message'] ?? '-',
-      'result_error' => $penilaian['result'] ?? null,
-    ]);
     if ($penilaian['success'] === true) {
       $penilaianId = $penilaian['idPenilaian'];
     }
