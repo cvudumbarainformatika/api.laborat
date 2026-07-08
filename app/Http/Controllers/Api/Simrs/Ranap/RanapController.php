@@ -220,6 +220,13 @@ class RanapController extends Controller
             'rs23_sambung.ket as tindaklanjut_sambung', // tindaklanjut
             'rs23.rs23 as carakeluar', // cara keluar
             'rs15.rs2 as nama_panggil',
+            'rs23_paksa.alasan as alasan_pulangpaksa',
+            'rs23_paksa.nama_penanggungjawab',
+            'rs23_paksa.umur_penanggungjawab',
+            'rs23_paksa.kelamin_penanggungjawab',
+            'rs23_paksa.alamat_penanggungjawab',
+            'rs23_paksa.identitas_penanggungjawab',
+            'rs23_paksa.ttdYgMenyatakan',
             DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
             DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
             DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
@@ -283,6 +290,7 @@ class RanapController extends Controller
             ->leftjoin('rs26', 'rs26.rs1', 'rs23.rs23') // master cara keluar
             ->leftjoin('rs23_nosurat', 'rs23_nosurat.noreg', 'rs23.rs1')
             ->leftjoin('rs23_sambung', 'rs23_sambung.noreg', 'rs23.rs1') // sambungan rs23
+            ->leftjoin('rs23_paksa', 'rs23_paksa.noreg', 'rs23.rs1') // pulang paksa
             // ->leftJoin('serah_terima', function ($join) {
             //     $join->on('rs23.rs1', '=', 'serah_terima.noreg')
             //         ->on('serah_terima.ke', '=', 'rs23.rs5');

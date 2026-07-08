@@ -14,12 +14,14 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\Simrs\Ranap\Rs23Paksa;
 use App\Models\Simrs\Ranap\Rs23Sambung;
 use App\Models\Simrs\SuratPasien\SuratPasien;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class PulangController extends Controller
 {
@@ -69,6 +71,25 @@ class PulangController extends Controller
         ]
       );
 
+      $paksa = Rs23Paksa::updateOrCreate(
+        ['noreg' => $request->noreg],
+        [
+          'alasan' => $request->alasan,
+          'nama_penanggungjawab' => $request->nama_penanggungjawab,
+          'umur_penanggungjawab' => $request->umur_penanggungjawab,
+          'kelamin_penanggungjawab' => $request->kelamin_penanggungjawab,
+          'alamat_penanggungjawab' => $request->alamat_penanggungjawab,
+          'identitas_penanggungjawab' => $request->identitas_penanggungjawab
+        ]
+      );
+      $ttd = self::saveImage(
+          $request,
+          $request->ttdYgMenyatakan,
+          $paksa->id . '_ygMenyatakan'
+       );
+
+      $paksa->ttdYgMenyatakan = $ttd;
+      $paksa->save();
 
 
       if ($request->noLp !== null) {
@@ -106,6 +127,28 @@ class PulangController extends Controller
       Pasien::where('rs1', $request->norm)->where('rs1', $request->norm)->update([
         'rs53' => '1',
       ]);
+    }
+    if ($plgPaksa) {
+      $paksa = Rs23Paksa::updateOrCreate(
+        ['noreg' => $request->noreg],
+        [
+          'alasan' => $request->alasan,
+          'nama_penanggungjawab' => $request->nama_penanggungjawab,
+          'umur_penanggungjawab' => $request->umur_penanggungjawab,
+          'kelamin_penanggungjawab' => $request->kelamin_penanggungjawab,
+          'alamat_penanggungjawab' => $request->alamat_penanggungjawab,
+          'identitas_penanggungjawab' => $request->identitas_penanggungjawab
+        ]
+      );
+
+      $ttd = self::saveImage(
+        $request,
+        $request->ttdYgMenyatakan,
+        $paksa->id . '_ygMenyatakan'
+      );
+
+      $paksa->ttdYgMenyatakan = $ttd;
+      $paksa->save();
     }
 
     $noSuratMeninggal = null;
@@ -192,6 +235,7 @@ class PulangController extends Controller
 
     $surat = DB::table('rs23_nosurat')->select('*')->where('noreg', $request->noreg)->get();
     $sambungan = DB::table('rs23_sambung')->select('*')->where('noreg', $request->noreg)->get();
+    $pulangpaksa = DB::table('rs23_paksa')->select('*')->where('noreg', $request->noreg)->get();
     if ($request->noSep !== null || $request->noSep !== '') {
       self::update_pulang_bpjs_ranap($request, $user, $noSuratMeninggal);
     }
@@ -203,6 +247,7 @@ class PulangController extends Controller
       'result' => $sql_cek_kunjungan,
       'surat' => $surat,
       'sambungan' => $sambungan,
+      'pulangpaksa' => $pulangpaksa,
     ]);
   }
 
@@ -335,4 +380,31 @@ class PulangController extends Controller
     $cari->delete();
     return new JsonResponse(['message' => 'berhasil dihapus'], 200);
   }
+
+
+  static function saveImage($request, $image, $id)
+    {
+
+        $file = null;
+
+        if ($image && $id) {
+            $name = $id;
+            $noreg = str_replace('/', '-', $request->noreg);
+            $folderPath = "pulang_paksa/" . $noreg . '/';
+
+            $image_parts = explode(";base64,", $image);
+            $image_type_aux = explode("image/", $image_parts[0]);
+            $image_type = $image_type_aux[1];
+            $image_base64 = base64_decode($image_parts[1], true);
+            $file = $folderPath . $name . '.' . $image_type;
+
+            $imageName = $name . '.' . $image_type;
+            // Storage::delete('public/' . $folderPath . $imageName);
+            //   Storage::disk('remote')->delete('public/' . $folderPath . $imageName);
+            // Storage::disk('public')->put($folderPath . $imageName, $image_base64);
+            Storage::disk('remote')->put('public/' . $folderPath . $imageName, $image_base64);
+        }
+
+        return $file;
+    }
 }
