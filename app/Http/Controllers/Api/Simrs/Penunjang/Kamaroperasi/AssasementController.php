@@ -19,6 +19,11 @@ class AssasementController extends Controller
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
     }
+    public function ambilByNoreg()
+    {
+        $data = AssasemenPraBedah::where('noreg', request('noreg'))->with(['user:kdpegsimrs,nama'])->get();
+        return new JsonResponse($data);
+    }
     public function ambil()
     {
         $data = AssasemenPraBedah::where('nota', request('nota'))->first();
