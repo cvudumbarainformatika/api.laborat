@@ -245,22 +245,28 @@ class CpptController extends Controller
     $kdpegsimrs = $user->kdpegsimrs;
     $nakes = $user->kdgroupnakes;
 
-    $anamnesis = AnamnesisController::storeAnamnesis((object) $request->anamnesis);
     $anamnesisId = null;
-    if ($anamnesis['success'] === true) {
-      $anamnesisId = $anamnesis['idAnamnesis'];
+    if ($request->has('anamnesis') && $request->anamnesis !== null) {
+      $anamnesis = AnamnesisController::storeAnamnesis((object) $request->anamnesis);
+      if (isset($anamnesis['success']) && $anamnesis['success'] === true) {
+        $anamnesisId = $anamnesis['idAnamnesis'];
+      }
     }
 
-    $pemeriksaanUmum = PemeriksaanUmumController::store((object) $request->pemeriksaan);
     $pemeriksaanUmumId = null;
-    if ($pemeriksaanUmum['success'] === true) {
-      $pemeriksaanUmumId = $pemeriksaanUmum['idPemeriksaan'];
+    if ($request->has('pemeriksaan') && $request->pemeriksaan !== null) {
+      $pemeriksaanUmum = PemeriksaanUmumController::store((object) $request->pemeriksaan);
+      if (isset($pemeriksaanUmum['success']) && $pemeriksaanUmum['success'] === true) {
+        $pemeriksaanUmumId = $pemeriksaanUmum['idPemeriksaan'];
+      }
     }
 
-    $penilaian = PemeriksaanPenilaianController::store((object) $request->penilaian);
     $penilaianId = null;
-    if ($penilaian['success'] === true) {
-      $penilaianId = $penilaian['idPenilaian'];
+    if ($request->has('penilaian') && $request->penilaian !== null) {
+      $penilaian = PemeriksaanPenilaianController::store((object) $request->penilaian);
+      if (isset($penilaian['success']) && $penilaian['success'] === true) {
+        $penilaianId = $penilaian['idPenilaian'];
+      }
     }
 
     $cppt = Cppt::create([
