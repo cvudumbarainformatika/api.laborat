@@ -131,4 +131,9 @@ class PermintaanOperasi extends Model
     {
         return $this->hasMany(PembacaanradiologiController::class, 'rs1', 'rs1');
     }
+
+    public function cppt()
+    {
+        return $this->hasMany(\App\Models\Simrs\Ranap\Pelayanan\Cppt::class, 'noreg', 'rs1');
+    }
 }

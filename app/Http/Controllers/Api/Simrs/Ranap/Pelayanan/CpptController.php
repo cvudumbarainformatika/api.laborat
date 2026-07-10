@@ -233,6 +233,69 @@ class CpptController extends Controller
     ]);
   }
 
+  public function saveCpptOk(Request $request)
+  {
+    $cekKasir = DB::table('rs23')->select('rs42')->where('rs1', $request->noreg)->where('rs41', '=', '1')->get();
+
+    if (count($cekKasir) > 0) {
+      return response()->json(['status' => 'failed', 'message' => 'Maaf, data pasien telah dikunci oleh kasir pada tanggal ' . $cekKasir[0]->rs42], 500);
+    }
+
+    $user = Pegawai::find(auth()->user()->pegawai_id);
+    $kdpegsimrs = $user->kdpegsimrs;
+    $nakes = $user->kdgroupnakes;
+
+    $anamnesis = AnamnesisController::storeAnamnesis((object) $request->anamnesis);
+    $anamnesisId = null;
+    if ($anamnesis['success'] === true) {
+      $anamnesisId = $anamnesis['idAnamnesis'];
+    }
+
+    $pemeriksaanUmum = PemeriksaanUmumController::store((object) $request->pemeriksaan);
+    $pemeriksaanUmumId = null;
+    if ($pemeriksaanUmum['success'] === true) {
+      $pemeriksaanUmumId = $pemeriksaanUmum['idPemeriksaan'];
+    }
+
+    $penilaian = PemeriksaanPenilaianController::store((object) $request->penilaian);
+    $penilaianId = null;
+    if ($penilaian['success'] === true) {
+      $penilaianId = $penilaian['idPenilaian'];
+    }
+
+    $cppt = Cppt::create([
+      'noreg' => $request->noreg,
+      'norm' => $request->norm,
+      'tgl' => date('Y-m-d H:i:s'),
+      'rs209_id' => $anamnesisId,
+      'rs253_id' => $pemeriksaanUmumId,
+      'penilaian_id' => $penilaianId,
+      'asessment' => $request->form['asessment'],
+      'plann' => $request->form['plann'],
+      'instruksi' => $request->form['instruksi'],
+      'kdruang' => $request->kdruang,
+      'user' => $kdpegsimrs,
+      'nakes' => $nakes,
+      's_sambung' => $request->form['s_sambung'] ?? null,
+      'o_sambung' => $request->form['o_sambung'] ?? null,
+    ]);
+
+    if (!$cppt) {
+      return new JsonResponse([
+        'success' => false,
+        'message' => 'Gagal menyimpan data'
+      ]);
+    }
+
+    $result = self::getdata($request->noreg, null);
+
+    return new JsonResponse([
+      'success' => true,
+      'message' => 'success',
+      'result' => $result
+    ]);
+  }
+
   public static function insertTarif($request, $user, $kdpegsimrs)
   {
 

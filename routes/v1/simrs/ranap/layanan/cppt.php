@@ -12,6 +12,7 @@ Route::group([
 ], function () {
     Route::get('/listcppt', [CpptController::class, 'list']);
     Route::post('/savecppt', [CpptController::class, 'saveCppt']);
+    Route::post('/savecpptok', [CpptController::class, 'saveCpptOk']);
     Route::post('/deletecppt', [CpptController::class, 'deleteCppt']);
 
     Route::post('/editcpptanamnesis', [CpptController::class, 'editCpptAnamnesis']);
