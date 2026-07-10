@@ -18,6 +18,7 @@ class NotadinasController extends Controller
 {
     public function listdata()
     {
+        $perPage = request('per_page', 20);
         $user = auth()->user()->pegawai_id;
         $pg= Pegawai::find($user);
         $pegawai= $pg->nip;
@@ -70,7 +71,8 @@ class NotadinasController extends Controller
             })
             ->groupBy('notadinas_heder.nonotadinas')
             ->orderBy('notadinas_heder.tglnotadinas', 'desc')
-            ->get();
+            // ->get();
+            ->paginate($perPage);
         return new JsonResponse($nota);
 
     }
