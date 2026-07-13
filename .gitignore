@@ -50,3 +50,6 @@ storage/framework
 #!/storage/framework/sessions/
 #!/storage/framework/views/
 #!/storage/logs/
+
+# Gemini AI rules
+.gemini

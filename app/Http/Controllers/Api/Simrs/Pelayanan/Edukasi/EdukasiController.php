@@ -48,7 +48,7 @@ class EdukasiController extends Controller
         if (!$hapus) {
             return new JsonResponse(['message' => 'Data Gagal Dihapus...!!!'], 500);
         }
-        $listedukasi = Transedukasi::where('noreg', $request->noreg);
+        $listedukasi = Transedukasi::where('rs1', $request->noreg)->get();
         return new JsonResponse(
             [
                 'message' => 'Data Berhasil Dihapus...!!!',
