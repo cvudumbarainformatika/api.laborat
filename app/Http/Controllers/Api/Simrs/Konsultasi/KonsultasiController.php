@@ -226,7 +226,7 @@ class KonsultasiController extends Controller
         $ranap = false;
         // $ranap = !($request->kdruang !== 'POL014' || $request->kdruang !== 'PEN005') ? false : true; // tambahan HD dari wawan
 
-        $ranap = $request->kdruang !== 'POL014' && $request->kdruang !== 'PEN005'; // Perbaikan logika tak ubah wan ....
+        $ranap = $request->kdruang !== 'POL014' && $request->kdruang !== 'PEN005' && $request->kdruang !== 'PEN001' && $data->kdruang !== 'PEN001'; // Perbaikan logika tak ubah wan ....
 
 
        

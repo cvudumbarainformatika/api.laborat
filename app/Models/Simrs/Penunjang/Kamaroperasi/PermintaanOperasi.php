@@ -136,4 +136,9 @@ class PermintaanOperasi extends Model
     {
         return $this->hasMany(\App\Models\Simrs\Ranap\Pelayanan\Cppt::class, 'noreg', 'rs1');
     }
+
+    public function konsultasi()
+    {
+        return $this->hasMany(\App\Models\Simrs\Konsultasi\Konsultasi::class, 'noreg', 'rs1');
+    }
 }
