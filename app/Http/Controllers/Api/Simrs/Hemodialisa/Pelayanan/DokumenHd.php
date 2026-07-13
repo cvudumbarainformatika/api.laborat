@@ -239,6 +239,7 @@ class DokumenHd extends Controller
                     ->with([
                         'tarif:id,rs1,rs3,rs4,rs5,rs6,rs7,rs8,rs9,rs10',
                         'nakesminta:kdpegsimrs,nama,kdgroupnakes,statusspesialis',
+                        'dokterkonsul:kdpegsimrs,nama,kdgroupnakes,statusspesialis',
                     ])
                     ->orderBy('id', 'DESC'); // ini updatean baru
             },

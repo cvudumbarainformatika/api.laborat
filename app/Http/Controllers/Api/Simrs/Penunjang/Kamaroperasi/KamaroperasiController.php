@@ -445,7 +445,12 @@ class KamaroperasiController extends Controller
                 'hasilradiologi' => function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
-                'konsultasi',
+                'konsultasi' => function ($q) {
+                    $q->with([
+                        'nakesminta:kdpegsimrs,nama,kdgroupnakes,statusspesialis',
+                        'dokterkonsul:kdpegsimrs,nama,kdgroupnakes,statusspesialis',
+                    ])->orderBy('id', 'DESC');
+                },
             ])
             ->first();
         return new JsonResponse([
