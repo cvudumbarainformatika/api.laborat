@@ -17,10 +17,23 @@ class MppSkrining extends Model
 
     protected $casts = [
         'skrining' => 'array',
+        'asesmen' => 'array',
+        'identifikasi_masalah' => 'array',
+        'sasaran' => 'array',
+        'perencanaan' => 'array',
+        'monitoring' => 'array',
+        'fasilitasi' => 'array',
+        'advokasi' => 'array',
+        'hasil_pelayanan' => 'array',
+        'terminasi' => 'array',
     ];
 
     public function petugas()
     {
         return $this->hasOne(Petugas::class, 'kdpegsimrs', 'kdpegsimrs');
+    }
+    public function petugas_updated()
+    {
+        return $this->hasOne(Petugas::class, 'kdpegsimrs', 'kdpegsimrs_updated');
     }
 }

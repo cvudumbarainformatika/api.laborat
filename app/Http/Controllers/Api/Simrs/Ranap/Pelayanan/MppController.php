@@ -13,7 +13,10 @@ class MppController extends Controller
     public function list()
     {
         $data = MppSkrining::where('noreg', request('noreg'))
-            ->with('petugas:kdpegsimrs,nik,nip,nama,kdgroupnakes,foto')
+            ->with([
+                'petugas:kdpegsimrs,nik,nip,nama,kdgroupnakes,foto',
+                'petugas_updated:kdpegsimrs,nik,nip,nama,kdgroupnakes,foto'
+            ])
             ->orderBy('created_at', 'DESC')
             ->get();
         return new JsonResponse($data);
@@ -24,27 +27,24 @@ class MppController extends Controller
         $pegawai = Petugas::find(auth()->user()->pegawai_id);
         $kdpegsimrs = $pegawai ? $pegawai->kdpegsimrs : null;
 
-        $data = null;
-        if ($request->id === null || !$request->has('id')) {
-            $data = new MppSkrining();
+        $data = MppSkrining::where('noreg', $request->noreg)->first();
+        if ($data) {
+            $data->fill($request->except(['id', 'kdpegsimrs', 'kdpegsimrs_updated']));
+            $data->kdpegsimrs_updated = $kdpegsimrs;
         } else {
-            $data = MppSkrining::find($request->id);
-            if (!$data) {
-                return new JsonResponse([
-                    'success' => false,
-                    'message' => 'Data tidak ditemukan'
-                ], 444);
-            }
+            $data = new MppSkrining();
+            $data->fill($request->except(['id', 'kdpegsimrs', 'kdpegsimrs_updated']));
+            $data->kdpegsimrs = $kdpegsimrs;
         }
-
-        $data->fill($request->except(['id', 'kdpegsimrs']));
-        $data->kdpegsimrs = $kdpegsimrs;
         $data->save();
 
         return new JsonResponse([
             'success' => true,
             'message' => 'Data berhasil disimpan',
-            'result' => $data->load('petugas:kdpegsimrs,nik,nip,nama,kdgroupnakes,foto')
+            'result' => $data->load([
+                'petugas:kdpegsimrs,nik,nip,nama,kdgroupnakes,foto',
+                'petugas_updated:kdpegsimrs,nik,nip,nama,kdgroupnakes,foto'
+            ])
         ], 200);
     }
 
