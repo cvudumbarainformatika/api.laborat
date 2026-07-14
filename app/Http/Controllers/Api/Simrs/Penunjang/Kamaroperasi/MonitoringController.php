@@ -223,7 +223,7 @@ class MonitoringController extends Controller
                     'noreg' => $request->noreg,
                     'nota' => $request->nota,
                     'norm' => $request->norm,
-                    'waktu' => $request->time,
+                    'waktu' => $request->waktu,
                 ],
                 $request->all()
             );

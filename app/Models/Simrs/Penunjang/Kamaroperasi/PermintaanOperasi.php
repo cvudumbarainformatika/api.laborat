@@ -81,11 +81,11 @@ class PermintaanOperasi extends Model
     }
     public function implant()
     {
-        return $this->hasMany(Implant::class, 'nota', 'rs2');
+        return $this->hasMany(Implant::class, 'noreg', 'rs1');
     }
     public function implant_seri()
     {
-        return $this->hasMany(ImplantSeri::class, 'nota', 'rs2');
+        return $this->hasMany(ImplantSeri::class, 'noreg', 'rs1');
     }
     public function inventaris_kasa()
     {
