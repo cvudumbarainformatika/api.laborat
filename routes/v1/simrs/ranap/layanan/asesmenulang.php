@@ -1,0 +1,13 @@
+<?php
+
+use App\Http\Controllers\Api\Simrs\Ranap\Pelayanan\AsesmenUlangController;
+use Illuminate\Support\Facades\Route;
+
+Route::group([
+    'middleware' => 'auth:api',
+    'prefix' => 'simrs/ranap/layanan/asesmenulang'
+], function () {
+    Route::get('/list', [AsesmenUlangController::class, 'index']);
+    Route::post('/simpan-jatuh', [AsesmenUlangController::class, 'simpanJatuh']);
+    Route::post('/simpan-nyeri', [AsesmenUlangController::class, 'simpanNyeri']);
+});

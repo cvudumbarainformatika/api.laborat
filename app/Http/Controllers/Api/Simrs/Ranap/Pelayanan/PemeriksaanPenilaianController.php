@@ -111,6 +111,7 @@ class PemeriksaanPenilaianController extends Controller
         return $data;
       } catch (\Throwable $th) {
         DB::rollBack();
+        logger($th);
         // return new JsonResponse(['message' => 'GAGAL DISIMPAN','err'=>$th], 500);
         $data = [
           'success' => false,
