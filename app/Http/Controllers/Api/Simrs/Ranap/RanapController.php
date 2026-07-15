@@ -366,7 +366,7 @@ class RanapController extends Controller
         foreach ($groupedByRuangan as $kdruang => $pasiens) {
             // Optimasi: Lakukan pembersihan string di awal (O(N)), bukan di dalam loop nested (O(N^2))
             foreach ($pasiens as $p) {
-                $p->clean_nama = strtoupper(trim(preg_replace('/\s+/', ' ', $p->nama)));
+                $p->clean_nama = strtoupper(trim(preg_replace('/\s+/', ' ', preg_replace('/[^A-Za-z ]/', '', $p->nama))));
                 $p->words = explode(' ', $p->clean_nama);
             }
 
