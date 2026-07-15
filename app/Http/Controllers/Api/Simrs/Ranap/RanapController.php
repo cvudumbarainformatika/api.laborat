@@ -383,20 +383,43 @@ class RanapController extends Controller
                     if ($n1 === $n2) {
                         $isSimilar = true;
                     } else {
-                        // Levenshtein
-                        if (strlen($n1) > 4 && strlen($n2) > 4) {
-                            if (levenshtein($n1, $n2) <= 2) {
-                                $isSimilar = true;
-                            }
-                        }
-                        // First two words
-                        if (!$isSimilar) {
-                            $w1 = $pasienA->words;
-                            $w2 = $pasienB->words;
-                            if (count($w1) >= 2 && count($w2) >= 2) {
-                                if ($w1[0] === $w2[0] && $w1[1] === $w2[1]) {
-                                    $isSimilar = true;
+                        $w1 = $pasienA->words;
+                        $w2 = $pasienB->words;
+
+                        $count1 = count($w1);
+                        $count2 = count($w2);
+
+                        if ($count1 > 0 && $count2 > 0) {
+                            $minWords = min($count1, $count2);
+                            $totalPercent = 0;
+                            $usedIndices = [];
+
+                            foreach ($w1 as $wordA) {
+                                $bestPercent = 0;
+                                $bestIndex = -1;
+
+                                foreach ($w2 as $indexB => $wordB) {
+                                    if (in_array($indexB, $usedIndices)) {
+                                        continue;
+                                    }
+
+                                    similar_text($wordA, $wordB, $percent);
+                                    if ($percent > $bestPercent) {
+                                        $bestPercent = $percent;
+                                        $bestIndex = $indexB;
+                                    }
                                 }
+
+                                if ($bestPercent >= 70 && $bestIndex !== -1) {
+                                    $totalPercent += $bestPercent;
+                                    $usedIndices[] = $bestIndex;
+                                }
+                            }
+
+                            // Pembagi menggunakan jumlah kata paling sedikit (minWords)
+                            $averagePercent = $minWords > 0 ? ($totalPercent / $minWords) : 0;
+                            if ($averagePercent >= 80) {
+                                $isSimilar = true;
                             }
                         }
                     }
