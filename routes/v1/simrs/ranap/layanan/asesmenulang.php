@@ -9,5 +9,7 @@ Route::group([
 ], function () {
     Route::get('/list', [AsesmenUlangController::class, 'index']);
     Route::post('/simpan-jatuh', [AsesmenUlangController::class, 'simpanJatuh']);
+    Route::post('/hapus-jatuh', [AsesmenUlangController::class, 'hapusJatuh']);
     Route::post('/simpan-nyeri', [AsesmenUlangController::class, 'simpanNyeri']);
+    Route::post('/hapus-nyeri', [AsesmenUlangController::class, 'hapusNyeri']);
 });
