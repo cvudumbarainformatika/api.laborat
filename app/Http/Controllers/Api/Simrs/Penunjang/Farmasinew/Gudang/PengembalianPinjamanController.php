@@ -261,19 +261,20 @@ class PengembalianPinjamanController extends Controller
                 $rinciKeyed = $rinciPenerimaan->keyBy(function ($item) {
                     return $item->nopenerimaan . '_' . $item->no_batch;
                 });
+                $rincianFifo = null;
                 foreach ($caristok as $stokItem) {
                     if ($jumlahDikembalikan <= 0) break; // keluar dari loop jika jumlah sudah cukup
                     $sisa = $stokItem->jumlah;
                     $keyGabungan = $stokItem->nopenerimaan . '_' . $stokItem->nobatch;
-                    $rinci = $rinciKeyed[$keyGabungan] ?? null;
-                    $idRinci = $rinci->id ?? null;
+                    $rinciPenerimaanItem = $rinciKeyed[$keyGabungan] ?? null;
+                    $idRinci = $rinciPenerimaanItem->id ?? null;
                     $pengurangan = min($jumlahDikembalikan, $sisa);
 
                     $rincianFifo = PengembalianRinciFifo::updateOrCreate(
                         [
                             'nopengembalian' => $key->nopengembalian,
                             'kdobat' => $key->kdobat,
-                            'id_rincipenerimaan' => $idRinci, // percuma karena ya sama aja 
+                            'id_rincipenerimaan' => $key->id_rincipenerimaan,
                             'nopenerimaan' => $stokItem->nopenerimaan,
                         ],
                         [
