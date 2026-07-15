@@ -17,7 +17,7 @@ class AsesmenUlangController extends Controller
 {
     public function index(Request $request)
     {
-        $noreg = $request->noreg;
+        $noreg = $request->noreg; // by noreg
 
         $jatuh = AsesmenUlangJatuh::where('noreg', $noreg)
             ->with('pegawai:kdpegsimrs,nik,nama,kdgroupnakes')
