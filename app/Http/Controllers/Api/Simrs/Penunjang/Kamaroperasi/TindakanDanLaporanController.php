@@ -162,7 +162,18 @@ class TindakanDanLaporanController extends Controller
         // return new JsonResponse($request->all());
 
         $cekTindakanOperasi = Kamaroperasi::where('rs1', $request->noreg)->where('rs2', $request->nota)->first();
-        if (!$cekTindakanOperasi)  return new JsonResponse(['message' => 'Tindakan Operasi belum dibuatkan, tidak bisa membuat laporan operasi'], 410);
+        if (!$cekTindakanOperasi) {
+            $cekTindakanLain = Tindakan::join('rs30', 'rs73.rs4', '=', 'rs30.rs1')
+                ->where('rs73.rs1', $request->noreg)
+                ->where('rs73.rs2', $request->nota)
+                ->where('rs30.rs2', 'like', 'Kanulasi Vena Sentral%')
+                ->select('rs73.id')
+                ->first();
+
+            if (!$cekTindakanLain) {
+                return new JsonResponse(['message' => 'Tindakan Operasi / Kanulasi Vena Sentral belum dibuatkan, tidak bisa membuat laporan operasi'], 410);
+            }
+        }
         try {
             DB::beginTransaction();
 
