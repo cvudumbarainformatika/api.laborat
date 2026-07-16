@@ -391,35 +391,47 @@ class RanapController extends Controller
 
                         if ($count1 > 0 && $count2 > 0) {
                             $minWords = min($count1, $count2);
-                            $totalPercent = 0;
-                            $usedIndices = [];
 
-                            foreach ($w1 as $wordA) {
-                                $bestPercent = 0;
-                                $bestIndex = -1;
+                            if ($minWords === 1) {
+                                // --- ATURAN KHUSUS NAMA 1 KATA ---
+                                // Hanya dianggap mirip jika salah ketik maksimal 1 huruf (Levenshtein <= 1)
+                                $word1 = isset($w1[0]) ? $w1[0] : '';
+                                $word2 = isset($w2[0]) ? $w2[0] : '';
+                                if ($word1 !== '' && $word2 !== '' && levenshtein($word1, $word2) <= 1) {
+                                    $isSimilar = true;
+                                }
+                            } else {
+                                // --- ATURAN KHUSUS NAMA MULTI KATA ---
+                                $totalPercent = 0;
+                                $usedIndices = [];
 
-                                foreach ($w2 as $indexB => $wordB) {
-                                    if (in_array($indexB, $usedIndices)) {
-                                        continue;
+                                foreach ($w1 as $wordA) {
+                                    $bestPercent = 0;
+                                    $bestIndex = -1;
+
+                                    foreach ($w2 as $indexB => $wordB) {
+                                        if (in_array($indexB, $usedIndices)) {
+                                            continue;
+                                        }
+
+                                        similar_text($wordA, $wordB, $percent);
+                                        if ($percent > $bestPercent) {
+                                            $bestPercent = $percent;
+                                            $bestIndex = $indexB;
+                                        }
                                     }
 
-                                    similar_text($wordA, $wordB, $percent);
-                                    if ($percent > $bestPercent) {
-                                        $bestPercent = $percent;
-                                        $bestIndex = $indexB;
+                                    if ($bestPercent >= 70 && $bestIndex !== -1) {
+                                        $totalPercent += $bestPercent;
+                                        $usedIndices[] = $bestIndex;
                                     }
                                 }
 
-                                if ($bestPercent >= 70 && $bestIndex !== -1) {
-                                    $totalPercent += $bestPercent;
-                                    $usedIndices[] = $bestIndex;
+                                // Pembagi menggunakan jumlah kata paling sedikit (minWords)
+                                $averagePercent = $minWords > 0 ? ($totalPercent / $minWords) : 0;
+                                if ($averagePercent >= 80) {
+                                    $isSimilar = true;
                                 }
-                            }
-
-                            // Pembagi menggunakan jumlah kata paling sedikit (minWords)
-                            $averagePercent = $minWords > 0 ? ($totalPercent / $minWords) : 0;
-                            if ($averagePercent >= 80) {
-                                $isSimilar = true;
                             }
                         }
                     }
