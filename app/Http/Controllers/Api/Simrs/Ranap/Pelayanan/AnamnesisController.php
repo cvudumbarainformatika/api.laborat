@@ -190,6 +190,8 @@ class AnamnesisController extends Controller
               'norm'=> $request->norm,
               "crMasuk" => $request->formNeoNatal['crMasuk'],
               "asalMasuk" => $request->formNeoNatal['asalMasuk'],
+              "namaibu" => $request->formNeoNatal['namaibu'],
+              "namaayah" => $request->formNeoNatal['namaayah'],
               "penanggungJawab" => $request->formNeoNatal['penanggungJawab'],
               "noHpPj" => $request->formNeoNatal['noHpPj'],
               "alamatPj" => $request->formNeoNatal['alamatPj'],

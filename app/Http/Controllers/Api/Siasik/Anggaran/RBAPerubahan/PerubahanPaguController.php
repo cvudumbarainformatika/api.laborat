@@ -168,10 +168,12 @@ class PerubahanPaguController extends Controller
                 ]
             );
             if ($data) {
-                Tampung_Pagu_pak::create([
+                Tampung_Pagu_pak::updateOrCreate([
                     'kodekegiatanblud' => $data->kodekegiatan,
-                    'pagu' => $data->total,
                     'tahun' => $data->tahun,
+                ],
+                [
+                    'pagu' => $data->total,
                 ]);
             }
 
@@ -183,29 +185,29 @@ class PerubahanPaguController extends Controller
         }
     }
 
-    public function penetapan(Request $request) {
+    // public function penetapan(Request $request) {
 
-        $tahun = request('tahun', date('Y'));
-        try {
-            DB::beginTransaction();
-            $dataPak = Penetapan_Pagu_pak::where('tahun', $tahun)->get();
+    //     $tahun = request('tahun', date('Y'));
+    //     try {
+    //         DB::beginTransaction();
+    //         $dataPak = Penetapan_Pagu_pak::where('tahun', $tahun)->get();
 
-            foreach ($dataPak as $item) {
+    //         foreach ($dataPak as $item) {
 
-                Tampung_Pagu_pak::where('kodekegiatanblud', $item->kodekegiatan)
-                    ->where('tahun', $item->tahun)
-                    ->update([
-                        'pagu'    => $item->pagu
-                    ]);
+    //             Tampung_Pagu_pak::where('kodekegiatanblud', $item->kodekegiatan)
+    //                 ->where('tahun', $item->tahun)
+    //                 ->update([
+    //                     'pagu'    => $item->pagu
+    //                 ]);
                 
-            }
-            DB::commit();
-            return new JsonResponse(['status' => 'success', 'message' => 'Berhasil Penetapan Data Pendapatan']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return new JsonResponse(['status' => 'error', 'message' => 'Data gagal penetapan: ' . $e->getMessage()], 500);
-        }
-    }
+    //         }
+    //         DB::commit();
+    //         return new JsonResponse(['status' => 'success', 'message' => 'Berhasil Penetapan Data Pendapatan']);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return new JsonResponse(['status' => 'error', 'message' => 'Data gagal penetapan: ' . $e->getMessage()], 500);
+    //     }
+    // }
     public function delete(Request $request)
     {
         try {
