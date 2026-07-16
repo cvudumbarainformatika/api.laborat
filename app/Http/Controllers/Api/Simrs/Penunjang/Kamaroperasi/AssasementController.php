@@ -14,9 +14,18 @@ class AssasementController extends Controller
 {
     public function getnota()
     {
-        $nota = PermintaanOperasi::select('rs2 as nota')->where('rs1', request('noreg'))
-            ->where('rs10', request('ruang'))
-            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+        $ruang = request('ruang');
+        
+        $query = PermintaanOperasi::select('rs2 as nota')
+            ->where('rs1', request('noreg'));
+
+        if (strpos($ruang, 'POL') === 0) {
+            $query->where('rs10', $ruang);
+        } else {
+            $query->where('rs10', 'not like', 'POL%');
+        }
+
+        $nota = $query->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
     }
     public function ambilByNoreg()
