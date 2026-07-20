@@ -10,6 +10,7 @@ Route::group([
   'prefix' => 'simrs/penunjang/ok/assasement'
 ], function () {
   Route::get('/getnota', [AssasementController::class, 'getnota']);
+  Route::get('/pra-bedah/ambil-by-noreg', [AssasementController::class, 'ambilByNoreg']);
   Route::get('/pra-bedah/ambil', [AssasementController::class, 'ambil']);
   Route::post('/pra-bedah/simpan', [AssasementController::class, 'simpan']);
   Route::post('/pra-induksi/simpan', [AssasementController::class, 'simpanPraInduksi']);

@@ -14,6 +14,7 @@ use App\Models\Simrs\Rajal\KunjunganPoli;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class PlannController extends Controller
 {
@@ -150,6 +151,7 @@ class PlannController extends Controller
                         'norm' => $request->norm,
                         'id_heder' => $simpan['id'] ?? '',
                         'atas_dasar' => $request->atasdasarpulang,
+                        'alasan' => $request->alasan,
                         'nama_penanggungjawab' => $request->nama_penanggungjawab,
                         'umur_penanggungjawab' => $request->umur_penanggungjawab,
                         'kelamin_penanggungjawab' => $request->kelamin_penanggungjawab,
@@ -158,6 +160,15 @@ class PlannController extends Controller
                         ]
                     );
                 }
+                $ttd = self::saveImage(
+                    $request,
+                    $request->ttdYgMenyatakan,
+                    $simpansambung->id . '_ygMenyatakan'
+                );
+
+                $simpansambung->ttdYgMenyatakan = $ttd;
+                $simpansambung->save();
+
             }
 
 
@@ -303,5 +314,31 @@ class PlannController extends Controller
             DB::rollBack();
             return new JsonResponse(['message' => 'ada kesalahan', 'error' => $e], 500);
         }
+    }
+
+    static function saveImage($request, $image, $id)
+    {
+
+        $file = null;
+
+        if ($image && $id) {
+            $name = $id;
+            $noreg = str_replace('/', '-', $request->noreg);
+            $folderPath = "pulang_paksa/" . $noreg . '/';
+
+            $image_parts = explode(";base64,", $image);
+            $image_type_aux = explode("image/", $image_parts[0]);
+            $image_type = $image_type_aux[1];
+            $image_base64 = base64_decode($image_parts[1], true);
+            $file = $folderPath . $name . '.' . $image_type;
+
+            $imageName = $name . '.' . $image_type;
+            // Storage::delete('public/' . $folderPath . $imageName);
+            //   Storage::disk('remote')->delete('public/' . $folderPath . $imageName);
+            // Storage::disk('public')->put($folderPath . $imageName, $image_base64);
+            Storage::disk('remote')->put('public/' . $folderPath . $imageName, $image_base64);
+        }
+
+        return $file;
     }
 }

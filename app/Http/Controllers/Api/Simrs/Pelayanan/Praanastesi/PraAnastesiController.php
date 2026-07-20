@@ -91,7 +91,7 @@ class PraAnastesiController extends Controller
   public function getPraAnastesiKunjunganPoli()
   {
     $data = PraAnastesi::where('noreg', '=', request('noreg'))
-      ->with(['user:id,nama'])
+      ->with(['user:id,nama,kdpegsimrs'])
       ->get();
     if (!$data) {
       return new JsonResponse(['message' => 'Ada Kesalahan'], 500);

@@ -1,0 +1,224 @@
+<?php
+
+namespace App\Http\Controllers\Api\Siasik\Anggaran\RBAPerubahan;
+
+use App\Helpers\FormatingHelper;
+use App\Http\Controllers\Api\Siasik\Anggaran\PenyusunanAnggaran\AnggaranPendapatanController;
+use App\Http\Controllers\Controller;
+use App\Models\Siasik\Anggaran\Anggaran_Pendapatan_pak;
+use App\Models\Siasik\Anggaran\Tampung_pendapatan;
+use App\Models\Sigarang\Pegawai;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class PerubahanPendapatanController extends Controller
+{
+    public function index()
+    {
+        $tahun = request('tahun','Y');
+        $data = Anggaran_Pendapatan_pak::where('tahun',$tahun)->get();
+        return new JsonResponse($data);
+    }
+
+    public function save(Request $request)
+    {
+        $validated = $request->validate([
+            'notrans' => 'nullable',
+            'bidang' => 'nullable',
+            'koderekeningblud' => 'required',
+            'uraian_rekening' => 'nullable',
+            'nilai' => 'required',
+            'tahun' => 'nullable',
+            'tgl_entry' => 'nullable',
+            'user_entry' => 'nullable',
+        ], [
+            'koderekeningblud.required' => 'Rekening Harus Di isi.',
+            'nilai.required' => 'Nilai Harus Di isi.'
+        ]);
+
+        $time = date('Y-m-d H:i:s');
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->kdpegsimrs;
+
+        if (empty($request->notrans)) {
+            DB::connection('siasik')->select('call anggaranpendapatan(@nomor)');
+            $x = DB::connection('siasik')->table('conter')->select('anggaran_pendapatan')->first();
+
+            if (!$x) {
+                throw new \Exception('Gagal mendapatkan nomor dari prosedur notadinas');
+            }
+            $nomer = (int)$x->anggaran_pendapatan;
+            $notrans = FormatingHelper::nonotadinas($nomer, 'AP-Perubahan');
+        } else {
+            $notrans = $request->notrans;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $anggaran = Anggaran_Pendapatan_pak::updateOrCreate(
+                [
+                    'notrans' => $notrans
+                ],
+                [
+                    'bidang' => $validated['bidang'],
+                    'koderekeningblud' => $validated['koderekeningblud'],
+                    'uraian_rekening' => $validated['uraian_rekening'],
+                    'nilai' => $validated['nilai'],
+                    'tahun' => $validated['tahun'],
+                    'tgl_entry' => $time,
+                    'user_entry' => $pegawai,
+                ]
+            );
+            // if ($anggaran) {
+            //     Tampung_pendapatan::create([
+            //         'notrans' => $anggaran->notrans,
+            //         'pagu' => $anggaran->nilai,
+            //         'koderekeningblud' => $anggaran->koderekeningblud,
+            //         'tahun' => $anggaran->tahun,
+            //     ]);
+            // }
+
+            DB::commit();
+            return new JsonResponse(['status' => 'success', 'message' => 'Data berhasil disimpan', 'data' => $anggaran]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse(['status' => 'error', 'message' => 'Data gagal disimpan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function penetapan(Request $request) {
+
+        $rekening = $request['rekening'];
+        $tahun = request('tahun', date('Y'));
+        try {
+            DB::beginTransaction();
+            $dataPak = Anggaran_Pendapatan_pak::where('tahun', $tahun)->get();
+
+            foreach ($dataPak as $item) {
+
+                Tampung_pendapatan::where('koderekeningblud', $item->koderekeningblud)
+                    ->where('tahun', $item->tahun)
+                    ->update([
+                        'notrans' => $item->notrans,
+                        'pagu'    => $item->pagu,
+                        'flag'    => $item->flag,
+                    ]);
+            }
+            DB::commit();
+            return new JsonResponse(['status' => 'success', 'message' => 'Berhasil Penetapan Data Pendapatan']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse(['status' => 'error', 'message' => 'Data gagal penetapan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function delete(Request $request)
+    {
+        try {
+            // Validasi request
+            $validated = $request->validate([
+                'id' => 'required'
+            ]);
+
+            DB::beginTransaction();
+
+            $data = Anggaran_Pendapatan_pak::find($validated['id']);
+
+            if (!$data) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data tidak ditemukan'
+                ], 404);
+            }
+
+            if ($data->kunci === '1') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data terkunci dan tidak dapat dihapus'
+                ], 403);
+            }
+            // Hapus data utama
+            $data->delete();
+
+            // Hapus detail / relasi
+            Tampung_pendapatan::where('notrans', $data->notrans)->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data berhasil dihapus',
+                'data' => $data
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function kunci(Request $request)
+    {
+        try {
+            // Validasi request
+            $validated = $request->validate([
+                'id' => 'required'
+            ]);
+
+            DB::beginTransaction();
+
+            $data = Anggaran_Pendapatan_pak::find($validated['id']);
+
+            if (!$data) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data tidak ditemukan'
+                ], 404);
+            }
+
+            $data->kunci = $data->kunci === '1' ? '' : '1';
+            $data->save(); 
+            Tampung_pendapatan::where('notrans', $data->notrans)
+            ->update([
+                'flag' => $data->kunci === '1' ? '1' : ''
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => $data->kunci === '1'
+                ? 'Data berhasil dikunci'
+                : 'Kunci berhasil dibuka',
+                'data' => $data
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal proses kunci: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+}

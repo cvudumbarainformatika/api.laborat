@@ -20,6 +20,160 @@ class RanapController extends Controller
         $total = self::query_table()->get()->count();
         $data = self::query_table()->simplePaginate(25);
 
+        $norms = $data->pluck('norm')->filter()->unique()->toArray();
+        $alergis = [];
+        if (!empty($norms)) {
+            $alergis = DB::table('rs209')
+                ->select('rs2 as norm', 'riwayatalergi', 'keteranganalergi')
+                ->whereIn('rs2', $norms)
+                ->whereNotNull('riwayatalergi')
+                ->where('riwayatalergi', '!=', '')
+                ->where('riwayatalergi', '!=', '[]')
+                ->where('riwayatalergi', 'not like', '%tidak ada%')
+                ->where('riwayatalergi', 'not like', '%tdk ada%')
+                ->whereNotNull('keteranganalergi')
+                ->where('keteranganalergi', '!=', '')
+                ->where('keteranganalergi', 'not like', '%tidak ada%')
+                ->where('keteranganalergi', 'not like', '%tdk ada%')
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy('norm');
+        }
+
+        $noregs = $data->pluck('noreg')->filter()->unique()->toArray();
+        $penilaians = [];
+        $resusitasi = [];
+        $mppSkrinings = [];
+        if (!empty($noregs)) {
+            $penilaians = DB::table('penilaian')
+                ->select(
+                    'id',
+                    'rs1 as noreg',
+                    'barthel',
+                    'norton',
+                    'humpty_dumpty',
+                    'morse_fall',
+                    'ontario'
+                )
+                ->whereIn('rs1', $noregs)
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy('noreg');
+
+            $resusitasi = DB::table('inform_concern')
+                ->select('id', 'noreg', 'jenis', 'setuju')
+                ->whereIn('noreg', $noregs)
+                ->where('jenis', '=', 'Resusitasi')
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy('noreg');
+
+            $mppSkrinings = DB::table('mpp_skrinings')
+                ->select('id', 'noreg', 'skrining')
+                ->whereIn('noreg', $noregs)
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy('noreg');
+        }
+
+        $kdruangans = $data->pluck('kdruangan')->filter()->unique()->toArray();
+        $namaSamaMap = self::getNamaSamaMap($kdruangans);
+
+        $data->getCollection()->transform(function ($item) use ($alergis, $penilaians, $resusitasi, $namaSamaMap, $mppSkrinings) {
+            $item->pasien_mpp = false;
+            if (isset($mppSkrinings[$item->noreg])) {
+                $mpp = $mppSkrinings[$item->noreg]->first();
+                if ($mpp && $mpp->skrining) {
+                    $skrining = json_decode($mpp->skrining, true);
+                    if (is_array($skrining)) {
+                        $score = 0;
+                        $keys = [
+                            'usia',
+                            'kognitif_rendah',
+                            'resiko_tinggi',
+                            'potensi_komplain',
+                            'kasus_penyakit',
+                            'keterbatasan_adl',
+                            'pakai_alat_medis',
+                            'riwayat_psikologis',
+                            'readmisi',
+                            'biaya_tinggi',
+                            'pembiayaan_komplek',
+                            'melebihi_los',
+                            'transfer_rujukan',
+                            'kerjasama_sektor',
+                            'kontinuitas_pelayanan'
+                        ];
+                        foreach ($keys as $key) {
+                            if (
+                                isset($skrining[$key]) &&
+                                $skrining[$key] !== null &&
+                                $skrining[$key] !== false &&
+                                $skrining[$key] !== '' &&
+                                $skrining[$key] !== []
+                            ) {
+                                $score++;
+                            }
+                        }
+                        if ($score >= 3) {
+                            $item->pasien_mpp = true;
+                        }
+                    }
+                }
+            }
+
+            $item->alergis = isset($alergis[$item->norm])
+                ? $alergis[$item->norm]->take(5)->map(function ($al) {
+                    return [
+                        'riwayatalergi' => json_decode($al->riwayatalergi) ?? $al->riwayatalergi,
+                        'keteranganalergi' => $al->keteranganalergi
+                    ];
+                })->values()->all()
+                : [];
+
+            $item->resiko_jatuh = [];
+            if (isset($penilaians[$item->noreg])) {
+                $pen = $penilaians[$item->noreg]->first();
+                $isKuning = (
+                    ($pen->humpty_dumpty && (strpos($pen->humpty_dumpty, '"kuning":true') !== false || strpos($pen->humpty_dumpty, '"kuning": true') !== false)) ||
+                    ($pen->morse_fall && (strpos($pen->morse_fall, '"kuning":true') !== false || strpos($pen->morse_fall, '"kuning": true') !== false)) ||
+                    ($pen->ontario && (strpos($pen->ontario, '"kuning":true') !== false || strpos($pen->ontario, '"kuning": true') !== false))
+                );
+
+                if ($isKuning) {
+                    $item->resiko_jatuh = [
+                        [
+                            'id' => $pen->id,
+                            'barthel' => json_decode($pen->barthel),
+                            'norton' => json_decode($pen->norton),
+                            'humpty_dumpty' => json_decode($pen->humpty_dumpty),
+                            'morse_fall' => json_decode($pen->morse_fall),
+                            'ontario' => json_decode($pen->ontario)
+                        ]
+                    ];
+                }
+            }
+
+            $item->penolakan_resusitasi = [];
+            if (isset($resusitasi[$item->noreg])) {
+                $dnr = $resusitasi[$item->noreg]->first();
+                if ($dnr->setuju === 'Tidak') {
+                    $item->penolakan_resusitasi = [
+                        [
+                            'id' => $dnr->id,
+                            'noreg' => $dnr->noreg,
+                            'jenis' => $dnr->jenis,
+                            'setuju' => $dnr->setuju
+                        ]
+                    ];
+                }
+            }
+
+            $item->nama_sama_mirip = isset($namaSamaMap[$item->noreg]) ? $namaSamaMap[$item->noreg] : [];
+
+            return $item;
+        });
+
         $response = (object)[
             'total' => $total,
             'data' => $data
@@ -66,6 +220,13 @@ class RanapController extends Controller
             'rs23_sambung.ket as tindaklanjut_sambung', // tindaklanjut
             'rs23.rs23 as carakeluar', // cara keluar
             'rs15.rs2 as nama_panggil',
+            'rs23_paksa.alasan as alasan_pulangpaksa',
+            'rs23_paksa.nama_penanggungjawab',
+            'rs23_paksa.umur_penanggungjawab',
+            'rs23_paksa.kelamin_penanggungjawab',
+            'rs23_paksa.alamat_penanggungjawab',
+            'rs23_paksa.identitas_penanggungjawab',
+            'rs23_paksa.ttdYgMenyatakan',
             DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
             DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
             DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
@@ -129,6 +290,7 @@ class RanapController extends Controller
             ->leftjoin('rs26', 'rs26.rs1', 'rs23.rs23') // master cara keluar
             ->leftjoin('rs23_nosurat', 'rs23_nosurat.noreg', 'rs23.rs1')
             ->leftjoin('rs23_sambung', 'rs23_sambung.noreg', 'rs23.rs1') // sambungan rs23
+            ->leftjoin('rs23_paksa', 'rs23_paksa.noreg', 'rs23.rs1') // pulang paksa
             // ->leftJoin('serah_terima', function ($join) {
             //     $join->on('rs23.rs1', '=', 'serah_terima.noreg')
             //         ->on('serah_terima.ke', '=', 'rs23.rs5');
@@ -182,6 +344,115 @@ class RanapController extends Controller
             ->groupBy('rs23.rs1');
 
         return $data;
+    }
+
+    public static function getNamaSamaMap($kdruangans)
+    {
+        $namaSamaMap = [];
+        if (empty($kdruangans)) {
+            return $namaSamaMap;
+        }
+
+        // Ambil semua pasien aktif di ruangan-ruangan tersebut beserta nomor bed (rs23.rs7)
+        $allPasienInRooms = DB::table('rs23')
+            ->join('rs15', 'rs15.rs1', '=', 'rs23.rs2')
+            ->select('rs23.rs5 as kdruangan', 'rs23.rs1 as noreg', 'rs15.rs2 as nama', 'rs23.rs7 as nomorbed')
+            ->whereIn('rs23.rs5', $kdruangans)
+            ->where('rs23.rs22', '=', '')
+            ->where('rs23.rs1', '!=', '')
+            ->get();
+
+        $groupedByRuangan = $allPasienInRooms->groupBy('kdruangan');
+        foreach ($groupedByRuangan as $kdruang => $pasiens) {
+            // Optimasi: Lakukan pembersihan string di awal (O(N)), bukan di dalam loop nested (O(N^2))
+            foreach ($pasiens as $p) {
+                $p->clean_nama = strtoupper(trim(preg_replace('/\s+/', ' ', preg_replace('/[^A-Za-z ]/', '', $p->nama))));
+                $p->words = explode(' ', $p->clean_nama);
+            }
+
+            $count = count($pasiens);
+            for ($i = 0; $i < $count; $i++) {
+                $pasienA = $pasiens[$i];
+                for ($j = $i + 1; $j < $count; $j++) {
+                    $pasienB = $pasiens[$j];
+
+                    $n1 = $pasienA->clean_nama;
+                    $n2 = $pasienB->clean_nama;
+
+                    $isSimilar = false;
+                    if ($n1 === $n2) {
+                        $isSimilar = true;
+                    } else {
+                        $w1 = $pasienA->words;
+                        $w2 = $pasienB->words;
+
+                        $count1 = count($w1);
+                        $count2 = count($w2);
+
+                        if ($count1 > 0 && $count2 > 0) {
+                            $minWords = min($count1, $count2);
+
+                            if ($minWords === 1) {
+                                // --- ATURAN KHUSUS NAMA 1 KATA ---
+                                // Hanya dianggap mirip jika salah ketik maksimal 1 huruf (Levenshtein <= 1)
+                                $word1 = isset($w1[0]) ? $w1[0] : '';
+                                $word2 = isset($w2[0]) ? $w2[0] : '';
+                                if ($word1 !== '' && $word2 !== '' && levenshtein($word1, $word2) <= 1) {
+                                    $isSimilar = true;
+                                }
+                            } else {
+                                // --- ATURAN KHUSUS NAMA MULTI KATA ---
+                                $totalPercent = 0;
+                                $usedIndices = [];
+
+                                foreach ($w1 as $wordA) {
+                                    $bestPercent = 0;
+                                    $bestIndex = -1;
+
+                                    foreach ($w2 as $indexB => $wordB) {
+                                        if (in_array($indexB, $usedIndices)) {
+                                            continue;
+                                        }
+
+                                        similar_text($wordA, $wordB, $percent);
+                                        if ($percent > $bestPercent) {
+                                            $bestPercent = $percent;
+                                            $bestIndex = $indexB;
+                                        }
+                                    }
+
+                                    if ($bestPercent >= 70 && $bestIndex !== -1) {
+                                        $totalPercent += $bestPercent;
+                                        $usedIndices[] = $bestIndex;
+                                    }
+                                }
+
+                                // Pembagi menggunakan jumlah kata paling sedikit (minWords)
+                                $averagePercent = $minWords > 0 ? ($totalPercent / $minWords) : 0;
+                                if ($averagePercent >= 80) {
+                                    $isSimilar = true;
+                                }
+                            }
+                        }
+                    }
+
+                    if ($isSimilar) {
+                        $namaSamaMap[$pasienA->noreg][] = [
+                            'noreg' => $pasienB->noreg,
+                            'nama' => $pasienB->nama,
+                            'nomorbed' => $pasienB->nomorbed
+                        ];
+                        $namaSamaMap[$pasienB->noreg][] = [
+                            'noreg' => $pasienA->noreg,
+                            'nama' => $pasienA->nama,
+                            'nomorbed' => $pasienA->nomorbed
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $namaSamaMap;
     }
 
     public function kunjunganpasien()
@@ -376,6 +647,110 @@ class RanapController extends Controller
             ->orderby('rs23.rs3', 'DESC')
             ->groupBy('rs23.rs1')
             ->paginate(25);
+
+        $norms = $data->pluck('norm')->filter()->unique()->toArray();
+        $alergis = [];
+        if (!empty($norms)) {
+            $alergis = DB::table('rs209')
+                ->select('rs2 as norm', 'riwayatalergi', 'keteranganalergi')
+                ->whereIn('rs2', $norms)
+                ->whereNotNull('riwayatalergi')
+                ->where('riwayatalergi', '!=', '')
+                ->where('riwayatalergi', '!=', '[]')
+                ->where('riwayatalergi', 'not like', '%tidak ada%')
+                ->where('riwayatalergi', 'not like', '%tdk ada%')
+                ->whereNotNull('keteranganalergi')
+                ->where('keteranganalergi', '!=', '')
+                ->where('keteranganalergi', 'not like', '%tidak ada%')
+                ->where('keteranganalergi', 'not like', '%tdk ada%')
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy('norm');
+        }
+
+        $noregs = $data->pluck('noreg')->filter()->unique()->toArray();
+        $penilaians = [];
+        $resusitasi = [];
+        if (!empty($noregs)) {
+            $penilaians = DB::table('penilaian')
+                ->select(
+                    'id',
+                    'rs1 as noreg',
+                    'barthel',
+                    'norton',
+                    'humpty_dumpty',
+                    'morse_fall',
+                    'ontario'
+                )
+                ->whereIn('rs1', $noregs)
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy('noreg');
+
+            $resusitasi = DB::table('inform_concern')
+                ->select('id', 'noreg', 'jenis', 'setuju')
+                ->whereIn('noreg', $noregs)
+                ->where('jenis', '=', 'Resusitasi')
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy('noreg');
+        }
+
+        $kdruangans = $data->pluck('kdruangan')->filter()->unique()->toArray();
+        $namaSamaMap = self::getNamaSamaMap($kdruangans);
+
+        $data->getCollection()->transform(function ($item) use ($alergis, $penilaians, $resusitasi, $namaSamaMap) {
+            $item->alergis = isset($alergis[$item->norm])
+                ? $alergis[$item->norm]->take(5)->map(function ($al) {
+                    return [
+                        'riwayatalergi' => json_decode($al->riwayatalergi) ?? $al->riwayatalergi,
+                        'keteranganalergi' => $al->keteranganalergi
+                    ];
+                })->values()->all()
+                : [];
+
+            $item->resiko_jatuh = [];
+            if (isset($penilaians[$item->noreg])) {
+                $pen = $penilaians[$item->noreg]->first();
+                $isKuning = (
+                    ($pen->humpty_dumpty && (strpos($pen->humpty_dumpty, '"kuning":true') !== false || strpos($pen->humpty_dumpty, '"kuning": true') !== false)) ||
+                    ($pen->morse_fall && (strpos($pen->morse_fall, '"kuning":true') !== false || strpos($pen->morse_fall, '"kuning": true') !== false)) ||
+                    ($pen->ontario && (strpos($pen->ontario, '"kuning":true') !== false || strpos($pen->ontario, '"kuning": true') !== false))
+                );
+
+                if ($isKuning) {
+                    $item->resiko_jatuh = [
+                        [
+                            'id' => $pen->id,
+                            'barthel' => json_decode($pen->barthel),
+                            'norton' => json_decode($pen->norton),
+                            'humpty_dumpty' => json_decode($pen->humpty_dumpty),
+                            'morse_fall' => json_decode($pen->morse_fall),
+                            'ontario' => json_decode($pen->ontario)
+                        ]
+                    ];
+                }
+            }
+
+            $item->penolakan_resusitasi = [];
+            if (isset($resusitasi[$item->noreg])) {
+                $dnr = $resusitasi[$item->noreg]->first();
+                if ($dnr->setuju === 'Tidak') {
+                    $item->penolakan_resusitasi = [
+                        [
+                            'id' => $dnr->id,
+                            'noreg' => $dnr->noreg,
+                            'jenis' => $dnr->jenis,
+                            'setuju' => $dnr->setuju
+                        ]
+                    ];
+                }
+            }
+
+            $item->nama_sama_mirip = isset($namaSamaMap[$item->noreg]) ? $namaSamaMap[$item->noreg] : [];
+
+            return $item;
+        });
 
         return new JsonResponse($data);
     }
@@ -761,6 +1136,7 @@ class RanapController extends Controller
                         ->with([
                             'tarif:id,rs1,rs3,rs4,rs5,rs6,rs7,rs8,rs9,rs10',
                             'nakesminta:kdpegsimrs,nama,kdgroupnakes,statusspesialis',
+                            'dokterkonsul:kdpegsimrs,nama,kdgroupnakes,statusspesialis',
                         ])
                         ->orderBy('id', 'DESC'); // ini updatean baru
                 },

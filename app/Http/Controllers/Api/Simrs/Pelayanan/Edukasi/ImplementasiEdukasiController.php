@@ -94,7 +94,7 @@ class ImplementasiEdukasiController extends Controller
 
 
 
-        if ($ttdPasien !== null || $ttdPasien !== "") {
+        if (filled($ttdPasien)) {
             $isBase64 = self::is_base64_image($ttdPasien);
             if ($isBase64) {
                 $ttdPasienx = $this->saveImage($request, $ttdPasien, $data->id);

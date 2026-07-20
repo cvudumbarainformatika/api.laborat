@@ -48,8 +48,9 @@ class LRAController extends Controller
     public function newlra() {
         $thn=Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
         $awal = $thn.'-01-01';
-        $akhir=request('tglx', 'Y-m-d');
         $awalx=request('tgl', 'Y-m-d');
+        $akhir=request('tglx', 'Y-m-d');
+        
         $sebelum = Carbon::createFromFormat('Y-m-d', $awalx)->subDay();
         $thnakhir =Carbon::createFromFormat('Y-m-d', request('tglx'))->format('Y');
         if($thn !== $thnakhir){
@@ -120,6 +121,8 @@ class LRAController extends Controller
                             ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
                             
                     })
+        ->where('akun50_2024.akun', '=', '5')
+        ->where('akun50_2024.subrincian_objek', '!=', '')
         ->where('t_tampung.pagu', '!=', 0)
         ->where('t_tampung.tgl',  $thn)
         ->when(request('bidang'),function($x) {
@@ -128,35 +131,45 @@ class LRAController extends Controller
             $y->where('t_tampung.bidang', request('bidang'))
             ->where('t_tampung.kodekegiatanblud', request('kegiatan'));
         })
-        ->with(['realisasi' => function ($npdls) use ($awal, $akhir){
+        ->with(['realisasi' => function ($npdls) use ($awalx, $akhir){
             $npdls->select('npdls_rinci.nonpdls',
+                        'npkls_rinci.nonpdls',
+                        'npdls_heder.nonpdls',
+                        'npkls_heder.nonpk',
+                        'npdls_heder.nopencairan',
+                        'npkls_rinci.nonpk',
                         'npdls_rinci.koderek50',
                         'npdls_rinci.rincianbelanja',
                         'npdls_rinci.nominalpembayaran as realisasi',
-                        'npdls_rinci.idserahterima_rinci')
+                        'npdls_rinci.idserahterima_rinci',
+                        'npkls_heder.tglpindahbuku')
                         // ->groupBy('npdls_rinci.koderek50')
             ->join('npdls_heder', 'npdls_heder.nonpdls', '=', 'npdls_rinci.nonpdls')
             ->join('npkls_rinci', 'npkls_rinci.nonpdls', '=', 'npdls_heder.nonpdls')
-            ->join('npkls_heder', 'npkls_heder.nonpk', '=', 'npkls_rinci.nonpk')
+            // ->join('npkls_heder', 'npkls_heder.nonpk', '=', 'npkls_rinci.nonpk')
+            ->join('npkls_heder', function ($join) use ($awalx, $akhir) {
+                $join->on('npkls_heder.nonpk', '=', 'npkls_rinci.nonpk')
+                     ->whereBetween('npkls_heder.tglpindahbuku', [$awalx, $akhir]);
+            })
             ->where('npdls_heder.nopencairan', '!=', '')
             ->when(request('bidang'),function($x) {
                     $x->where('npdls_heder.kodebidang', request('bidang'));
                 })->when(request('kegiatan'),function($y) {
                     $y->where('npdls_heder.kodebidang', request('bidang'))
                     ->where('npdls_heder.kodekegiatanblud', request('kegiatan'));
-                })
-            ->whereBetween('npkls_heder.tglpindahbuku', [$awal, $akhir]);
+                });
 
-        }, 'realisasi_spjpanjar' => function ($spj_panjar) use ($awal, $akhir){
+        }, 'realisasi_spjpanjar' => function ($spj_panjar) use ($awalx, $akhir){
             $spj_panjar->select('spjpanjar_rinci.nospjpanjar',
                         'spjpanjar_rinci.koderek50',
                         'spjpanjar_rinci.rincianbelanja50',
                         'spjpanjar_rinci.sisapanjar',
                         'spjpanjar_rinci.jumlahbelanjapanjar',
-                        'spjpanjar_rinci.iditembelanjanpd')
+                        'spjpanjar_rinci.iditembelanjanpd',
+                        'spjpanjar_heder.tglspjpanjar')
             ->join('spjpanjar_heder','spjpanjar_heder.nospjpanjar', '=', 'spjpanjar_rinci.nospjpanjar')
-            ->whereBetween('spjpanjar_heder.tglspjpanjar', [$awal, $akhir]);
-        }, 'contrapost' => function($tgl) use ($awal, $akhir){
+            ->whereBetween('spjpanjar_heder.tglspjpanjar', [$awalx, $akhir]);
+        }, 'contrapost' => function($tgl) use ($awalx, $akhir){
             $tgl->select('contrapost.nocontrapost',
                         'contrapost.tglcontrapost',
                         'contrapost.idpp',
@@ -165,7 +178,7 @@ class LRAController extends Controller
                         'contrapost.koderek50',
                         'contrapost.rincianbelanja',
                         'contrapost.nominalcontrapost')
-            ->whereBetween('tglcontrapost', [$awal. ' 00:00:00', $akhir. ' 23:59:59']);
+            ->whereBetween('tglcontrapost', [$awalx. ' 00:00:00', $akhir. ' 23:59:59']);
         
         }])
         ->groupBy('t_tampung.idpp')
@@ -199,6 +212,8 @@ class LRAController extends Controller
                             ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
                             
                     })
+        ->where('akun50_2024.akun', '=', '5')
+        ->where('akun50_2024.subrincian_objek', '!=', '')
         ->where('t_tampung.pagu', '!=', 0)
         ->where('t_tampung.tgl',  $thn)
         ->when(request('bidang'),function($x) {
@@ -207,12 +222,13 @@ class LRAController extends Controller
             $y->where('t_tampung.bidang', request('bidang'))
             ->where('t_tampung.kodekegiatanblud', request('kegiatan'));
         })
-        ->with(['realisasi' => function ($npdls) use ($awalx, $sebelum){
+        ->with(['realisasi' => function ($npdls) use ($awal, $sebelum){
             $npdls->select('npdls_rinci.nonpdls',
                         'npdls_rinci.koderek50',
                         'npdls_rinci.rincianbelanja',
                         'npdls_rinci.nominalpembayaran as realisasi',
-                        'npdls_rinci.idserahterima_rinci')
+                        'npdls_rinci.idserahterima_rinci',
+                        'npkls_heder.tglpindahbuku')
                         // ->groupBy('npdls_rinci.koderek50')
             ->join('npdls_heder', 'npdls_heder.nonpdls', '=', 'npdls_rinci.nonpdls')
             ->join('npkls_rinci', 'npkls_rinci.nonpdls', '=', 'npdls_heder.nonpdls')
@@ -224,18 +240,19 @@ class LRAController extends Controller
                     $y->where('npdls_heder.kodebidang', request('bidang'))
                     ->where('npdls_heder.kodekegiatanblud', request('kegiatan'));
                 })
-            ->whereBetween('npkls_heder.tglpindahbuku', [$awalx, $sebelum]);
+            ->whereBetween('npkls_heder.tglpindahbuku', [$awal, $sebelum]);
 
-        }, 'realisasi_spjpanjar' => function ($spj_panjar) use ($awalx, $sebelum){
+        }, 'realisasi_spjpanjar' => function ($spj_panjar) use ($awal, $sebelum){
             $spj_panjar->select('spjpanjar_rinci.nospjpanjar',
                         'spjpanjar_rinci.koderek50',
                         'spjpanjar_rinci.rincianbelanja50',
                         'spjpanjar_rinci.sisapanjar',
                         'spjpanjar_rinci.jumlahbelanjapanjar',
-                        'spjpanjar_rinci.iditembelanjanpd')
+                        'spjpanjar_rinci.iditembelanjanpd',
+                        'spjpanjar_heder.tglspjpanjar')
             ->join('spjpanjar_heder','spjpanjar_heder.nospjpanjar', '=', 'spjpanjar_rinci.nospjpanjar')
-            ->whereBetween('spjpanjar_heder.tglspjpanjar', [$awalx, $sebelum]);
-        }, 'contrapost' => function($tgl) use ($awalx, $sebelum){
+            ->whereBetween('spjpanjar_heder.tglspjpanjar', [$awal, $sebelum]);
+        }, 'contrapost' => function($tgl) use ($awal, $sebelum){
             $tgl->select('contrapost.nocontrapost',
                         'contrapost.tglcontrapost',
                         'contrapost.idpp',
@@ -244,7 +261,7 @@ class LRAController extends Controller
                         'contrapost.koderek50',
                         'contrapost.rincianbelanja',
                         'contrapost.nominalcontrapost')
-            ->whereBetween('tglcontrapost', [$awalx. ' 00:00:00', $sebelum. ' 23:59:59']);
+            ->whereBetween('tglcontrapost', [$awal. ' 00:00:00', $sebelum. ' 23:59:59']);
         
         }])
         ->groupBy('t_tampung.idpp')

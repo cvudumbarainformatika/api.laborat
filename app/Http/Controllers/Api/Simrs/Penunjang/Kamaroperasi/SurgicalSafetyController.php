@@ -23,7 +23,7 @@ class SurgicalSafetyController extends Controller
     //
     public function getNakes()
     {
-        $data = Petugas::select('id', 'nama', 'kdpegsimrs', 'kdgroupnakes')
+        $data = Petugas::select('id', 'nama', 'kdpegsimrs', 'kdgroupnakes', 'nip')
             ->where('aktif', 'Aktif')
             ->whereIn('kdgroupnakes', ['1', '2'])
             ->get();

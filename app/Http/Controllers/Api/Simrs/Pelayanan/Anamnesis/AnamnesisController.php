@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Simrs\Pelayanan\Anamnesis;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis as AnamnesisAnamnesis;
+use App\Models\Simrs\Anamnesis\AnamnesisSkrinig;
+use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -77,9 +79,30 @@ class AnamnesisController extends Controller
         if (!$simpananamnesis) {
             return new JsonResponse(['message' => 'GAGAL DISIMPAN'], 500);
         }
+        // simpan skrining
+        $skrining = AnamnesisSkrinig::updateOrCreate(
+            [
+                'noreg' => $request->noreg,
+                'norm' => $request->norm,
+                'rs209_id' => $simpananamnesis->id,
+            ],
+            [
+                'pernafasan' => $request->pernafasan,
+                'hambatan_fisik' => $request->hambatan_fisik,
+                'hambatan_fisik_kursi_roda' => $request->hambatan_fisik_kursi_roda,
+                'hambatan_fisik_lain' => $request->hambatan_fisik_lain,
+                'hambatan_bahasa' => $request->hambatan_bahasa,
+                'hambatan_penerjemah' => $request->hambatan_penerjemah,
+                'nyeri_dada' => $request->nyeri_dada,
+                'batuk' => $request->batuk,
+                'keputusan' => $request->keputusan,
+                'kdpegsimrs' => $kdpegsimrs,
+            ]
+        );
         return new JsonResponse([
             'message' => 'BERHASIL DISIMPAN',
-            'result' => $simpananamnesis
+            'result' => $simpananamnesis,
+            'skrining' => $skrining
         ], 200);
     }
 
@@ -89,7 +112,9 @@ class AnamnesisController extends Controller
         if (!$cari) {
             return new JsonResponse(['message' => 'MAAF DATA TIDAK DITEMUKAN'], 500);
         }
+        $skrining = AnamnesisSkrinig::where('rs209_id', $request->id)->first();
         $hapus = $cari->delete();
+        if ($skrining) $skrining->delete();
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 501);
         }
@@ -140,5 +165,13 @@ class AnamnesisController extends Controller
 
 
         return new JsonResponse($collapsed->all());
+    }
+    public function skriningRajalNoreg()
+    {
+        $data['data'] = AnamnesisSkrinig::where('noreg', request('noreg'))->with(['user_input:nama,kdpegsimrs'])->get();
+        $data['anamnesis'] = AnamnesisAnamnesis::where('rs1', request('noreg'))->get();
+        $data['pemeriksaanfisik'] = Pemeriksaanfisik::where('rs1', request('noreg'))->get();
+
+        return new JsonResponse($data);
     }
 }

@@ -81,11 +81,11 @@ class PermintaanOperasi extends Model
     }
     public function implant()
     {
-        return $this->hasMany(Implant::class, 'nota', 'rs2');
+        return $this->hasMany(Implant::class, 'noreg', 'rs1');
     }
     public function implant_seri()
     {
-        return $this->hasMany(ImplantSeri::class, 'nota', 'rs2');
+        return $this->hasMany(ImplantSeri::class, 'noreg', 'rs1');
     }
     public function inventaris_kasa()
     {
@@ -108,6 +108,7 @@ class PermintaanOperasi extends Model
     {
         return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
+
     public function laborats()
     {
         return $this->hasMany(LaboratMeta::class, 'noreg', 'rs1');
@@ -129,5 +130,15 @@ class PermintaanOperasi extends Model
     public function hasilradiologi()
     {
         return $this->hasMany(PembacaanradiologiController::class, 'rs1', 'rs1');
+    }
+
+    public function cppt()
+    {
+        return $this->hasMany(\App\Models\Simrs\Ranap\Pelayanan\Cppt::class, 'noreg', 'rs1');
+    }
+
+    public function konsultasi()
+    {
+        return $this->hasMany(\App\Models\Simrs\Konsultasi\Konsultasi::class, 'noreg', 'rs1');
     }
 }

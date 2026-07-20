@@ -47,6 +47,7 @@ class NPD_LSController extends Controller
     }
     public function listnpdls()
     {
+        $perPage = request('per_page', 20);
         $user = auth()->user()->pegawai_id;
         $pg= Pegawai::find($user);
         $pegawai= $pg->nip;
@@ -84,8 +85,9 @@ class NPD_LSController extends Controller
                 $data->where('kodepptk', $pegawai);
             }
 
-            $data->when(request('q'), function ($query) {
-                $query->where('nonpdls', 'LIKE', '%' . request('q') . '%')
+            $data->when(request('q'), function ($q) {
+                $q->where(function ($query) {
+                    $query->where('nonpdls', 'LIKE', '%' . request('q') . '%')
                         ->orWhere('tglnpdls', 'LIKE', '%' . request('q') . '%')
                         ->orWhere('pptk', 'LIKE', '%' . request('q') . '%')
                         ->orWhere('bidang', 'LIKE', '%' . request('q') . '%')
@@ -93,8 +95,9 @@ class NPD_LSController extends Controller
                         ->orWhere('penerima', 'LIKE', '%' . request('q') . '%')
                         ->orWhere('keterangan', 'LIKE', '%' . request('q') . '%')
                         ->orWhere('nopencairan', 'LIKE', '%' . request('q') . '%');
+                });
             });
-
+            $data->withSum('npdlsrinci', 'nominalpembayaran');
             // $data->;
 
             $npdls = $data->with([
@@ -150,7 +153,8 @@ class NPD_LSController extends Controller
                 'newpajak'
             ])
             ->orderBy('tglnpdls', 'desc')
-            ->get();
+            // ->get();
+            ->paginate($perPage);
         return new JsonResponse($npdls);
     }
     // public function cetakPencairanNPD()

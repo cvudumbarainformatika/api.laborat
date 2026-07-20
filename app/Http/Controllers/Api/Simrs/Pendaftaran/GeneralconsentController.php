@@ -56,6 +56,8 @@ class GeneralconsentController extends Controller
             $key,
             [
                 'nama' => $request->nama,
+                'kelamin' => $request->kelamin,
+                'tgllahir' => $request->tgllahir,
                 'alamat' => $request->alamat,
                 'nohp' => $request->nohp,
                 'hubunganpasien' => $request->hubunganpasien,

@@ -39,9 +39,9 @@ class CeknoregController extends Controller
     $petugas=$split[3] ?? null;
 
     $dataPetugas = Pegawai::select('id','nip','nik','nama','foto','ttdpegawai','kdpegsimrs')->where('kdpegsimrs', $petugas)->first();
-    
+
     $cekx=null;
-    
+
     if ($asal === 'RAWAT JALAN') {
 
         $cekx = KunjunganPoli::select('rs1','rs2','rs3','rs1 as noreg', 'rs2 as norm','rs3 as tglmasuk', 'rs9', 'rs19')->where('rs1', $noreg)
@@ -49,7 +49,7 @@ class CeknoregController extends Controller
 
     } else if ($asal === 'RADIOLOGI') {
 
-         
+
       $query = Transpermintaanradiologi::query();
         $cekx = $query
             ->select([
@@ -59,15 +59,33 @@ class CeknoregController extends Controller
                 'rs106.rs1 as noreg',
                 'rs106.rs2 as nota',
                  DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
-                
+
                 'rs106.trmtgl as tglmasuk',
             ])
             ->leftjoin('rs17', 'rs106.rs1', '=', 'rs17.rs1') //rajal
             ->leftjoin('rs23', 'rs106.rs1', '=', 'rs23.rs1') //ranap
             ->leftjoin('rs24', 'rs24.rs1', '=', 'rs106.rs10') //ruangan ranap
             ->where('rs106.rs2', $noreg)
-           
+
             ->first();
+
+     } else if ($asal === 'PENUNJANG') {
+        $data=null;
+        $data = KunjunganPoli::select('rs1','rs2','rs3','rs1 as noreg', 'rs2 as norm','rs3 as tglmasuk', 'rs9', 'rs19')->where('rs1', $noreg)
+        ->with(['pegawai:id,nip,nik,nama,foto,ttdpegawai,kdpegsimrs'])->first();
+
+        if(!$data){
+          $data=Kunjunganranap::select(
+            'rs1',
+            'rs2',
+            'rs1 as noreg',
+            'rs2 as norm',
+            'rs3 as tglmasuk',
+            'rs4 as rs3',
+            'rs10')->where('rs1', $noreg)
+            ->with(['pegawai:id,nip,nik,nama,foto,ttdpegawai,kdpegsimrs'])->first();
+        }
+        $cekx = $data;
 
     } else {
 
@@ -80,7 +98,7 @@ class CeknoregController extends Controller
             'rs4 as rs3',
             'rs10')->where('rs1', $noreg)
             ->with(['pegawai:id,nip,nik,nama,foto,ttdpegawai,kdpegsimrs'])->first();
-      
+
     }
 
 

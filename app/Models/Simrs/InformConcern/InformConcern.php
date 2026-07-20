@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\InformConcern;
 
+use App\Traits\LogsActivity;
 use App\Models\KunjunganRawatInap;
 use App\Models\Simrs\Master\Rstigapuluhtarif;
 use App\Models\Simrs\Ranap\Kunjunganranap;
@@ -10,9 +11,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\URL;
 use Intervention\Image\ImageManager;
 
+
 class InformConcern extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $table = 'inform_concern';
     protected $guarded = ['id'];
 
@@ -25,8 +27,8 @@ class InformConcern extends Model
         'komplikasi' => 'array',
         'tindakanMedis' => 'array',
         'tatacara' => 'array',
-        'tujuan'=>'array',
-        'resiko'=>'array'
+        'tujuan' => 'array',
+        'resiko' => 'array'
     ];
 
     // protected $appends = ['ttd_dokter_url', 'ttd_petugas_url','ttd_saksi_pasien_url','ttd_yg_menyatakan_url'];
@@ -45,7 +47,7 @@ class InformConcern extends Model
                 $constraint->aspectRatio();
             })->encode('data-url');
 
-            $result=  $base64 ? $base64 : null;
+            $result =  $base64 ? $base64 : null;
             // return $this->ttdDokter ? $base64 : null;
             return $result;
         } else {
@@ -66,7 +68,7 @@ class InformConcern extends Model
                 $constraint->aspectRatio();
             })->encode('data-url');
 
-            $result=  $base64 ? $base64 : null;
+            $result =  $base64 ? $base64 : null;
             // return $this->ttdDokter ? $base64 : null;
             return $result;
         } else {
@@ -87,7 +89,7 @@ class InformConcern extends Model
                 $constraint->aspectRatio();
             })->encode('data-url');
 
-            $result=  $base64 ? $base64 : null;
+            $result =  $base64 ? $base64 : null;
             // return $this->ttdDokter ? $base64 : null;
             return $result;
         } else {
@@ -108,7 +110,7 @@ class InformConcern extends Model
                 $constraint->aspectRatio();
             })->encode('data-url');
 
-            $result=  $base64 ? $base64 : null;
+            $result =  $base64 ? $base64 : null;
             // return $this->ttdDokter ? $base64 : null;
             return $result;
         } else {
@@ -116,8 +118,8 @@ class InformConcern extends Model
         }
     }
 
-    function scopeWithAccessor($query) {
+    function scopeWithAccessor($query)
+    {
         $query->append('ttd_dokter_url');
     }
-
 }

@@ -1,23 +1,18 @@
 <?php
 
-namespace App\Models\Simrs\Planing;
+namespace App\Models\Simrs\Ranap;
 
-use App\Models\Simpeg\Petugas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\URL;
 use Intervention\Image\ImageManager;
 
-class Planing_Igd_Pulang extends Model
+class Rs23Paksa extends Model
 {
     use HasFactory;
-    protected $table = 'plann_igd_pulang';
+    
+    protected $table = 'rs23_paksa';
     protected $guarded = ['id'];
-
-    public function dokterpenangungjawabpulang()
-    {
-        return $this->hasOne(Petugas::class, 'kdpegsimrs', 'user_dokter');
-    }
 
     public function getTtdYgMenyatakanUrlAttribute()
     {

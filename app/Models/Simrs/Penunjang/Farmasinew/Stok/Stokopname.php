@@ -4,12 +4,13 @@ namespace App\Models\Simrs\Penunjang\Farmasinew\Stok;
 
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Stokopname extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $table = 'stokopname';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';

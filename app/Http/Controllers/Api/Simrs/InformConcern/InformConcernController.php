@@ -51,6 +51,9 @@ class InformConcernController extends Controller
         $data->komplikasi = $request->komplikasi;
         $data->prognosis = $request->prognosis;
         $data->alternatif = $request->alternatif;
+
+        $data->golonganDarah = $request->golonganDarah;
+
         $data->ttdPetugas = $request->ttdPetugas;
         $data->ttdPasien = $request->ttdPasien;
         $data->hubunganDgPasien = $request->hubunganDgPasien;
@@ -69,6 +72,9 @@ class InformConcernController extends Controller
         $data->kdRuang = $request->kdRuang;
         $data->jenis = $request->jenis;
         $data->user = $user['kodesimrs'] ?? '';
+
+
+
         $data->save();
 
 

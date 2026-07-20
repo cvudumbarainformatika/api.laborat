@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Kamaroperasi;
 
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Kamaroperasi\KeluarRuangPemulihan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\LogMonitoringPascaAnastesi;
@@ -102,7 +103,7 @@ class MonitoringController extends Controller
         }
     }
 
-    /** 
+    /**
      *  pasca anastesi
      */
     public function getLogPasca()
@@ -166,13 +167,29 @@ class MonitoringController extends Controller
 
         try {
             DB::beginTransaction();
+
+            $payload = $request->all();
+
+            // CATATAN: Kolom 'dokter_anastesi' pada tabel medikasi_pasca_anastesis diisi dengan kdpegsimrs
+            // Penata Anestesi (User/Nakes yang meng-input data saat ini)
+            $user = $request->user();
+            $kdpeg = $user->kdpegsimrs ?? $user->kodesimrs ?? ($user->pegawai->kdpegsimrs ?? null);
+            if (!$kdpeg && class_exists('\App\Helpers\FormatingHelper')) {
+                $sess = FormatingHelper::session_user();
+                $kdpeg = $sess['kodesimrs'] ?? null;
+            }
+
+            if ($kdpeg) {
+                $payload['dokter_anastesi'] = $kdpeg; // di isi user input yang biasanya penata anestesi
+            }
+
             $data = MedikasiPascaAnastesi::updateOrCreate(
                 [
                     'noreg' => $request->noreg,
                     'nota' => $request->nota,
                     'norm' => $request->norm,
                 ],
-                $request->all()
+                $payload
             );
 
             if (!$data) throw new Exception('Gagal menyimpan data medikasi pasca');
@@ -223,7 +240,7 @@ class MonitoringController extends Controller
                     'noreg' => $request->noreg,
                     'nota' => $request->nota,
                     'norm' => $request->norm,
-                    'waktu' => $request->time,
+                    'waktu' => $request->waktu,
                 ],
                 $request->all()
             );

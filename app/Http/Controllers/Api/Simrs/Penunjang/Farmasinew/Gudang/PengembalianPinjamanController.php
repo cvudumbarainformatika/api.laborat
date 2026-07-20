@@ -51,6 +51,20 @@ class PengembalianPinjamanController extends Controller
             ->where('kunci', '1')
             ->where('flag_bayar', '')
             ->get();
+
+        if (request()->has('kdruang')) {
+            $kdruang = request('kdruang');
+            $cacheAlokasi = [];
+            foreach ($data as $heder) {
+                foreach ($heder->penerimaanrinci as $rinci) {
+                    if (!isset($cacheAlokasi[$rinci->kdobat])) {
+                        $cacheAlokasi[$rinci->kdobat] = $this->getAlokasiObat($rinci->kdobat, $kdruang);
+                    }
+                    $rinci->alokasi = $cacheAlokasi[$rinci->kdobat];
+                }
+            }
+        }
+
         return new JsonResponse([
             'data' => $data,
             'req' => request()->all(),
@@ -58,6 +72,13 @@ class PengembalianPinjamanController extends Controller
     }
     public function simpan(Request $request)
     {
+        $alokasiTersedia = $this->getAlokasiObat($request->kdobat, $request->kdruang);
+        if ($alokasiTersedia < $request->jml_dikembalikan) {
+            return new JsonResponse([
+                'message' => 'Stok alokasi obat tidak mencukupi untuk disimpan. Tersedia: ' . $alokasiTersedia . ', Diminta: ' . $request->jml_dikembalikan
+            ], 410);
+        }
+
         try {
             DB::connection('farmasi')->beginTransaction();
             if (!$request->nopengembalian) {
@@ -218,6 +239,7 @@ class PengembalianPinjamanController extends Controller
                             $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
                                 ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
                         })
+                        ->whereNull('mutasi_gudangdepo.kd_obat')
                         ->where('permintaan_h.tujuan', request('kdruang'))
                         ->whereIn('permintaan_h.flag', ['', '1', '2'])
                         ->groupBy('permintaan_r.kdobat');
@@ -232,15 +254,23 @@ class PengembalianPinjamanController extends Controller
             $alokasi = (float) $total  - (float)$permintaanobatrinci;
             $x->alokasi = $alokasi <= 0 ? 0 : $alokasi;
             return $x;
-        });
+        })->keyBy('kd_obat');
 
         $header = Pengembalian::find($request->id);
         if (!$header) {
             return new JsonResponse(['message' => 'Data tidak ditemukan, gagal kunci'], 410);
         }
-        $rinci = PengembalianRinci::where('nopengembalian', $header->nopengembalian)->get();
+        $rinci = PengembalianRinci::with('masterobat')->where('nopengembalian', $header->nopengembalian)->get();
         if (sizeof($rinci) <= 0) {
             return new JsonResponse(['message' => 'Data Rincian tidak ditemukan, gagal kunci'], 410);
+        }
+        foreach ($rinci as $key) {
+            $alokasiTersedia = $obat[$key->kdobat]->alokasi ?? 0;
+            if ($alokasiTersedia < $key->jml_dikembalikan) {
+                return new JsonResponse([
+                    'message' => 'Stok alokasi obat ' . ($key->masterobat->nama_obat ?? $key->kdobat) . ' tidak mencukupi. Tersedia: ' . $alokasiTersedia . ', Dibutuhkan: ' . $key->jml_dikembalikan
+                ], 410);
+            }
         }
         try {
             DB::connection('farmasi')->beginTransaction();
@@ -261,19 +291,20 @@ class PengembalianPinjamanController extends Controller
                 $rinciKeyed = $rinciPenerimaan->keyBy(function ($item) {
                     return $item->nopenerimaan . '_' . $item->no_batch;
                 });
+                $rincianFifo = null;
                 foreach ($caristok as $stokItem) {
                     if ($jumlahDikembalikan <= 0) break; // keluar dari loop jika jumlah sudah cukup
                     $sisa = $stokItem->jumlah;
                     $keyGabungan = $stokItem->nopenerimaan . '_' . $stokItem->nobatch;
-                    $rinci = $rinciKeyed[$keyGabungan] ?? null;
-                    $idRinci = $rinci->id ?? null;
+                    $rinciPenerimaanItem = $rinciKeyed[$keyGabungan] ?? null;
+                    $idRinci = $rinciPenerimaanItem->id ?? null;
                     $pengurangan = min($jumlahDikembalikan, $sisa);
 
                     $rincianFifo = PengembalianRinciFifo::updateOrCreate(
                         [
                             'nopengembalian' => $key->nopengembalian,
                             'kdobat' => $key->kdobat,
-                            'id_rincipenerimaan' => $idRinci, // percuma karena ya sama aja 
+                            'id_rincipenerimaan' => $idRinci,
                             'nopenerimaan' => $stokItem->nopenerimaan,
                         ],
                         [
@@ -334,16 +365,19 @@ class PengembalianPinjamanController extends Controller
             $allBack = true;
             $penerimaanR = PenerimaanRinci::where('nopenerimaan', $header->nopenerimaan_asal)->get();
             foreach ($penerimaanR as $key) {
-                $kem = PengembalianRinciFifo::selectRaw('sum(jml_dikembalikan) as jumlah')->where('id_rincipenerimaan', $key->id)->first();
-                if ($kem->jumlah != $key->jml_terima_k) {
+                $totalDikembalikan = PengembalianRinci::where('id_rincipenerimaan', $key->id)->sum('jml_dikembalikan');
+                if ($totalDikembalikan != $key->jml_terima_k) {
                     $allBack = false;
+                    break;
                 }
             }
             if ($allBack) {
                 $penerimaanH = PenerimaanHeder::where('nopenerimaan', $header->nopenerimaan_asal)->first();
-                $penerimaanH->update([
-                    'flag_bayar' => '1',
-                ]);
+                if ($penerimaanH) {
+                    $penerimaanH->update([
+                        'flag_bayar' => '1',
+                    ]);
+                }
             }
             DB::connection('farmasi')->commit();
             return new JsonResponse([
@@ -354,7 +388,7 @@ class PengembalianPinjamanController extends Controller
                 'rinci' => $rinci,
                 'stok' => $stok,
                 'penerimaanR' => $penerimaanR,
-                'kem' => $kem,
+                // 'kem' => $kem,
                 'allBack' => $allBack,
             ]);
         } catch (\Exception $e) {
@@ -407,5 +441,28 @@ class PengembalianPinjamanController extends Controller
             'hapusHead' => $hapusHead,
             'req' => $request->all(),
         ]);
+    }
+
+    private function getAlokasiObat($kdobat, $kdruang)
+    {
+        $total = DB::connection('farmasi')->table('stokreal')
+            ->where('kdruang', $kdruang)
+            ->where('kdobat', $kdobat)
+            ->sum('jumlah');
+
+        $permintaan = DB::connection('farmasi')->table('permintaan_r')
+            ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+            ->leftJoin('mutasi_gudangdepo', function ($join) {
+                $join->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+            })
+            ->whereNull('mutasi_gudangdepo.kd_obat')
+            ->where('permintaan_h.tujuan', $kdruang)
+            ->where('permintaan_r.kdobat', $kdobat)
+            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+            ->sum('permintaan_r.jumlah_minta');
+
+        $alokasi = (float)$total - (float)$permintaan;
+        return $alokasi <= 0 ? 0 : $alokasi;
     }
 }
