@@ -39,7 +39,7 @@ class CekController extends Controller
             ->where('rs141.rs1', $noreg)
             ->where('rs141.rs3', 'POL014')
             ->where('rs141.rs4', 'Rawat Inap')
-            ->select('rs141.rs1 as noreg','rs141.rs2 as norm','rs141.rs5 as ruangan', 'rs24.3 as kelas')
+            ->select('rs141.rs1 as noreg','rs141.rs2 as norm','rs141.rs5 as ruangan', 'rs24.rs3 as kelas')
             ->first();
         if($cari->kelas === 'NICU' || $cari->kelas === 'ICC' || $cari->kelas === 'IC' || $cari->kelas === 'HCU'){
             $cek = Plann_Igd_Ranap_Ruang::where('noreg', $noreg)->count();
