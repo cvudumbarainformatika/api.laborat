@@ -480,6 +480,11 @@ class IgdController extends Controller
             if ($cekplan === '1') {
                 return new JsonResponse(['message' => 'Maaf Form Planing Belum Diisi...!!!'], 500);
             }
+
+            $cekberkas = CekController::cekindikasimasukranap($request->noreg);
+            if($cekberkas !== 1){
+                return new JsonResponse(['message' => 'Maaf Form Planing (Indikasi Pasien Masuk Rawat Inap)...!!!'], 500);
+            }
         }
 
 
