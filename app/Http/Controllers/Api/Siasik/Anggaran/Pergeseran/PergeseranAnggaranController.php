@@ -7,6 +7,7 @@ use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Header;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Anggaran\Perubahan_pak_header;
 use App\Models\Siasik\Anggaran\Perubahan_RincianBelanja;
+use App\Models\Siasik\Anggaran\Tampung_batasan;
 use App\Models\Siasik\Anggaran\Tampung_Pagu;
 use App\Models\Siasik\Anggaran\Tampungcopy;
 use App\Models\Sigarang\Pegawai;
@@ -780,6 +781,54 @@ class PergeseranAnggaranController extends Controller
         })->all();
 
             return new JsonResponse($finalData);
+    }
+
+    public function simpanBatasan(Request $request)
+    {
+        $validated = $request->validate([
+            'notrans' => 'required',
+            'pagu' => 'required',
+            'batasan' => 'nullable',
+            'koderek50' => 'nullable',
+            'uraian50' => 'nullable',
+            'kodekegiatanblud' => 'required',
+            'tahun' => 'nullable',
+            'flag' => 'nullable',
+            'bidang' => 'nullable'
+        ],
+        [
+            'notrans' => 'Nomor Transaksi Harus diisi',
+            'kodekegiatanblud' => 'Kegiatan BLUD Harus diisi',
+        ]);
+
+       try {
+            DB::beginTransaction();
+            $data = Tampung_batasan::updateOrCreate(
+                [
+                    'notrans' => $validated['notrans']
+                ],
+                [
+                    'pagu' => $validated['pagu'] ?? '',
+                    'batasan' => $validated['batasan'] ?? '',
+                    'koderek50' => $validated['koderek50'] ?? '',
+                    'uraian50' => $validated['uraian50'] ?? '',
+                    'kodekegiatanblud' => $validated['kodekegiatanblud'] ?? '',
+                    'tahun' => $validated['tahun'] ?? '',
+                    'bidang' => $validated['bidang'] ?? '',
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+            DB::commit();
+            return new JsonResponse(['status' => 'success', 'message' => 'Data berhasil disimpan', 'data' => $data]);
+       } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data gagal disimpan: ' . $e->getMessage()
+            ], 500);
+        }
     }
     
 }
