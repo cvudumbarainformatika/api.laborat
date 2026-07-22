@@ -243,6 +243,7 @@ class PemeriksaanUmumController extends Controller
               'hmlVgnJml'  => $request->formKebidanan['hmlVgnJml'],
               'hmlVgnKtuban'  => $request->formKebidanan['hmlVgnKtuban'],
               'hmlVgnToucher'  => $request->formKebidanan['hmlVgnToucher'],
+              'hmlKeteranganVgnToucher'  => $request->formKebidanan['hmlKeteranganVgnToucher'],
               'nfsTfu'  => $request->formKebidanan['nfsTfu'],
               'nfsUterus'  => $request->formKebidanan['nfsUterus'],
               'nfsVgnBentuk'  => $request->formKebidanan['nfsVgnBentuk'],
