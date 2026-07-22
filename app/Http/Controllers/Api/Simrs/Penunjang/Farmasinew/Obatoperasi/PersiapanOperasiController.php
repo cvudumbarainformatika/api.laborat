@@ -1835,4 +1835,108 @@ class PersiapanOperasiController extends Controller
             'message' => 'Data berhasil di hapus'
         ]);
     }
+
+    public function kembalikanKeDistribusi(Request $request)
+    {
+        try {
+            DB::connection('farmasi')->beginTransaction();
+
+            $head = PersiapanOperasi::find($request->id);
+            if (!$head) {
+                return new JsonResponse([
+                    'message' => 'Data tidak ditemukan'
+                ], 410);
+            }
+
+            // Find all unique noresep
+            $rincis = PersiapanOperasiRinci::where('nopermintaan', $head->nopermintaan)->get();
+            $nores = $rincis->pluck('noresep')->filter(fn($val) => !empty($val))->unique()->toArray();
+
+            // Delete resep tables
+            if (count($nores) > 0) {
+                Resepkeluarheder::whereIn('noresep', $nores)->delete();
+                Permintaanresep::whereIn('noresep', $nores)->delete();
+                Resepkeluarrinci::whereIn('noresep', $nores)->delete();
+            }
+
+            // Revert stock from returns if any
+            $distribusis = PersiapanOperasiDistribusi::where('nopermintaan', $head->nopermintaan)->get();
+            foreach ($distribusis as $distItem) {
+                $retu = (float)$distItem->jumlah_retur;
+                if ($retu > 0) {
+                    $this->decreaseStok($distItem->kd_obat, $distItem->nopenerimaan, $distItem->nodistribusi, $distItem->nobatch, $retu);
+                }
+            }
+
+            // Update PersiapanOperasiDistribusi
+            PersiapanOperasiDistribusi::where('nopermintaan', $head->nopermintaan)->update([
+                'jumlah_retur' => 0,
+                'tgl_retur' => null
+            ]);
+
+            // Update PersiapanOperasiRinci
+            PersiapanOperasiRinci::where('nopermintaan', $head->nopermintaan)->update([
+                'noresep' => '',
+                'jumlah_resep' => 0,
+                'jumlah_kembali' => 0
+            ]);
+
+            // Update PersiapanOperasi
+            $head->update([
+                'flag' => '2',
+                'tgl_resep' => null,
+                'tgl_retur' => null
+            ]);
+
+            DB::connection('farmasi')->commit();
+
+            return new JsonResponse([
+                'message' => 'Status berhasil dikembalikan ke distribusi',
+                'head' => $head
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'message' => 'Gagal mengembalikan ke distribusi: ' . $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 410);
+        }
+    }
+
+    private function decreaseStok($kdobat, $nopenerimaan, $nodistribusi, $nobatch, $jumlah)
+    {
+        if ($jumlah <= 0) return;
+
+        $stok = Stokreal::where('kdobat', $kdobat)
+            ->where('nopenerimaan', $nopenerimaan)
+            ->when(!empty($nodistribusi), function ($q) use ($nodistribusi) {
+                $q->where('nodistribusi', $nodistribusi);
+            })
+            ->when(!empty($nobatch) && $nobatch != '-', function ($q) use ($nobatch) {
+                $q->where('nobatch', $nobatch);
+            })
+            ->where('kdruang', 'Gd-04010103')
+            ->lockForUpdate()
+            ->first();
+
+        if ($stok) {
+            $stok->jumlah = (float)$stok->jumlah - $jumlah;
+            $stok->save();
+        } else {
+            $stok2 = Stokreal::where('kdobat', $kdobat)
+                ->where('nopenerimaan', $nopenerimaan)
+                ->when(!empty($nobatch) && $nobatch != '-', function ($q) use ($nobatch) {
+                    $q->where('nobatch', $nobatch);
+                })
+                ->where('kdruang', 'Gd-04010103')
+                ->lockForUpdate()
+                ->first();
+
+            if ($stok2) {
+                $stok2->jumlah = (float)$stok2->jumlah - $jumlah;
+                $stok2->save();
+            }
+        }
+    }
 }

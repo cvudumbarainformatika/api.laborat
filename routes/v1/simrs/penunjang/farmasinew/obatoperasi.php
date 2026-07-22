@@ -26,6 +26,7 @@ Route::group([
     Route::post('/batal-obat-resep', [PersiapanOperasiController::class, 'batalObatResep']);
 
     Route::post('/batal-operasi', [PersiapanOperasiController::class, 'batalOperasi']);
+    Route::post('/kembalikan-ke-distribusi', [PersiapanOperasiController::class, 'kembalikanKeDistribusi']);
     // hapus draft
     Route::post('/hapus-draft', [PersiapanOperasiController::class, 'hapusDraft']);
 
