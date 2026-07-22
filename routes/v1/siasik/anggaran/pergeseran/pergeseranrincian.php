@@ -17,4 +17,7 @@ Route::group([
     Route::post('/verifikasi', [PergeseranAnggaranController::class, 'verifikasi']);
     Route::get('/cetak', [PergeseranAnggaranController::class, 'cetakData']);
 
+    Route::post('/simpanbatasan', [PergeseranAnggaranController::class, 'simpanBatasan']);
+
+
 });

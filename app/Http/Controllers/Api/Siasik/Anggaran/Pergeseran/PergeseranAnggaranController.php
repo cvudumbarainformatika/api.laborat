@@ -345,7 +345,10 @@ class PergeseranAnggaranController extends Controller
                             
                     })->select(
                         't_tampung.idpp',
+                        't_tampung.tgl as tahun',
                         't_tampung.notrans',
+                        't_tampung.kodekegiatanblud',
+                        't_tampung.bidang as kodebidang',
                         't_tampung.usulan',
                         't_tampung.koderek108',
                         't_tampung.uraian108',
@@ -399,6 +402,8 @@ class PergeseranAnggaranController extends Controller
                         'perubahanrincianbelanja.id',
                         'perubahanrincianbelanja.idpp',
                         'perubahanrincianbelanja.notrans',
+                        'perubahanrincianbelanja.kodekegiatanblud',
+                        'perubahanrincianbelanja.kodebidang',
                         'perubahanrincianbelanja.usulan',
                         'perubahanrincianbelanja.koderek108',
                         'perubahanrincianbelanja.uraian108',
@@ -419,6 +424,7 @@ class PergeseranAnggaranController extends Controller
                         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(perubahanrincianbelanja.koderek50, ".", 5) LIMIT 1) as uraian5'),
                         'akun50_2024.uraian as uraian6'
                     )
+                    ->selectRaw('YEAR(perubahanrincianbelanja.tglperubahan) as tahun')
                     ->havingRaw('perubahanrincianbelanja.id = (SELECT MAX(id) FROM perubahanrincianbelanja prb2 WHERE prb2.idpp = perubahanrincianbelanja.idpp)');
                 // ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'perubahanrincianbelanja.koderek50')
                 //     ->select(
@@ -470,6 +476,10 @@ class PergeseranAnggaranController extends Controller
                     $pergeseran = $pergeseranData[$idpp] ?? null;
                     $hasilpergeseran[] = [
                         'idpp' => $idpp,
+                        'notrans' => $rincian['notrans'] ?? '',
+                        'kodekegiatanblud' => $rincian['kodekegiatanblud'] ?? '',
+                        'kodebidang' => $rincian['kodebidang'] ?? '',
+                        'tahun' => $rincian['tahun'] ?? '',
                         'usulan' => $rincian['usulan'] ?? '',
                         'koderek108' => $rincian['koderek108'] ?? '',
                         'uraian108' => $rincian['uraian108'] ?? '',
@@ -502,6 +512,10 @@ class PergeseranAnggaranController extends Controller
                     if (!isset($rincianData[$idpp])) {
                         $hasilpergeseran[] = [
                             'idpp' => $idpp,
+                            'notrans' => $pergeseran['notrans'] ?? '',
+                            'kodekegiatanblud' => $pergeseran['kodekegiatanblud'] ?? '',
+                            'kodebidang' => $pergeseran['kodebidang'] ?? '',
+                            'tahun' => $pergeseran['tahun'] ?? '',
                             'usulan' => $pergeseran['usulan'] ?? '',
                             'koderek108' => $pergeseran['koderek108'] ?? '',
                             'uraian108' => $pergeseran['uraian108'] ?? '',
@@ -531,6 +545,7 @@ class PergeseranAnggaranController extends Controller
 
             return [
                 'id' => $item->id,
+                'tahun' => $item->tahun,
                 'notrans' => $item->notrans,
                 'kodepptk' => $item->kodepptk,
                 'pptk' => $item->pptk,
@@ -581,7 +596,8 @@ class PergeseranAnggaranController extends Controller
                         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(usulanHonor_r_pak.koderek50, ".", 4) LIMIT 1) as uraian4'),
                         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(usulanHonor_r_pak.koderek50, ".", 5) LIMIT 1) as uraian5'),
                         'akun50_2024.uraian as uraian6'
-                    );
+                    )
+                    ->selectRaw('YEAR(usulanHonor_r_pak.tglEntry) as tahun');
             }, 'pergeseranpak' => function($query) {
                 $query->leftJoin('akun50_2024', function ($join) {
                         $join->on('perubahanrincianbelanja.koderek50', '=', 'akun50_2024.kodeall2')
@@ -613,6 +629,7 @@ class PergeseranAnggaranController extends Controller
                         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(perubahanrincianbelanja.koderek50, ".", 5) LIMIT 1) as uraian5'),
                         'akun50_2024.uraian as uraian6'
                     )
+                    ->selectRaw('YEAR(perubahanrincianbelanja.tglperubahan) as tahun')
                     ->havingRaw('perubahanrincianbelanja.id = (SELECT MAX(id) FROM perubahanrincianbelanja prb2 WHERE prb2.idpp = perubahanrincianbelanja.idpp)');
             }])
             ->get();
@@ -654,6 +671,7 @@ class PergeseranAnggaranController extends Controller
             $perubahanpak[] = [
                 'idpp' => $idpp,
                 'usulan' => $rincian['usulan'] ?? '',
+                'tahun' => $rincian['tahun'] ?? '',
 
                 'koderek108' => $rincian['koderek108'] ?? '',
                 'uraian108' => $rincian['uraian108'] ?? '',
@@ -693,6 +711,7 @@ class PergeseranAnggaranController extends Controller
 
                 $perubahanpak[] = [
                     'idpp' => $idpp,
+                    'tahun' => $rincipak['tahun'] ?? '',
                     'usulan' => $rincipak['usulan'] ?? '',
                     'koderek108' => $rincipak['koderek108'] ?? '',
                     'uraian108' => $rincipak['uraian108'] ?? '',
@@ -728,6 +747,7 @@ class PergeseranAnggaranController extends Controller
 
                 $perubahanpak[] = [
                     'idpp' => $idpp,
+                    'tahun' => $pergespak['tahun'] ?? '',
                     'usulan' => $pergespak['usulan'] ?? '',
                     'koderek108' => $pergespak['koderek108'] ?? '',
                     'uraian108' => $pergespak['uraian108'] ?? '',
@@ -760,6 +780,7 @@ class PergeseranAnggaranController extends Controller
 
             return [
                 'id' => $item['id'],
+                'tahun' => $item['tahun'],
                 'notrans' => $item['notrans'],
                 'kodepptk' => $item['kodepptk'],
                 'pptk' => $item['pptk'],
@@ -793,8 +814,9 @@ class PergeseranAnggaranController extends Controller
             'uraian50' => 'nullable',
             'kodekegiatanblud' => 'required',
             'tahun' => 'nullable',
+            // flag aktif jika sama dengan 1
             'flag' => 'nullable',
-            'bidang' => 'nullable'
+            'kodebidang' => 'nullable'
         ],
         [
             'notrans' => 'Nomor Transaksi Harus diisi',
@@ -814,7 +836,7 @@ class PergeseranAnggaranController extends Controller
                     'uraian50' => $validated['uraian50'] ?? '',
                     'kodekegiatanblud' => $validated['kodekegiatanblud'] ?? '',
                     'tahun' => $validated['tahun'] ?? '',
-                    'bidang' => $validated['bidang'] ?? '',
+                    'kodebidang' => $validated['kodebidang'] ?? '',
                     'updated_at' => now(),
                     'created_at' => now(),
                 ]
