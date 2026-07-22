@@ -164,6 +164,9 @@ class KamaroperasiController extends Controller
                         END
                     ) as tgl_mrs'
                 ),
+                'daftartilik.id as daftartilik_id',
+                'daftartilik.pre_petugas_penerima as pre_petugas_penerima',
+                DB::raw('(CASE WHEN daftartilik.id IS NOT NULL THEN 1 ELSE 0 END) as has_daftartilik')
 
             )->leftjoin('rs17', 'rs17.rs1', '=', 'rs200.rs1') //rajal
             ->leftjoin('rs23', 'rs23.rs1', '=', 'rs200.rs1') //ranap
@@ -173,6 +176,7 @@ class KamaroperasiController extends Controller
             ->leftjoin('rs24', 'rs24.rs1', '=', 'rs200.rs10') //ruangan ranap
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs200.rs8') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs200.rs14') //sistembayar
+            ->leftjoin('daftartilik', 'daftartilik.noreg', '=', 'rs200.rs1')
             ->where(function ($sts) use ($status) {
                 if ($status !== 'all') {
                     if ($status === '') {
