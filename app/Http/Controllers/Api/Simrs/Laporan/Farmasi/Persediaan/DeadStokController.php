@@ -211,6 +211,23 @@ class DeadStokController extends Controller
                 ->groupBy('r.kdobat')->get()->keyBy('kdobat');
         }
 
+        // H. Pemakaian Ruangan (Floor Stok / Ruangan)
+        $keluarList[] = DB::connection('farmasi')->table('pemakaian_r as r')
+            ->join('pemakaian_h as h', 'h.nopemakaian', '=', 'r.nopemakaian')
+            ->leftJoin('penerimaan_r as pr', function ($join) {
+                $join->on('pr.nopenerimaan', '=', 'r.nopenerimaan')
+                    ->on('pr.kdobat', '=', 'r.kd_obat');
+            })
+            ->select('r.kd_obat as kdobat', DB::raw("SUM(r.jumlah) as qty"), DB::raw("SUM(r.jumlah * COALESCE(pr.harga_netto_kecil, 0)) as val"))
+            ->whereBetween('h.tgl', [$start, $end])
+            ->where('h.flag', '1')
+            ->when($kodeRuang !== 'all', function ($q) use ($kodeRuang) {
+                $q->where('h.kdruang', $kodeRuang);
+            }, function ($q) {
+                $q->whereIn('h.kdruang', ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104']);
+            })
+            ->groupBy('r.kd_obat')->get()->keyBy('kdobat');
+
         // 4. Expiration Date Subquery (GROUP_CONCAT multiple expiration dates formatted in DD-MM-YYYY)
         $qExpQuery = DB::connection('farmasi')->table('stokreal')
             ->select('kdobat', DB::raw("GROUP_CONCAT(DISTINCT DATE_FORMAT(tglexp, '%d-%m-%Y') ORDER BY tglexp ASC SEPARATOR ', ') as tglexp"))
