@@ -1275,13 +1275,16 @@ class PersiapanOperasiController extends Controller
                     $obat = Mobatnew::select('nama_obat')->where('kd_obat', $key['kd_obat'])->first();
                     throw new \Exception('Distribusi Persiapan obat ' . $obat->nama_obat . ' untuk operasi tidak ditemukan');
                 }
-                $cek = Resepkeluarrinci::where('nopenerimaan', $dist[$index]->nopenerimaan)
-                    ->where('noresep', $key['noresep'])
-                    ->when(!empty($dist[$index]->nobatch), function ($q) use ($dist, $index) {
-                        $q->where('nobatch', $dist[$index]->nobatch);
-                    })
-                    ->when(empty($dist[$index]->nobatch), function ($q) {
-                        $q->whereNull('nobatch');
+                $cek = Resepkeluarrinci::where('noresep', $key['noresep'])
+                    ->where('kdobat', $key['kd_obat'])
+                    ->where('nopenerimaan', $dist[$index]->nopenerimaan)
+                    ->where(function ($q) use ($dist, $index) {
+                        $nobatch = $dist[$index]->nobatch;
+                        if (empty($nobatch)) {
+                            $q->whereNull('nobatch')->orWhere('nobatch', '');
+                        } else {
+                            $q->where('nobatch', $nobatch);
+                        }
                     })
                     ->exists();
 
@@ -1367,6 +1370,16 @@ class PersiapanOperasiController extends Controller
     {
         try {
             DB::connection('farmasi')->beginTransaction();
+
+            // Lock the header row and verify it isn't already completed/processed
+            $head = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->lockForUpdate()->first();
+            if (!$head) {
+                throw new \Exception("Data Permintaan tidak ditemukan");
+            }
+            if ($head->flag === '4') {
+                throw new \Exception("Permintaan ini sudah selesai diproses (terima pengembalian sudah dilakukan sebelumnya)");
+            }
+
             $msg = 'Data berhasil disimpan, Obat masih ada yang belum kembali';
             $rinci = $request->rinci;
             $user = FormatingHelper::session_user();
@@ -1470,11 +1483,13 @@ class PersiapanOperasiController extends Controller
                             $ada = Resepkeluarrinci::where('noresep', $detItem->noresep)
                                 ->where('kdobat', $distItem->kd_obat)
                                 ->where('nopenerimaan', $distItem->nopenerimaan)
-                                ->when(!empty($distItem->nobatch), function ($q) use ($distItem) {
-                                    $q->where('nobatch', $distItem->nobatch);
-                                })
-                                ->when(empty($distItem->nobatch), function ($q) {
-                                    $q->whereNull('nobatch');
+                                ->where(function ($q) use ($distItem) {
+                                    $nobatch = $distItem->nobatch;
+                                    if (empty($nobatch)) {
+                                        $q->whereNull('nobatch')->orWhere('nobatch', '');
+                                    } else {
+                                        $q->where('nobatch', $nobatch);
+                                    }
                                 })
                                 ->exists();
 
@@ -1521,10 +1536,13 @@ class PersiapanOperasiController extends Controller
                         $exists = Resepkeluarrinci::where('noresep', $rin['noresep'])
                             ->where('kdobat', $rin['kdobat'])
                             ->where('nopenerimaan', $rin['nopenerimaan'])
-                            ->when(!empty($rin['nobatch']), function ($q) use ($rin) {
-                                $q->where('nobatch', $rin['nobatch']);
-                            }, function ($q) {
-                                $q->whereNull('nobatch');
+                            ->where(function ($q) use ($rin) {
+                                $nobatch = $rin['nobatch'];
+                                if (empty($nobatch)) {
+                                    $q->whereNull('nobatch')->orWhere('nobatch', '');
+                                } else {
+                                    $q->where('nobatch', $nobatch);
+                                }
                             })
                             ->exists();
 
@@ -1552,7 +1570,6 @@ class PersiapanOperasiController extends Controller
                     }
                 }
 
-                $head = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->first();
                 $head->update([
                     'flag' => $flag,
                     'tgl_retur' => now()
@@ -1642,10 +1659,13 @@ class PersiapanOperasiController extends Controller
                     $exists = Resepkeluarrinci::where('noresep', $rin['noresep'])
                         ->where('kdobat', $rin['kdobat'])
                         ->where('nopenerimaan', $rin['nopenerimaan'])
-                        ->when(!empty($rin['nobatch']), function ($q) use ($rin) {
-                            $q->where('nobatch', $rin['nobatch']);
-                        }, function ($q) {
-                            $q->whereNull('nobatch');
+                        ->where(function ($q) use ($rin) {
+                            $nobatch = $rin['nobatch'];
+                            if (empty($nobatch)) {
+                                    $q->whereNull('nobatch')->orWhere('nobatch', '');
+                            } else {
+                                    $q->where('nobatch', $nobatch);
+                            }
                         })
                         ->exists();
 
