@@ -49,7 +49,7 @@ class CekController extends Controller
 
         // Data planning rawat inap tidak ditemukan
         if (!$cari) {
-            return 0;
+            return 2;
         }
 
         $kelasKhusus = ['NICU', 'ICC', 'IC', 'HCU'];

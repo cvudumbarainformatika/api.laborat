@@ -255,7 +255,11 @@ class IgdController extends Controller
                             $planranap->with(
                                 [
                                     'ruangranap',
-                                    'dokumentransfer'
+                                    'dokumentransfer' => function ($dokumentransfer) {
+                                        $dokumentransfer->with([
+                                            'dokter'
+                                        ]);
+                                    },
                                 ]
                             );
                         },
@@ -480,12 +484,16 @@ class IgdController extends Controller
             if ($cekplan === '1') {
                 return new JsonResponse(['message' => 'Maaf Form Planing Belum Diisi...!!!'], 500);
             }
-
-            // $cekberkas = CekController::cekindikasimasukranap($request->noreg);
-            // if($cekberkas !== 1){
-            //     return new JsonResponse(['message' => 'Maaf Form Planing (Indikasi Pasien Masuk Rawat Inap)...!!!'], 500);
-            // }
         }
+
+        // $cekberkas = CekController::cekindikasimasukranap($request->noreg);
+        //     if($cekberkas == 0){
+        //         return new JsonResponse(['message' => 'Maaf Form Planing (Indikasi Pasien Masuk Rawat Inap)...!!!'], 500);
+        //     }else if($cekberkas == 2){
+        //         return new JsonResponse(['message' => 'Plann Belum Di isi...!!!'], 500);
+        //     }
+
+        // return $cekberkas;
 
 
         $user = Pegawai::find(auth()->user()->pegawai_id);
