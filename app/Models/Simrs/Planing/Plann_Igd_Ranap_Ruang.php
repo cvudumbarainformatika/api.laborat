@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Planing;
 
+use App\Models\Simpeg\Petugas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,4 +14,9 @@ class Plann_Igd_Ranap_Ruang extends Model
     protected $casts = [
              'isi' => 'array'
          ];
+
+    public function dokter()
+    {
+        return $this->hasOne(Petugas::class, 'kdpegsimrs', 'dokterpenerima');
+    }
 }

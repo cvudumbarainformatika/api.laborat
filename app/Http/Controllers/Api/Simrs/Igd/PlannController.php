@@ -99,6 +99,7 @@ class PlannController extends Controller
                             'norm' => $request->norm,
                             'id_heder' => $simpansambung['id'] ?? '',
                             'isi' => $isi,
+                            'dokterpenerima' => $request->dokterpenerima,
                             'kelas' => $request->kelas
                         ]
                     );
@@ -175,13 +176,15 @@ class PlannController extends Controller
             DB::commit();
             $data = Planing_Igd_Lama::with(
                 [
-                    'planranap' => function($planranap){
-                        $planranap->with(
-                            [
-                                'ruangranap',
-                                'dokumentransfer'
-                            ]
-                        );
+                    'planranap' => function ($planranap) {
+                        $planranap->with([
+                            'dokumentransfer' => function ($dokumentransfer) {
+                                $dokumentransfer->with([
+                                    'dokter'
+                                ]);
+                            },
+                            'ruangranap',
+                        ]);
                     },
                     'planrujukan',
                     'planpulang'
