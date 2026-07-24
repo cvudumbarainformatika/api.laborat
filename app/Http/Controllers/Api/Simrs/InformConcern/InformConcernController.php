@@ -86,10 +86,10 @@ class InformConcernController extends Controller
         $ttdSaksiPasien = self::saveImage($request, $request->ttdSaksiPasien, $data->id . '_saksi');
         $ttdygMenyatakan = self::saveImage($request, $request->ttdYgMenyatakan, $data->id . '_ygMenyatakan');
 
-        $saved->ttdDokter = $ttdDokter;
-        $saved->ttdPetugas = $ttdPetugas;
-        $saved->ttdSaksiPasien = $ttdSaksiPasien;
-        $saved->ttdYgMenyatakan = $ttdygMenyatakan;
+        if ($ttdDokter !== null) $saved->ttdDokter = $ttdDokter;
+        if ($ttdPetugas !== null) $saved->ttdPetugas = $ttdPetugas;
+        if ($ttdSaksiPasien !== null) $saved->ttdSaksiPasien = $ttdSaksiPasien;
+        if ($ttdygMenyatakan !== null) $saved->ttdYgMenyatakan = $ttdygMenyatakan;
 
         $saved->save();
 
@@ -99,10 +99,13 @@ class InformConcernController extends Controller
 
     static function saveImage($request, $image, $id)
     {
-
         $file = null;
 
         if ($image && $id) {
+            if (strpos($image, ';base64,') === false) {
+                return $image;
+            }
+
             $name = $id;
             $noreg = str_replace('/', '-', $request->noreg);
             $folderPath = "inform_concern/" . $noreg . '_' . $request->jenis . '/';
