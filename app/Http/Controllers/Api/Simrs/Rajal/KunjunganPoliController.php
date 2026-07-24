@@ -118,7 +118,13 @@ class KunjunganPoliController extends Controller
                 'memodiagnosadokter.diagnosa as memodiagnosa',
                 'rs17.rs19 as status',
                 'antrian_ambil.nomor as noantrian',
-                'listkirimcasmixRajal.flaging as kunjungancesmix'
+                'listkirimcasmixRajal.flaging as kunjungancesmix',
+                DB::raw('CASE WHEN TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE()) >= 60 AND (
+                    SELECT COUNT(DISTINCT sub_rs17.rs8) 
+                    FROM rs17 as sub_rs17 
+                    WHERE sub_rs17.rs2 = rs17.rs2 
+                      AND sub_rs17.rs8 NOT IN ("POL017", "POL012", "POL038", "POL039", "POL040", "POL015", "POL023", "POL014")
+                ) > 2 THEN 1 ELSE 0 END as is_geriatri')
             )
                 ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
                 ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
