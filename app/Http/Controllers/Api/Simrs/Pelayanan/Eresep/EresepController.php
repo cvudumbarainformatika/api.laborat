@@ -549,6 +549,27 @@ class EresepController extends Controller
             //     'kdobat' => $kdobat[$key],
             //     'message' => 'Data Berhasil Disimpan...!!!'
             // ];
+            // cek apakah pasien rawat jalan, dan ambil antrian farmasi jika belum ada
+            $noreg_first = $noreg;
+            $norm_first = null;
+            if ($request->has('kirimResep') && count($request->kirimResep) > 0) {
+                $first_record = $request->kirimResep[0];
+                $norm_first = is_array($first_record) ? ($first_record['norm'] ?? null) : (is_object($first_record) ? ($first_record->norm ?? null) : null);
+            }
+            if ($noreg_first && $norm_first) {
+                $updatekunjungan = \App\Models\Simrs\Rajal\KunjunganPoli::where('rs1', $noreg_first)->where('rs17.rs8', '!=', 'POL014')->first();
+                if ($updatekunjungan) {
+                    $newData = new Request([
+                        'norm' => $norm_first,
+                        'kodepoli' => 'AP0001',
+                    ]);
+                    $input = new Request([
+                        'noreg' => $noreg_first
+                    ]);
+                    \App\Http\Controllers\Api\Simrs\Antrian\AntrianController::ambilnoantrian($newData, $input);
+                }
+            }
+
             DB::connection('farmasi')->commit();
             return new JsonResponse($response, 200);
         } catch (\Exception $e) {
@@ -876,6 +897,19 @@ class EresepController extends Controller
                         'user' => $user['kodesimrs']
                     ]);
                 }
+            }
+
+            // cek apakah pasien rawat jalan, dan ambil antrian farmasi jika belum ada
+            $updatekunjungan = \App\Models\Simrs\Rajal\KunjunganPoli::where('rs1', $noreg)->where('rs17.rs8', '!=', 'POL014')->first();
+            if ($updatekunjungan) {
+                $newData = new Request([
+                    'norm' => $norm,
+                    'kodepoli' => 'AP0001',
+                ]);
+                $input = new Request([
+                    'noreg' => $noreg
+                ]);
+                \App\Http\Controllers\Api\Simrs\Antrian\AntrianController::ambilnoantrian($newData, $input);
             }
 
             DB::connection('farmasi')->commit();

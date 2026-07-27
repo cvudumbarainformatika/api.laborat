@@ -3892,6 +3892,20 @@ class EresepController extends Controller
             $data['caristok'] = $caristok ?? false;
             $data['jmldiminta'] = $jmldiminta ?? false;
             $data['message'] = 'Copy Resep selesai dan Obat sudah berkurang';
+            
+            // cek apakah pasien rawat jalan, dan ambil antrian farmasi jika belum ada
+            $updatekunjungan = KunjunganPoli::where('rs1', $head['noreg'])->where('rs17.rs8', '!=', 'POL014')->first();
+            if ($updatekunjungan) {
+                $newData = new Request([
+                    'norm' => $head['norm'],
+                    'kodepoli' => 'AP0001',
+                ]);
+                $input = new Request([
+                    'noreg' => $head['noreg']
+                ]);
+                AntrianController::ambilnoantrian($newData, $input);
+            }
+
             DB::connection('farmasi')->commit();
             return new JsonResponse($data);
         } catch (\Exception $e) {
