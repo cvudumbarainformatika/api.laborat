@@ -469,15 +469,15 @@ class CekPerbaikanHargaController extends Controller
                     if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
                     $data->update(['harga' => $request->harga]);
                     if ($data->nobatch != $request->penerimaan['nobatch']) $data->update(['nobatch' => $request->penerimaan['nobatch']]);
-                    if ($data->nobatch != $request->penerimaan['tglexp']) $data->update(['tglexp' => $request->penerimaan['tglexp']]);
+                    if (isset($request->penerimaan['tglexp']) && $data->tglexp != $request->penerimaan['tglexp']) $data->update(['tglexp' => $request->penerimaan['tglexp']]);
 
-                    $tglpenerimaan = $request->penerimaan['header']['tglpenerimaan'] ?? $request->penerimaan['tglpenerimaan'];
-                    if ($data->nobatch != $tglpenerimaan) $data->update(['tglpenerimaan' => $tglpenerimaan]);
+                    $tglpenerimaan = $request->penerimaan['header']['tglpenerimaan'] ?? $request->penerimaan['tglpenerimaan'] ?? null;
+                    if ($tglpenerimaan && $data->tglpenerimaan != $tglpenerimaan) $data->update(['tglpenerimaan' => $tglpenerimaan]);
                     return [
                         'data' => $data,
                         'penerimaan' => $request->penerimaan,
-                        'nobatch' => $request->penerimaan['nobatch'],
-                        'tglexp' => $request->penerimaan['tglexp'],
+                        'nobatch' => $request->penerimaan['nobatch'] ?? null,
+                        'tglexp' => $request->penerimaan['tglexp'] ?? null,
                         'tglpenerimaan' => $tglpenerimaan,
                     ];
                 }
