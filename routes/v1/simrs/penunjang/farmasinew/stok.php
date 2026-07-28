@@ -21,8 +21,11 @@ Route::group([
 
     // with fornt end
     Route::post('/fr-perbaikan-data-depo', [SetNewStokController::class, 'frontPerbaikanDataPerDepo']);
+    Route::post('/fr-perbaikan-data-depo-v2', [SetNewStokController::class, 'frontPerbaikanDataPerDepoV2']);
     Route::post('/fr-perbaikan-data-opname', [SetNewStokController::class, 'frontPerbaikanDataOpname']);
+    Route::post('/fr-perbaikan-data-opname-v2', [SetNewStokController::class, 'frontPerbaikanDataOpnameV2']);
     Route::post('/fr-perbaikan-data', [SetNewStokController::class, 'frontPerbaikanData']);
+    Route::post('/fr-perbaikan-data-v2', [SetNewStokController::class, 'frontPerbaikanDataV2']);
     Route::post('/fr-data-mutasi', [SetNewStokController::class, 'frontDataMutasi']);
     Route::post('/fr-data-resep', [SetNewStokController::class, 'frontDataResep']);
     Route::post('/fr-get-perbaikan-harga', [CekPerbaikanHargaController::class, 'getPerbaikanHarga']);

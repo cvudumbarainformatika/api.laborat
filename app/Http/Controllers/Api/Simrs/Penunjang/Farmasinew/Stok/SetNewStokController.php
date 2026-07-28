@@ -4965,4 +4965,1165 @@ class SetNewStokController extends Controller
             ->min('tglopname');
         return $opnameAwal ? date('Y-m', strtotime($opnameAwal)) : '2024-05';
     }
+
+    public function frontPerbaikanDataV2(Request $request)
+    {
+        $depo = request('kdruang');
+        $obat = request('kdobat');
+        $month = request('bulan');
+        $year = request('tahun');
+        $perbaiki = request('perbaiki') === 'ya';
+        $tipe = request('tipe') ?? 'default';
+        $head = [
+            'depo' => $depo,
+            'obat' => $obat,
+            'month' => $month,
+            'year' => $year,
+            'perbaiki' => $perbaiki,
+            'tipe' => $tipe,
+        ];
+        $data = self::getDataToFixByTransV2($head);
+        return new JsonResponse($data['data'] ?? $data, $data['status'] ?? 200);
+    }
+
+    public static function getDataToFixByTransV2($head)
+    {
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $data = [];
+            $gudangs = ['Gd-05010100', 'Gd-03010100'];
+            $koderuangan = $head['depo'];
+            $kdobat = $head['obat'];
+            $bulan = $head['month'];
+            $tahun = $head['year'];
+
+            $sekarang = date('Y-m');
+            $x = $tahun . '-' . $bulan;
+            $tglAwal = $x . '-01';
+            $tglAkhir = $x . date('-t', strtotime($x . '-01'));
+            $dateAwal = Carbon::parse($tglAwal);
+            $dateAkhir = Carbon::parse($tglAkhir);
+            $blnLaluAwal = $dateAwal->subMonth()->format('Y-m');
+            $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
+            $parameter = [
+                'kdobat' => $kdobat,
+                'koderuangan' => $koderuangan,
+                'now' => $x,
+                'blnLalu' => $blnLaluAwal,
+                'perbaiki' => $head['perbaiki'],
+                'tipe' => $head['tipe'],
+            ];
+
+            $message = 'Stok sudah Sesuai tidak ada yang perlu di update';
+            if (in_array($koderuangan, $gudangs)) {
+                $saldoAwalRinci = StokStokopname::select('tglopname', 'nopenerimaan', 'harga', 'tglexp', 'nobatch', 'tglpenerimaan', 'kdobat', DB::raw('sum(jumlah) as total'))
+                    ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
+                    ->where('kdruang', $koderuangan)
+                    ->where('kdobat', $kdobat)
+                    ->groupBy('nopenerimaan', 'tglopname', 'kdruang', 'kdobat', 'nobatch')
+                    ->orderBy('tglpenerimaan', 'DESC')
+                    ->get();
+                $saldoAwal = collect($saldoAwalRinci)->sum('total');
+                $stokid = FarmasinewStokreal::select('id')->where('kdruang', $koderuangan)
+                    ->where('kdobat', $kdobat)
+                    ->pluck('id');
+                $penyesuaianRinci = PenyesuaianStok::select('stokreal_id', 'nopenerimaan', DB::raw('sum(penyesuaian) as jumlah'))
+                    ->whereIn('stokreal_id', $stokid)
+                    ->where('tgl_penyesuaian', 'LIKE', '%' . $x . '%')
+                    ->groupBy('stokreal_id', 'nopenerimaan')
+                    ->get();
+                $penyesuaian = collect($penyesuaianRinci)->sum('jumlah');
+                $penerimaanRinci = PenerimaanRinci::select(
+                    'penerimaan_r.kdobat',
+                    'penerimaan_r.nopenerimaan',
+                    DB::raw('sum(jml_terima_k) as jumlah')
+                )
+                    ->join('penerimaan_h', 'penerimaan_r.nopenerimaan', '=', 'penerimaan_h.nopenerimaan')
+                    ->where('penerimaan_h.tglpenerimaan', 'LIKE', '%' . $x . '%')
+                    ->where('penerimaan_h.gudang', $koderuangan)
+                    ->where('penerimaan_h.kunci', '1')
+                    ->where('penerimaan_r.kdobat', $kdobat)
+                    ->groupBy('penerimaan_r.nopenerimaan', 'penerimaan_r.kdobat')
+                    ->get();
+                $penerimaan = collect($penerimaanRinci)->sum('jumlah');
+
+                $mutasiMasukRinci = Mutasigudangkedepo::select(
+                    'mutasi_gudangdepo.kd_obat as kdobat',
+                    'mutasi_gudangdepo.nopenerimaan',
+                    DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
+                )
+                    ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                    ->where('permintaan_h.tgl_terima_depo',  'LIKE', '%' . $x . '%')
+                    ->where('permintaan_h.dari', $koderuangan)
+                    ->where('mutasi_gudangdepo.kd_obat', $kdobat)
+                    ->groupBy('mutasi_gudangdepo.nopenerimaan', 'mutasi_gudangdepo.kd_obat')
+                    ->get();
+                $mutasiMasuk = collect($mutasiMasukRinci)->sum('jumlah');
+
+                $mutasiKeluarRinci = Mutasigudangkedepo::select(
+                    'mutasi_gudangdepo.kd_obat as kdobat',
+                    'mutasi_gudangdepo.nopenerimaan',
+                    DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
+                )
+                    ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                    ->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' . $x . '%')
+                    ->where('permintaan_h.tujuan', $koderuangan)
+                    ->where('mutasi_gudangdepo.kd_obat', $kdobat)
+                    ->groupBy('mutasi_gudangdepo.nopenerimaan', 'mutasi_gudangdepo.kd_obat')
+                    ->get();
+                $mutasiKeluar = collect($mutasiKeluarRinci)->sum('jumlah');
+
+                $rusakRinci = BarangRusak::select(
+                    'kd_obat',
+                    'nopenerimaan',
+                    DB::raw('sum(jumlah) as jumlah')
+                )
+                    ->where('tgl_kunci', 'LIKE', '%' . $x . '%')
+                    ->where('kd_obat', $kdobat)
+                    ->where('kunci', '1')
+                    ->where('gudang', $koderuangan)
+                    ->groupBy('kd_obat', 'nopenerimaan')
+                    ->get();
+                $rusak = collect($rusakRinci)->sum('jumlah');
+
+                $returGudangRinci = ReturGudangDetail::select(
+                    'retur_gudang_details.kd_obat',
+                    'retur_gudang_details.nopenerimaan',
+                    DB::raw('sum(retur_gudang_details.jumlah_retur) as jumlah')
+                )
+                    ->leftJoin('retur_gudangs', 'retur_gudangs.no_retur', '=', 'retur_gudang_details.no_retur')
+                    ->where('retur_gudangs.gudang', $koderuangan)
+                    ->where('retur_gudangs.tgl_retur', 'LIKE', '%' . $x . '%')
+                    ->where('retur_gudang_details.kd_obat', $kdobat)
+                    ->where('retur_gudangs.kunci', '1')
+                    ->groupBy('retur_gudang_details.nopenerimaan', 'retur_gudang_details.kd_obat', 'retur_gudangs.gudang')
+                    ->get();
+                $returGudang = collect($returGudangRinci)->sum('jumlah');
+
+                $returPbfRinci = Returpbfrinci::select(
+                    'retur_penyedia_r.kd_obat',
+                    'retur_penyedia_r.nopenerimaan_default as nopenerimaan',
+                    DB::raw('sum(retur_penyedia_r.jumlah_retur) as jumlah')
+                )
+                    ->leftJoin('retur_penyedia_h', 'retur_penyedia_h.no_retur', '=', 'retur_penyedia_r.no_retur')
+                    ->where('retur_penyedia_h.gudang', $koderuangan)
+                    ->where('retur_penyedia_h.tgl_kunci', 'LIKE', '%' . $x . '%')
+                    ->where('retur_penyedia_r.kd_obat', $kdobat)
+                    ->where('retur_penyedia_h.kunci', '1')
+                    ->groupBy('retur_penyedia_r.nopenerimaan', 'retur_penyedia_r.kd_obat', 'retur_penyedia_h.gudang')
+                    ->get();
+                $returPbf = collect($returPbfRinci)->sum('jumlah');
+
+                $pengembalianPinjamanRinci = PengembalianRinciFifo::select(
+                    'pengembalian_rinci_fifos.kdobat',
+                    'pengembalian_rinci_fifos.nopenerimaan',
+                    DB::raw('sum(pengembalian_rinci_fifos.jml_dikembalikan) as jumlah')
+                )
+                    ->leftJoin('pengembalians', 'pengembalians.nopengembalian', '=', 'pengembalian_rinci_fifos.nopengembalian')
+                    ->where('pengembalians.kdruang', $koderuangan)
+                    ->where('pengembalians.tgl_kunci', 'LIKE', '%' . $x . '%')
+                    ->where('pengembalian_rinci_fifos.kdobat', $kdobat)
+                    ->where('pengembalians.flag', '1')
+                    ->groupBy('pengembalian_rinci_fifos.nopenerimaan', 'pengembalian_rinci_fifos.kdobat', 'pengembalians.kdruang')
+                    ->get();
+                $pengembalianPinj = collect($pengembalianPinjamanRinci)->sum('jumlah');
+
+                if ($x == $sekarang) {
+                    $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
+                        ->where('kdruang', $koderuangan)->first();
+                } else {
+                    $totalStok = StokStokopname::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
+                        ->where('kdruang', $koderuangan)->where('tglopname', 'LIKE', $x . '%')->first();
+                }
+                $tts = round($totalStok->jumlah, 2) ?? 0;
+                $sal = round($saldoAwal, 2) ?? 0;
+                $peny = round($penyesuaian, 2) ?? 0;
+                $trm = round($penerimaan, 2) ?? 0;
+                $mutma = round($mutasiMasuk, 2) ?? 0;
+                $mutkel = round($mutasiKeluar, 2) ?? 0;
+                $rus = round($rusak, 2) ?? 0;
+                $retG = round($returGudang, 2) ?? 0;
+                $retPbf = round($returPbf, 2) ?? 0;
+                $pengPinj = $pengembalianPinj ?? 0;
+
+                $masuk = (float)$sal + (float)$peny + (float)$trm + (float)$mutma + (float)$retG;
+                $keluar = (float)$mutkel + (float)$rus + (float)$retPbf + (float)$pengPinj;
+                $sisa = (float)$masuk - (float)$keluar;
+
+                $nopeSt = [];
+                foreach ($saldoAwalRinci as $key) {
+                    $nopeSt[] = $key->nopenerimaan;
+                }
+                foreach ($penyesuaianRinci as $key) {
+                    $nopeSt[] = $key->nopenerimaan;
+                }
+                foreach ($penerimaanRinci as $key) {
+                    $nopeSt[] = $key->nopenerimaan;
+                }
+                foreach ($mutasiMasukRinci as $key) {
+                    $nopeSt[] = $key->nopenerimaan;
+                }
+                foreach ($mutasiKeluarRinci as $key) {
+                    $nopeSt[] = $key->nopenerimaan;
+                }
+                foreach ($rusakRinci as $key) {
+                    $nopeSt[] = $key->nopenerimaan;
+                }
+                foreach ($returGudangRinci as $key) {
+                    $nopeSt[] = $key->nopenerimaan;
+                }
+                foreach ($penerimaanRinci as $key) {
+                    $nopeSt[] = $key->nopenerimaan;
+                }
+                foreach ($returPbfRinci as $key) {
+                    $nopeSt[] = $key->nopenerimaan;
+                }
+                $uniNopeSt = array_unique($nopeSt);
+
+                $penKur = [];
+                $penLeb = [];
+                $penPas = [];
+                $penAll = [];
+                foreach ($uniNopeSt as $key) {
+                    if ($x == $sekarang) {
+                        $stOP = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
+                            ->where('kdruang', $koderuangan)->where('nopenerimaan', $key)->first();
+                    } else {
+                        $stOP = StokStokopname::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
+                            ->where('kdruang', $koderuangan)->where('nopenerimaan', $key)->where('tglopname', 'LIKE', $x . '%')->first();
+                    }
+                    $stOpnya = round($stOP->jumlah, 2) ?? 0;
+                    $salAwal =  collect($saldoAwalRinci)->where('nopenerimaan', $key)->sum('total') ?? 0;
+                    $mutMas =  collect($mutasiMasukRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $trm =  collect($penerimaanRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $retGu =  collect($returGudangRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $peny =  collect($penyesuaianRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $mutKel =  collect($mutasiKeluarRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $rus =  collect($rusakRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $retPbf =  collect($returPbfRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $pengPinjx =  collect($pengembalianPinjamanRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+
+                    $maSuk = round(((float)round($salAwal, 2) + (float)round($mutMas, 2) + (float)round($trm, 2) + (float)round($retGu, 2) + (float)round($peny, 2)), 2);
+                    $keLuar = round(((float)round($mutKel, 2) + (float)round($rus, 2) + (float)round($retPbf, 2)), 2) + (float)round($pengPinjx, 2);
+                    $sisanya = round(($maSuk - $keLuar), 2);
+                    $sts = round(($sisanya - $stOpnya), 2);
+
+                    if ($sisanya == $stOpnya) {
+                        $penPas[] = [
+                            'noper' => $key,
+                            'sisanya' => $sisanya,
+                            'sts' => $sts,
+                            'stOpnya' => $stOpnya,
+                            'maSuk' => $maSuk,
+                            'keLuar' => $keLuar,
+                            'peny' => $peny,
+                        ];
+                    } else if ($sisanya < 0) {
+                        $penKur[] = [
+                            'noper' => $key,
+                            'sisanya' => $sisanya,
+                            'sts' => $sts,
+                            'stOpnya' => $stOpnya,
+                            'maSuk' => $maSuk,
+                            'keLuar' => $keLuar,
+                            'peny' => $peny,
+                        ];
+                    } else if ($sisanya < $stOpnya) {
+                        $penKur[] = [
+                            'noper' => $key,
+                            'sisanyaPeng' => $sisanya,
+                            'sisanya' => $sts,
+                            'sts' => $sts,
+                            'stOpnya' => $stOpnya,
+                            'maSuk' => $maSuk,
+                            'keLuar' => $keLuar,
+                            'peny' => $peny,
+                        ];
+                    } else {
+                        $penLeb[] = [
+                            'noper' => $key,
+                            'sisanya' => $sisanya,
+                            'sts' => $sts,
+                            'stOpnya' => $stOpnya,
+                            'maSuk' => $maSuk,
+                            'keLuar' => $keLuar,
+                            'peny' => $peny,
+                        ];
+                    }
+                    $penAll[] = [
+                        'noper' => $key,
+                        'sisanya' => $sisanya,
+                        'maSuk' => $maSuk,
+                        'keLuar' => $keLuar,
+                        'peny' => $peny,
+                    ];
+                }
+
+                $parameter['nopenerimaan'] = $uniNopeSt;
+                $parameter['penPas'] = $penPas;
+                $parameter['penKur'] = $penKur;
+                $parameter['penLeb'] = $penLeb;
+                $parameter['penAll'] = $penAll;
+                $parameter['tts'] = $tts;
+                $parameter['sisa'] = $sisa;
+                $parameter['keluar'] = $keluar;
+
+                $eksekusi = self::nopenerimaanGudangV2($parameter);
+                $cekOpname = self::opnemeGudang($parameter);
+                $gaKtm = $eksekusi['gaKtm'] ?? false;
+
+                $data = [
+                    'kdobat' => $kdobat,
+                    'gaKtm' => $gaKtm,
+                    'eksekusi' => $eksekusi ?? [],
+                    'cekOpname' => $cekOpname ?? [],
+                    'penyesuaian' => $penyesuaian,
+                    'penerimaan' => $penerimaan,
+                    'mutasiMasuk' => $mutasiMasuk,
+                    'mutasiKeluar' => $mutasiKeluar,
+                    'masuk' => $masuk,
+                    'keluar' => $keluar,
+                    'penLeb' => $penLeb,
+                    'penKur' => $penKur,
+                    'penPas' => $penPas,
+                    'uniNope' => $uniNopeSt,
+                    'penerimaanRinci' => $penerimaanRinci,
+                    'mutasiKeluarRinci' => $mutasiKeluarRinci,
+                    'mutasiMasukRinci' => $mutasiMasukRinci,
+                    'saldoAwalRinci' => $saldoAwalRinci,
+                    'returGudangRinci' => $returGudangRinci,
+                    'tts' => $tts,
+                    'sisa' => $sisa,
+                    'sal' => $sal,
+                    'peny' => $peny,
+                    'trm' => $trm,
+                    'mutma' => $mutma,
+                    'mutkel' => $mutkel,
+                    'rus' => $rus,
+                    'retG' => $retG,
+                    'retPbf' => $retPbf,
+                    'message' => $message
+                ];
+            } else {
+                $saldoAwalDepoRinci = StokStokopname::select('tglopname', 'tglpenerimaan', 'nopenerimaan', 'kdobat', 'nobatch', 'tglexp', 'harga', DB::raw('sum(jumlah) as total'))
+                    ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
+                    ->where('kdruang', $koderuangan)
+                    ->where('kdobat', $kdobat)
+                    ->groupBy('nopenerimaan', 'tglopname', 'kdruang', 'kdobat')
+                    ->get();
+                $saldoAwal = collect($saldoAwalDepoRinci)->sum('total');
+                $stokid = FarmasinewStokreal::select('id')->where('kdruang', $koderuangan)
+                    ->where('kdobat', $kdobat)
+                    ->pluck('id');
+                $penyesuaianDepoRinci = PenyesuaianStok::select('stokreal_id', 'nopenerimaan', DB::raw('sum(penyesuaian) as jumlah'))
+                    ->whereIn('stokreal_id', $stokid)
+                    ->where('tgl_penyesuaian', 'LIKE', '%' . $x . '%')
+                    ->groupBy('stokreal_id', 'nopenerimaan')
+                    ->get();
+                $penyesuaian = collect($penyesuaianDepoRinci)->sum('jumlah');
+
+                $headMutasiMas = Permintaandepoheder::select('no_permintaan')
+                    ->where('dari', $koderuangan)
+                    ->where('tgl_terima_depo', 'LIKE', '%' . $x . '%')
+                    ->pluck('no_permintaan');
+                $mutasiMasukDepoRinci = Mutasigudangkedepo::select('mutasi_gudangdepo.kd_obat as kdobat', 'mutasi_gudangdepo.nopenerimaan', 'mutasi_gudangdepo.nobatch', 'mutasi_gudangdepo.tglexp', 'mutasi_gudangdepo.tglpenerimaan', 'mutasi_gudangdepo.no_permintaan', 'mutasi_gudangdepo.harga', DB::raw('sum(mutasi_gudangdepo.jml) as jumlah'))
+                    ->whereIn('no_permintaan', $headMutasiMas)
+                    ->where('mutasi_gudangdepo.kd_obat', $kdobat)
+                    ->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan')
+                    ->orderby('no_permintaan', 'DESC')
+                    ->get();
+                $mutasiMasuk = collect($mutasiMasukDepoRinci)->sum('jumlah');
+
+                $headMutasiKel = Permintaandepoheder::select('no_permintaan')
+                    ->where('tujuan', $koderuangan)
+                    ->where('tgl_kirim_depo', 'LIKE', '%' . $x . '%')
+                    ->pluck('no_permintaan');
+                $mutasiKeluarDepoRinci = Mutasigudangkedepo::select('mutasi_gudangdepo.kd_obat as kdobat', 'mutasi_gudangdepo.nopenerimaan', 'mutasi_gudangdepo.nobatch', 'mutasi_gudangdepo.tglexp', 'mutasi_gudangdepo.no_permintaan', DB::raw('sum(mutasi_gudangdepo.jml) as jumlah'))
+                    ->whereIn('no_permintaan', $headMutasiKel)
+                    ->where('mutasi_gudangdepo.kd_obat', $kdobat)
+                    ->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan')
+                    ->get();
+                $mutasiKeluar = collect($mutasiKeluarDepoRinci)->sum('jumlah');
+
+                $returRinci = Returpenjualan_r::select('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan', DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah'))
+                    ->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
+                    ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
+                    ->where('retur_penjualan_h.tgl_retur', 'LIKE', '%' . $x . '%')
+                    ->where('resep_keluar_h.depo', $koderuangan)
+                    ->where('retur_penjualan_r.kdobat', $kdobat)
+                    ->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan')
+                    ->get();
+                $retur = collect($returRinci)->sum('jumlah');
+
+                $headerResep = Resepkeluarheder::select('noresep')->where('tgl_selesai', 'LIKE', '%' . $x . '%')
+                    ->where('depo', $koderuangan)
+                    ->when($koderuangan == 'Gd-04010103', function ($q) use ($x, $kdobat) {
+                        $perRin = PersiapanOperasiRinci::select('noresep')
+                            ->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                            ->where('tgl_distribusi', 'LIKE', '%' . $x . '%')
+                            ->where('kd_obat', $kdobat)
+                            ->groupBy('kd_obat')
+                            ->pluck('noresep');
+                        $q->whereNotIn('noresep', $perRin);
+                    })
+                    ->distinct()->pluck('noresep');
+
+                $resepKeluarRacikanRinci = Resepkeluarrinciracikan::select('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan', DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah'))
+                    ->whereIn('noresep', $headerResep)
+                    ->where('resep_keluar_racikan_r.kdobat', $kdobat)
+                    ->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan')
+                    ->get();
+                $resepKeluarRacikan = collect($resepKeluarRacikanRinci)->sum('jumlah');
+
+                $resepKeluarRinci = Resepkeluarrinci::select('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', DB::raw('sum(resep_keluar_r.jumlah) as jumlah'))
+                    ->when($koderuangan == 'Gd-04010103', function ($anu) use ($x, $kdobat) {
+                        $anu->leftJoin('persiapan_operasi_rincis', function ($q) {
+                            $q->on('persiapan_operasi_rincis.noresep', '=', 'resep_keluar_r.noresep')
+                                ->on('persiapan_operasi_rincis.kd_obat', '=', 'resep_keluar_r.kdobat');
+                        })
+                            ->whereNull('persiapan_operasi_rincis.noresep');
+                    })
+                    ->whereIn('resep_keluar_r.noresep', $headerResep)
+                    ->where('resep_keluar_r.kdobat', $kdobat)
+                    ->where('resep_keluar_r.jumlah', '>', 0)
+                    ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan')
+                    ->get();
+                $resepKeluar = collect($resepKeluarRinci)->sum('jumlah');
+
+                $persiapanOperasiDistribusiRinci = [];
+                $persiapanOperasiDistribusiRetur = [];
+                if ($koderuangan == 'Gd-04010103') {
+                    $persiapanOperasiDistribusiRinci = PersiapanOperasiDistribusi::select('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan', DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'))
+                        ->join('persiapan_operasis', 'persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                        ->leftJoin('persiapan_operasi_rincis', function ($join) {
+                            $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                                ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                        })
+                        ->where('persiapan_operasis.tgl_distribusi', 'LIKE', '%' . $x . '%')
+                        ->where('persiapan_operasi_distribusis.kd_obat', $kdobat)
+                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                        ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan')
+                        ->get();
+                    $persiapanOperasiDistribusiRetur = PersiapanOperasiDistribusi::select('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan', DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah'))
+                        ->join('persiapan_operasis', 'persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                        ->leftJoin('persiapan_operasi_rincis', function ($join) {
+                            $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                                ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                        })
+                        ->where('persiapan_operasis.tgl_retur', 'LIKE', '%' . $x . '%')
+                        ->where('persiapan_operasi_distribusis.kd_obat', $kdobat)
+                        ->where('persiapan_operasi_distribusis.jumlah_retur', '>', 0)
+                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                        ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan')
+                        ->get();
+                }
+
+                $returGudangRinci = ReturGudangDetail::select('retur_gudang_details.kd_obat', 'retur_gudang_details.nopenerimaan', DB::raw('sum(retur_gudang_details.jumlah_retur) as jumlah'))
+                    ->leftJoin('retur_gudangs', 'retur_gudangs.no_retur', '=', 'retur_gudang_details.no_retur')
+                    ->where('retur_gudangs.depo', $koderuangan)
+                    ->where('retur_gudangs.tgl_retur', 'LIKE', '%' . $x . '%')
+                    ->where('retur_gudang_details.kd_obat', $kdobat)
+                    ->where('retur_gudangs.kunci', '1')
+                    ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.depo', 'retur_gudang_details.nopenerimaan')
+                    ->get();
+                $returGudang = collect($returGudangRinci)->sum('jumlah');
+
+                $rawNoper = [];
+                foreach ($saldoAwalDepoRinci as $key) { $rawNoper[] = $key->nopenerimaan; }
+                foreach ($penyesuaianDepoRinci as $key) { $rawNoper[] = $key->nopenerimaan; }
+                foreach ($mutasiMasukDepoRinci as $key) { $rawNoper[] = $key->nopenerimaan; }
+                foreach ($mutasiKeluarDepoRinci as $key) { $rawNoper[] = $key->nopenerimaan; }
+                foreach ($resepKeluarRinci as $key) { $rawNoper[] = $key->nopenerimaan; }
+                foreach ($returRinci as $key) { $rawNoper[] = $key->nopenerimaan; }
+                foreach ($resepKeluarRacikanRinci as $key) { $rawNoper[] = $key->nopenerimaan; }
+                foreach ($persiapanOperasiDistribusiRinci as $key) { $rawNoper[] = $key->nopenerimaan; }
+                foreach ($persiapanOperasiDistribusiRetur as $key) { $rawNoper[] = $key->nopenerimaan; }
+                $noper = array_unique($rawNoper);
+
+                $penKur = [];
+                $penLeb = [];
+                $penPas = [];
+                $stOPAll = StokStokopname::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
+                    ->where('kdruang', $koderuangan)->where('tglopname', 'LIKE', $x . '%')->first();
+                $tts = round($stOPAll->jumlah, 2) ?? 0;
+                $sisa = 0;
+                $masukMu = 0;
+                $keluarMu = 0;
+
+                foreach ($noper as $key) {
+                    if ($x == $sekarang) {
+                        $stOP = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
+                            ->where('kdruang', $koderuangan)->where('nopenerimaan', $key)->first();
+                    } else {
+                        $stOP = StokStokopname::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
+                            ->where('kdruang', $koderuangan)->where('nopenerimaan', $key)->where('tglopname', 'LIKE', $x . '%')->first();
+                    }
+                    $salAwal =  collect($saldoAwalDepoRinci)->where('nopenerimaan', $key)->sum('total') ?? 0;
+                    $mutMas =  collect($mutasiMasukDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $peny =  collect($penyesuaianDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $retPenj =  collect($returRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $retPersi =  collect($persiapanOperasiDistribusiRetur)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $mutKel =  collect($mutasiKeluarDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $resepNRac =  collect($resepKeluarRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $resepRac =  collect($resepKeluarRacikanRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $retGud =  collect($returGudangRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $distOp =  collect($persiapanOperasiDistribusiRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+
+                    $maSuk = round(((float)round($salAwal, 2) + (float)round($mutMas, 2) +  (float)round($retPenj, 2) +  (float)round($retPersi, 2) + (float)round($peny, 2)), 2);
+                    $keLuar = round(((float)round($mutKel, 2) + (float)round($retGud, 2) + (float)round($resepNRac, 2) + (float)round($resepRac, 2) + (float)round($distOp, 2)), 2);
+                    $sisanya = round(($maSuk - $keLuar), 2);
+                    $stOpnya = round($stOP->jumlah, 2) ?? 0;
+                    $sts = round(($sisanya - $stOpnya), 2);
+                    $sisa += $sisanya;
+                    $masukMu += $maSuk;
+                    $keluarMu += $keLuar;
+
+                    if ($sisanya == $stOpnya) {
+                        $penPas[] = [
+                            'noper' => $key,
+                            'sisanya' => $sisanya,
+                            'sts' => $sts,
+                            'stOpnya' => $stOpnya,
+                            'maSuk' => $maSuk,
+                            'keLuar' => $keLuar,
+                            'masuknya' => [ 'salAwal' => $salAwal, 'mutMas' => $mutMas, 'retPenj' => $retPenj, 'peny' => $peny ],
+                            'keluarnya' => [ 'mutKel' => $mutKel, 'resepNRac' => $resepNRac, 'resepRac' => $resepRac, 'retGud' => $retGud, 'distOp' => $distOp ],
+                        ];
+                    } else if ($sisanya < 0) {
+                        $penKur[] = [
+                            'noper' => $key,
+                            'sisanya' => $sisanya,
+                            'sts' => $sts,
+                            'stOpnya' => $stOpnya,
+                            'maSuk' => $maSuk,
+                            'keLuar' => $keLuar,
+                            'masuknya' => [ 'salAwal' => $salAwal, 'mutMas' => $mutMas, 'retPenj' => $retPenj, 'peny' => $peny ],
+                            'keluarnya' => [ 'mutKel' => $mutKel, 'resepNRac' => $resepNRac, 'resepRac' => $resepRac, 'retGud' => $retGud, 'distOp' => $distOp ],
+                        ];
+                    } else if ($sisanya < $stOpnya) {
+                        $penKur[] = [
+                            'noper' => $key,
+                            'sisanyaPeng' => $sisanya,
+                            'sisanya' => $sts,
+                            'sts' => $sts,
+                            'stOpnya' => $stOpnya,
+                            'maSuk' => $maSuk,
+                            'keLuar' => $keLuar,
+                            'masuknya' => [ 'salAwal' => $salAwal, 'mutMas' => $mutMas, 'retPenj' => $retPenj, 'peny' => $peny ],
+                            'keluarnya' => [ 'mutKel' => $mutKel, 'resepNRac' => $resepNRac, 'resepRac' => $resepRac, 'retGud' => $retGud, 'distOp' => $distOp ],
+                        ];
+                    } else {
+                        $penLeb[] = [
+                            'noper' => $key,
+                            'sisanya' => $sisanya,
+                            'sts' => $sts,
+                            'stOpnya' => $stOpnya,
+                            'maSuk' => $maSuk,
+                            'keLuar' => $keLuar,
+                            'masuknya' => [ 'salAwal' => $salAwal, 'mutMas' => $mutMas, 'retPenj' => $retPenj, 'peny' => $peny ],
+                            'keluarnya' => [ 'mutKel' => $mutKel, 'resepNRac' => $resepNRac, 'resepRac' => $resepRac, 'retGud' => $retGud, 'distOp' => $distOp ],
+                        ];
+                    }
+                }
+
+                $parameter['nopenerimaan'] = $noper;
+                $parameter['penPas'] = $penPas;
+                $parameter['penKur'] = $penKur;
+                $parameter['penLeb'] = $penLeb;
+                $parameter['tts'] = round($tts, 2);
+                $parameter['sisa'] = round($sisa, 2);
+
+                $eksekusi = self::nopenerimaanDepoV2($parameter);
+                $cekOpname = self::opnemeDepo($parameter);
+                $gaKtm = $eksekusi['gaKtm'] ?? false;
+
+                $data = [
+                    'kdobat' => $kdobat,
+                    'gaKtm' => $gaKtm,
+                    'eksekusi' => $eksekusi ?? [],
+                    'penKur' => $penKur,
+                    'penLeb' => $penLeb,
+                    'penPas' => $penPas,
+                    'cekOpname' => $cekOpname ?? [],
+                    'tts' => round($tts, 2),
+                    'sisa' => round($sisa, 2),
+                    'masuk' => $masukMu,
+                    'keluar' => $keluarMu,
+                    'saldoAwal' => $saldoAwal,
+                    'penyesuaian' => $penyesuaian,
+                    'saldoAwalRinci' => $saldoAwalDepoRinci,
+                    'resepKeluarRinci' => $resepKeluarRinci,
+                    'persiapanOperasiDistribusiRinci' => $persiapanOperasiDistribusiRinci ?? [],
+                    'persiapanOperasiDistribusiRetur' => $persiapanOperasiDistribusiRetur ?? [],
+                    'message' => $message
+                ];
+            }
+            DB::connection('farmasi')->commit();
+            return [
+                'data' => $data,
+                'status' => 200,
+            ];
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return [
+                'data' => [
+                    'data' => $data,
+                    'result' => '' . $e,
+                    'err' =>  $e,
+                    'message' =>  $e->getMessage(),
+                    'line' => '' . $e->getLine(),
+                    'file' =>  $e->getFile(),
+                ],
+                'status' => 410
+            ];
+        }
+    }
+
+    public static function nopenerimaanDepoV2($head)
+    {
+        $opname = StokStokopname::where('kdobat', $head['kdobat'])
+            ->where('kdruang', $head['koderuangan'])
+            ->where('tglopname', 'LIKE', '%' . $head['now'] . '%')
+            ->get();
+        $opnaNya = collect($opname);
+        
+        if ($head['tipe'] === 'default') {
+            $mutasiKeluarRinci = Mutasigudangkedepo::select(
+                'mutasi_gudangdepo.*',
+                'mutasi_gudangdepo.jml as jumlah'
+            )
+                ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                ->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' . $head['now'] . '%')
+                ->where('permintaan_h.tujuan', $head['koderuangan'])
+                ->where('permintaan_h.dari', 'LIKE', '%R-%')
+                ->where('mutasi_gudangdepo.kd_obat', $head['kdobat'])
+                ->orderBy('mutasi_gudangdepo.jml', 'DESC')
+                ->get();
+            $resepKeluarRinci = Resepkeluarrinci::select(
+                'resep_keluar_r.id',
+                'resep_keluar_r.noresep',
+                'resep_keluar_r.nopenerimaan',
+                'resep_keluar_r.kdobat',
+                'resep_keluar_r.harga_beli',
+                'resep_keluar_r.jumlah',
+            )
+                ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
+                ->whereIn('resep_keluar_h.flag', ['3', '4'])
+                ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $head['now'] . '%')
+                ->where('resep_keluar_h.depo', $head['koderuangan'])
+                ->where('resep_keluar_r.kdobat', $head['kdobat'])
+                ->where('resep_keluar_r.jumlah', '>', 0)
+                ->orderBy('resep_keluar_h.flag', 'ASC')
+                ->orderBy('resep_keluar_r.jumlah', 'DESC')
+                ->get();
+            if ($head['koderuangan'] == 'Gd-04010103') {
+                $persiapanOperasiDistribusi = PersiapanOperasiDistribusi::select(
+                    'persiapan_operasi_distribusis.id',
+                    'persiapan_operasi_distribusis.kd_obat',
+                    'persiapan_operasi_distribusis.nopenerimaan',
+                    'persiapan_operasi_distribusis.jumlah as jumlah',
+                    DB::raw('persiapan_operasi_distribusis.jumlah - persiapan_operasi_distribusis.jumlah_retur as sisa'),
+                )
+                    ->join('persiapan_operasis', 'persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                    ->where('persiapan_operasis.tgl_distribusi', 'LIKE', '%' . $head['now'] . '%')
+                    ->where('persiapan_operasi_distribusis.kd_obat', $head['kdobat'])
+                    ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                    ->havingRaw('sisa > 0')
+                    ->get();
+            }
+
+            $mutasi = $head['koderuangan'] == 'Gd-03010101' ? collect($mutasiKeluarRinci) : ($head['koderuangan'] == 'Gd-04010103' ? collect($persiapanOperasiDistribusi) : collect($resepKeluarRinci));
+        }
+        if ($head['tipe'] === 'racikan') {
+            $headRes = Resepkeluarheder::select('noresep')
+                ->whereIn('flag', ['3', '4'])
+                ->where('tgl_selesai', 'LIKE', '%' . $head['now'] . '%')
+                ->where('depo', $head['koderuangan'])
+                ->pluck('noresep');
+            $rinciracikan = Resepkeluarrinciracikan::select('id', 'noresep', 'nopenerimaan', 'kdobat', 'harga_beli', 'jumlah')
+                ->whereIn('noresep', $headRes)
+                ->where('kdobat', $head['kdobat'])
+                ->get();
+            $mutasi = collect($rinciracikan);
+        }
+        if ($head['tipe'] === 'antar') {
+            $headMut = Permintaandepoheder::select('no_permintaan')
+                ->where('tujuan', $head['koderuangan'])
+                ->where('dari', 'NOT LIKE', '%R-%')
+                ->where('tgl_kirim_depo', 'LIKE', '%' . $head['now'] . '%')
+                ->pluck('no_permintaan');
+            $mutanu = Mutasigudangkedepo::select('*', 'jml as jumlah')->with('header:no_permintaan,tgl_kirim_depo,dari,tujuan', 'header.asal:kode,nama')
+                ->whereIn('no_permintaan', $headMut)
+                ->where('kd_obat', $head['kdobat'])
+                ->get();
+            $mutasi = collect($mutanu);
+        }
+
+        $retResep = [];
+        $targets = [];
+        $gaKtm = false;
+
+        if ($head['sisa'] == 0) {
+            foreach ($head['penLeb'] as $key) {
+                $targets[] = [
+                    'boleh' => $key['sisanya'],
+                    'sisa' => $key['sisanya'],
+                    'noper' => $key['noper'],
+                ];
+            }
+        } else if ($head['sisa'] > 0) {
+            foreach ($head['penLeb'] as $key) {
+                $anu = $key['sisanya'] - $opnaNya->where('nopenerimaan', $key['noper'])->sum('jumlah');
+                $targets[] = [
+                    'boleh' => round($anu, 2) ?? 0,
+                    'sisa' => $key['sisanya'],
+                    'noper' => $key['noper'],
+                ];
+            }
+        }
+
+        usort($targets, fn($a, $b) => $a['boleh'] <=> $b['boleh']);
+
+        $pelengkaps = [];
+        if (sizeof($targets) > 0) {
+            foreach ($head['nopenerimaan'] as $key) {
+                if (str_contains($key, 'awal')) {
+                    $temp = StokStokopname::select('nopenerimaan', 'kdobat', 'harga')->where('kdobat', $head['kdobat'])
+                        ->where('nopenerimaan', $key)
+                        ->first();
+                } else {
+                    $temp = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'harga_netto_kecil as harga')->where('nopenerimaan', $key)->where('kdobat', $head['kdobat'])->first();
+                }
+                $pelengkaps[] = $temp ?? $key;
+            }
+
+            $penKur = $head['penKur'];
+
+            foreach ($targets as &$target) {
+                $boleh = $target['boleh'] ?? 0;
+                if ($boleh <= 0) continue;
+
+                foreach ($penKur as &$key) {
+                    $adaKurang = -$key['sisanya'] ?? 0;
+                    if ($adaKurang <= 0) continue;
+
+                    $targetJumlah = min($adaKurang, $boleh);
+                    if ($targetJumlah <= 0) continue;
+
+                    $entries = $mutasi->where('nopenerimaan', $key['noper'])->all();
+                    
+                    usort($entries, function($a, $b) {
+                        $qtyA = isset($a['jumlah']) ? $a['jumlah'] : (isset($a['jml']) ? $a['jml'] : 0);
+                        $qtyB = isset($b['jumlah']) ? $b['jumlah'] : (isset($b['jml']) ? $b['jml'] : 0);
+                        return $qtyB <=> $qtyA;
+                    });
+
+                    $dataBolehDiganti = [];
+                    $accJumlah = 0;
+                    $selectedIndices = [];
+
+                    // Greedy Pass: Select whole transactions that fit
+                    foreach ($entries as $index => $entry) {
+                        $qty = isset($entry['jumlah']) ? $entry['jumlah'] : (isset($entry['jml']) ? $entry['jml'] : 0);
+                        if ($qty <= ($targetJumlah - $accJumlah)) {
+                            $accJumlah += $qty;
+                            $dataBolehDiganti[] = [
+                                'entry' => $entry,
+                                'type' => 'full',
+                                'qty' => $qty
+                            ];
+                            $selectedIndices[] = $index;
+                        }
+                        if ($accJumlah == $targetJumlah) break;
+                    }
+
+                    // Split Pass: If there is still a remaining gap, split the SMALLEST transaction that is larger than the gap
+                    $gap = $targetJumlah - $accJumlah;
+                    if ($gap > 0) {
+                        $splitCandidate = null;
+                        $splitCandidateIndex = -1;
+
+                        foreach ($entries as $index => $entry) {
+                            if (in_array($index, $selectedIndices)) continue;
+                            $qty = isset($entry['jumlah']) ? $entry['jumlah'] : (isset($entry['jml']) ? $entry['jml'] : 0);
+                            if ($qty > $gap) {
+                                if ($splitCandidate === null) {
+                                    $splitCandidate = $entry;
+                                    $splitCandidateIndex = $index;
+                                } else {
+                                    $curMinQty = isset($splitCandidate['jumlah']) ? $splitCandidate['jumlah'] : (isset($splitCandidate['jml']) ? $splitCandidate['jml'] : 0);
+                                    if ($qty < $curMinQty) {
+                                        $splitCandidate = $entry;
+                                        $splitCandidateIndex = $index;
+                                    }
+                                }
+                            }
+                        }
+
+                        if ($splitCandidate !== null) {
+                            $dataBolehDiganti[] = [
+                                'entry' => $splitCandidate,
+                                'type' => 'split',
+                                'qty' => $gap
+                            ];
+                            $accJumlah += $gap;
+                        }
+                    }
+
+                    // Apply Updates in Database
+                    if ($head['perbaiki'] && $accJumlah > 0) {
+                        $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
+
+                        foreach ($dataBolehDiganti as $itemToFix) {
+                            $entry = $itemToFix['entry'];
+                            $qtyToShift = $itemToFix['qty'];
+
+                            if ($itemToFix['type'] === 'full') {
+                                $entry->update(['nopenerimaan' => $target['noper']]);
+                                if ($head['koderuangan'] == 'Gd-03010101') {
+                                    if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
+                                    if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
+                                    if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
+                                } else {
+                                    if (isset($entry->harga_beli) && $entry->harga_beli != $pelengkap->harga) {
+                                        $entry->update(['harga_beli' => $pelengkap->harga]);
+                                    } else if (isset($entry->harga) && $entry->harga != $pelengkap->harga) {
+                                        $entry->update(['harga' => $pelengkap->harga]);
+                                    }
+                                }
+                            } else if ($itemToFix['type'] === 'split') {
+                                $origQty = isset($entry->jumlah) ? $entry->jumlah : (isset($entry->jml) ? $entry->jml : 0);
+                                $remainingQty = $origQty - $qtyToShift;
+
+                                if (isset($entry->jumlah)) {
+                                    $entry->update(['jumlah' => $remainingQty]);
+                                } else if (isset($entry->jml)) {
+                                    $entry->update(['jml' => $remainingQty]);
+                                }
+
+                                $newData = $entry->toArray();
+                                unset($newData['id']);
+                                if (isset($newData['jumlah'])) {
+                                    $newData['jumlah'] = $qtyToShift;
+                                } else if (isset($newData['jml'])) {
+                                    $newData['jml'] = $qtyToShift;
+                                }
+                                $newData['nopenerimaan'] = $target['noper'];
+                                
+                                if ($head['koderuangan'] == 'Gd-03010101') {
+                                    $newData['harga'] = $pelengkap->harga;
+                                    $newData['nobatch'] = $pelengkap->nobatch;
+                                    $newData['tglexp'] = $pelengkap->tglexp;
+                                } else {
+                                    if (array_key_exists('harga_beli', $newData)) {
+                                        $newData['harga_beli'] = $pelengkap->harga;
+                                    } else if (array_key_exists('harga', $newData)) {
+                                        $newData['harga'] = $pelengkap->harga;
+                                    }
+                                }
+
+                                if (array_key_exists('kandungan', $newData) && $newData['kandungan'] === null) $newData['kandungan'] = '';
+                                if (array_key_exists('fornas', $newData) && $newData['fornas'] === null) $newData['fornas'] = '';
+                                if (array_key_exists('forkit', $newData) && $newData['forkit'] === null) $newData['forkit'] = '';
+                                if (array_key_exists('generik', $newData) && $newData['generik'] === null) $newData['generik'] = '';
+                                if (array_key_exists('satuan_racik', $newData) && $newData['satuan_racik'] === null) $newData['satuan_racik'] = '';
+                                if (array_key_exists('nobatch', $newData) && $newData['nobatch'] === null) $newData['nobatch'] = '';
+                                if (array_key_exists('nodistribusi', $newData) && $newData['nodistribusi'] === null) $newData['nodistribusi'] = '';
+
+                                $entry->create($newData);
+                            }
+                        }
+
+                        $key['sisanya'] += $accJumlah;
+                        $target['boleh'] -= $accJumlah;
+                        $boleh -= $accJumlah;
+                    }
+                    if ($boleh <= 0) break;
+                }
+            }
+        }
+
+        if (sizeof($head['penKur']) > 0 && sizeof($targets) == 0) $gaKtm = $head['penKur'];
+        return [
+            'count' => count($mutasi),
+            'retResep' => $retResep,
+            'head' => $head,
+            'gaKtm' => $gaKtm,
+            'opname' => $opname,
+            'boleh' => $boleh ?? null,
+        ];
+    }
+
+    public static function nopenerimaanGudangV2($head)
+    {
+        $opname = StokStokopname::where('kdobat', $head['kdobat'])
+            ->where('kdruang', $head['koderuangan'])
+            ->where('tglopname', 'LIKE', '%' . $head['now'] . '%')
+            ->get();
+            
+        $mutasiKeluarRinci = Mutasigudangkedepo::select(
+            'mutasi_gudangdepo.*'
+        )
+            ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+            ->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' . $head['now'] . '%')
+            ->where('permintaan_h.tujuan', $head['koderuangan'])
+            ->where('mutasi_gudangdepo.kd_obat', $head['kdobat'])
+            ->orderBy('mutasi_gudangdepo.jml', 'DESC')
+            ->get();
+            
+        $mutasi = collect($mutasiKeluarRinci);
+        $retMutasi = [];
+        $opnaNya = collect($opname);
+        $gaKtm = false;
+        $pelengkaps = [];
+        $targets = [];
+
+        if ($head['sisa'] == 0) {
+            foreach ($head['penLeb'] as $key) {
+                $targets[] = [
+                    'boleh' => $key['sisanya'],
+                    'sisa' => $key['sisanya'],
+                    'noper' => $key['noper'],
+                ];
+            }
+        } else if ($head['sisa'] > 0) {
+            foreach ($head['penLeb'] as $key) {
+                $targets[] = [
+                    'boleh' => $key['sisanya'] - $opnaNya->where('nopenerimaan', $key['noper'])->sum('jumlah') ?? 0,
+                    'sisa' => $key['sisanya'],
+                    'noper' => $key['noper'],
+                ];
+            }
+        }
+
+        usort($targets, fn($a, $b) => $a['boleh'] <=> $b['boleh']);
+
+        if (sizeof($targets) > 0) {
+            foreach ($head['nopenerimaan'] as $key) {
+                if (str_contains($key, 'awal')) {
+                    $temp = StokStokopname::where('kdobat', $head['kdobat'])
+                        ->where('kdruang', $head['koderuangan'])
+                        ->where('nopenerimaan', $key)
+                        ->first();
+                    $pelengkaps[] = $temp;
+                } else {
+                    $temp = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'harga_netto_kecil as harga', 'no_batch as nobatch', 'tgl_exp as tglexp')->with('header:nopenerimaan,tglpenerimaan')->where('nopenerimaan', $key)->where('kdobat', $head['kdobat'])->first();
+                    if ($temp) {
+                        $temp->tglpenerimaan = $temp->header->tglpenerimaan;
+                        $pelengkaps[] = $temp;
+                    }
+                }
+            }
+
+            $penKur = $head['penKur'];
+
+            foreach ($targets as &$target) {
+                $boleh = $target['boleh'] ?? 0;
+                if ($boleh <= 0) continue;
+
+                foreach ($penKur as &$key) {
+                    $adaKurang = -$key['sisanya'] ?? 0;
+                    if ($adaKurang <= 0) continue;
+
+                    $targetJumlah = min($adaKurang, $boleh);
+                    if ($targetJumlah <= 0) continue;
+
+                    $entries = $mutasi->where('nopenerimaan', $key['noper'])->all();
+                    usort($entries, function($a, $b) {
+                        return $b['jml'] <=> $a['jml'];
+                    });
+
+                    $dataBolehDiganti = [];
+                    $accJumlah = 0;
+                    $selectedIndices = [];
+
+                    // Greedy Pass
+                    foreach ($entries as $index => $entry) {
+                        if ($entry['jml'] <= ($targetJumlah - $accJumlah)) {
+                            $accJumlah += $entry['jml'];
+                            $dataBolehDiganti[] = [
+                                'entry' => $entry,
+                                'type' => 'full',
+                                'qty' => $entry['jml']
+                            ];
+                            $selectedIndices[] = $index;
+                        }
+                        if ($accJumlah == $targetJumlah) break;
+                    }
+
+                    // Split Pass
+                    $gap = $targetJumlah - $accJumlah;
+                    if ($gap > 0) {
+                        $splitCandidate = null;
+                        $splitCandidateIndex = -1;
+
+                        foreach ($entries as $index => $entry) {
+                            if (in_array($index, $selectedIndices)) continue;
+                            if ($entry['jml'] > $gap) {
+                                if ($splitCandidate === null) {
+                                    $splitCandidate = $entry;
+                                    $splitCandidateIndex = $index;
+                                } else {
+                                    if ($entry['jml'] < $splitCandidate['jml']) {
+                                        $splitCandidate = $entry;
+                                        $splitCandidateIndex = $index;
+                                    }
+                                }
+                            }
+                        }
+
+                        if ($splitCandidate !== null) {
+                            $dataBolehDiganti[] = [
+                                'entry' => $splitCandidate,
+                                'type' => 'split',
+                                'qty' => $gap
+                            ];
+                            $accJumlah += $gap;
+                        }
+                    }
+
+                    if ($head['perbaiki'] && $accJumlah > 0) {
+                        $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
+
+                        foreach ($dataBolehDiganti as $itemToFix) {
+                            $entry = $itemToFix['entry'];
+                            $qtyToShift = $itemToFix['qty'];
+
+                            if ($itemToFix['type'] === 'full') {
+                                $entry->update(['nopenerimaan' => $target['noper']]);
+                                if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
+                                if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
+                                if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
+                            } else if ($itemToFix['type'] === 'split') {
+                                $remainingQty = $entry['jml'] - $qtyToShift;
+                                $entry->update(['jml' => $remainingQty]);
+
+                                $newData = $entry->toArray();
+                                unset($newData['id']);
+                                $newData['jml'] = $qtyToShift;
+                                $newData['nopenerimaan'] = $target['noper'];
+                                $newData['harga'] = $pelengkap->harga;
+                                $newData['nobatch'] = $pelengkap->nobatch;
+                                $newData['tglexp'] = $pelengkap->tglexp;
+
+                                if (array_key_exists('nobatch', $newData) && $newData['nobatch'] === null) $newData['nobatch'] = '';
+                                if (array_key_exists('nodistribusi', $newData) && $newData['nodistribusi'] === null) $newData['nodistribusi'] = '';
+
+                                $entry->create($newData);
+                            }
+                        }
+
+                        $key['sisanya'] += $accJumlah;
+                        $target['boleh'] -= $accJumlah;
+                        $boleh -= $accJumlah;
+                    }
+                    if ($boleh <= 0) break;
+                }
+            }
+        }
+
+        if (sizeof($head['penKur']) > 0 && sizeof($targets) == 0) $gaKtm = $head['penKur'];
+        return [
+            'count' => count($mutasi),
+            'retMutasi' => $retMutasi,
+            'head' => $head,
+            'gaKtm' => $gaKtm,
+            'mutasiKeluarRinci' => $mutasiKeluarRinci,
+        ];
+    }
+
+    public function frontPerbaikanDataPerDepoV2(Request $request)
+    {
+        $depo = request('kdruang');
+        $month = request('bulan');
+        $year = request('tahun');
+        $perbaiki = request('perbaiki') === 'ya';
+        $limit = request('per_page');
+        $offset = (request('page') - 1) * $limit;
+        $tipe = request('tipe') ?? 'default';
+
+        $total = Mobatnew::count();
+        $kdobat = Mobatnew::select('kd_obat', 'nama_obat')
+            ->when($limit, function ($q) use ($limit, $offset) {
+                $q->limit($limit)->offset($offset);
+            })
+            ->when(request('q'), function ($q) {
+                $q->where(function ($query) {
+                    $query->where('kd_obat', 'like', '%' . request('q') . '%')
+                        ->orWhere('nama_obat', 'like', '%' . request('q') . '%');
+                });
+            })
+            ->get();
+        $anu = [];
+        $mbuh = [];
+        foreach ($kdobat as $obat) {
+            $head = [
+                'depo' => $depo,
+                'obat' => $obat['kd_obat'],
+                'month' => $month,
+                'year' => $year,
+                'perbaiki' => $perbaiki,
+                'tipe' => $tipe,
+            ];
+            $data = self::getDataToFixByTransV2($head);
+            $obat['data'] = $data;
+            $temp = $data['data'] ?? $data;
+            $ada = $temp['penKur'] ?? false;
+            $gaktm = $temp['gaKtm'] ?? false;
+            if ($ada) if (sizeof($temp['penKur']) > 0 || $gaktm) {
+                $anu[] = $temp;
+                $obat['perbaikan'] = $temp;
+            } else $mbuh[] = $temp;
+        }
+
+        return new JsonResponse([
+            'count data' => sizeof($anu),
+            'kdobat' => $kdobat,
+            'total' => $total,
+            'page' => (int)request('page'),
+            'per_page' => $limit,
+        ], 200);
+    }
+
+    public function frontPerbaikanDataOpnameV2(Request $request)
+    {
+        $depo = request('kdruang');
+        $month = request('bulan');
+        $year = request('tahun');
+        $limit = request('per_page');
+        $offset = (request('page') - 1) * $limit;
+
+        $kdobat = StokStokopname::select('kdobat')
+            ->where('kdruang', $depo)
+            ->where('tglopname', 'LIKE', $year . '-' . $month . '%')
+            ->groupBy('kdobat')
+            ->when($limit, function ($q) use ($limit, $offset) {
+                $q->limit($limit)->offset($offset);
+            })
+            ->pluck('kdobat');
+        $anu = [];
+        $mbuh = [];
+        foreach ($kdobat as $obat) {
+            $head = [
+                'depo' => $depo,
+                'obat' => $obat,
+                'month' => $month,
+                'year' => $year,
+            ];
+            $data = self::getDataToFixByTransV2($head);
+            $temp = $data['data'] ?? $data;
+            $ada = $temp['penKur'] ?? false;
+            $gaktm = $temp['gaKtm'] ?? false;
+            if ($ada) if (sizeof($temp['penKur']) > 0 || $gaktm) $anu[] = $temp;
+            else $mbuh[] = $temp;
+        }
+
+        return new JsonResponse([
+            'count data' => sizeof($anu),
+            'data' => $anu,
+            'limit' => $limit,
+            'offset' => $offset,
+            'page' => request('page'),
+        ], 200);
+    }
 }
