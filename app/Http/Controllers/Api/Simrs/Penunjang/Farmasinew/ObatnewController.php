@@ -11,6 +11,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 
 use function PHPUnit\Framework\isEmpty;
@@ -222,5 +223,115 @@ class ObatnewController extends Controller
         $data->kode_bpjs = $request->kode_bpjs;
         $data->save();
         return new JsonResponse($data);
+    }
+
+    public function exportExcel()
+    {
+        $q = request('q');
+        $statusPrb = request('status_prb');
+        
+        $filename = 'master-obat-' . date('d-m-Y') . '.xlsx';
+        
+        return Excel::download(new MasterObatExport($q, $statusPrb), $filename);
+    }
+}
+
+class MasterObatExport implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithMapping, \Maatwebsite\Excel\Concerns\ShouldAutoSize
+{
+    protected $q;
+    protected $statusPrb;
+    protected $rowNumber = 0;
+
+    public function __construct($q = null, $statusPrb = null)
+    {
+        $this->q = $q;
+        $this->statusPrb = $statusPrb;
+    }
+
+    public function collection()
+    {
+        return Mobatnew::with('mkelasterapi', 'indikasi')
+            ->where(function ($list) {
+                if ($this->q) {
+                    $list->where('nama_obat', 'Like', '%' . $this->q . '%')
+                        ->orWhere('merk', 'Like', '%' . $this->q . '%')
+                        ->orWhere('kd_obat', 'Like', '%' . $this->q . '%')
+                        ->orWhere('kandungan', 'Like', '%' . $this->q . '%');
+                }
+            })
+            ->when($this->statusPrb == 'true' || $this->statusPrb == '1', function ($q) {
+                $q->where('status_prb', '1');
+            })
+            ->orderBy('nama_obat', 'asc')
+            ->where('flag', '')
+            ->get();
+    }
+
+    public function headings(): array
+    {
+        return [
+            'No',
+            'Kode Obat',
+            'Nama Obat',
+            'Kode BPJS',
+            'Kekuatan Dosis',
+            'Volume Sediaan',
+            'Bentuk Sediaan',
+            'Merk',
+            'Jenis Perbekalan',
+            'Kandungan',
+            'Penyimpanan',
+            'RKO',
+            'Uraian 108',
+            'Uraian 50',
+            'Satuan Besar',
+            'Satuan Kecil',
+            'Generik',
+            'Fornas',
+            'Forkit',
+            'Kronis',
+            'PRB',
+            'Program',
+            'Donasi',
+            'Kebijakan',
+            'Konsinyasi',
+            'Sistem Bayar',
+            'Gudang'
+        ];
+    }
+
+    public function map($row): array
+    {
+        $this->rowNumber++;
+        
+        return [
+            $this->rowNumber,
+            $row->kd_obat,
+            $row->nama_obat,
+            $row->kode_bpjs ?? '-',
+            $row->kekuatan_dosis ?? '-',
+            $row->volumesediaan ?? '-',
+            $row->bentuk_sediaan ?? '-',
+            $row->merk ?? '-',
+            $row->jenis_perbekalan ?? '-',
+            $row->kandungan ?? '-',
+            $row->kelompok_penyimpanan ?? '-',
+            $row->kelompok_rko ?? '-',
+            $row->uraian108 ?? '-',
+            $row->uraian50 ?? '-',
+            $row->satuan_b ?? '-',
+            $row->satuan_k ?? '-',
+            $row->status_generik === '1' ? 'YA' : 'TIDAK',
+            $row->status_fornas === '1' ? 'YA' : 'TIDAK',
+            $row->status_forkid === '1' ? 'YA' : 'TIDAK',
+            $row->status_kronis === '1' ? 'YA' : 'TIDAK',
+            $row->status_prb === '1' ? 'YA' : 'TIDAK',
+            $row->obat_program === '1' ? 'YA' : 'TIDAK',
+            $row->obat_donasi === '1' ? 'YA' : 'TIDAK',
+            $row->obat_kebijakan === '1' ? 'YA' : 'TIDAK',
+            $row->status_konsinyasi === '1' ? 'YA' : 'TIDAK',
+            $row->sistembayar ?? '-',
+            $row->gudang ?? '-'
+        ];
     }
 }
