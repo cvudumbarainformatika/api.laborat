@@ -14,6 +14,7 @@ use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class KartustokController extends Controller
 {
@@ -150,11 +151,9 @@ class KartustokController extends Controller
                 },
 
                 'resepkeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
-                    $q->select(
-                        'resep_keluar_r.kdobat',
-                        DB::raw('sum(resep_keluar_r.jumlah) as jumlah')
-                    )
-                        ->join('resep_keluar_h', 'resep_keluar_r.noresep', '=', 'resep_keluar_h.noresep')
+                    $q->from('resep_keluar_h')
+                        ->select(DB::raw('STRAIGHT_JOIN resep_keluar_r.kdobat, sum(resep_keluar_r.jumlah) as jumlah'))
+                        ->join('resep_keluar_r', 'resep_keluar_r.noresep', '=', 'resep_keluar_h.noresep')
                         ->when($koderuangan === 'Gd-04010103', function ($kd) {
                             $kd->leftJoin('persiapan_operasi_rincis', function ($q) {
                                 $q->on('persiapan_operasi_rincis.noresep', '=', 'resep_keluar_r.noresep')
@@ -167,22 +166,17 @@ class KartustokController extends Controller
                         ->where('resep_keluar_r.jumlah', '>', 0)
                         ->whereIn('resep_keluar_h.flag', ['3', '4'])
                         ->groupBy('resep_keluar_r.kdobat');
-                    // ->with('retur.rinci');
                 },
 
                 'resepkeluarracikan' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
-                    $q->select(
-                        'resep_keluar_racikan_r.kdobat',
-                        DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah')
-                    )
-                        ->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
+                    $q->from('resep_keluar_h')
+                        ->select(DB::raw('STRAIGHT_JOIN resep_keluar_racikan_r.kdobat, sum(resep_keluar_racikan_r.jumlah) as jumlah'))
+                        ->join('resep_keluar_racikan_r', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
                         ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
                         ->where('resep_keluar_racikan_r.jumlah', '>', 0)
                         ->whereIn('resep_keluar_h.flag', ['3', '4'])
                         ->groupBy('resep_keluar_racikan_r.kdobat');
-
-                    // ->with('retur.rinci');
                 },
 
                 'distribusipersiapan' => function ($dist) use ($tglAwal, $tglAkhir) {
@@ -451,8 +445,9 @@ class KartustokController extends Controller
                 },
 
                 'resepkeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
-                    $q->select('resep_keluar_r.*', 'resep_keluar_h.tgl_selesai')
-                        ->join('resep_keluar_h', 'resep_keluar_r.noresep', '=', 'resep_keluar_h.noresep')
+                    $q->from('resep_keluar_h')
+                        ->select(DB::raw('STRAIGHT_JOIN resep_keluar_r.*, resep_keluar_h.tgl_selesai'))
+                        ->join('resep_keluar_r', 'resep_keluar_r.noresep', '=', 'resep_keluar_h.noresep')
                         ->when($koderuangan === 'Gd-04010103', function ($kd) {
                             $kd->leftJoin('persiapan_operasi_rincis', function ($q) {
                                 $q->on('persiapan_operasi_rincis.noresep', '=', 'resep_keluar_r.noresep')
@@ -465,23 +460,16 @@ class KartustokController extends Controller
                         ->where('resep_keluar_r.jumlah', '>', 0)
                         ->whereIn('resep_keluar_h.flag', ['3', '4'])
                         ->with('retur.rinci');
-                    // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
-                    //     $x->whereBetween('tgl_selesai', [$tglAwal, $tglAkhir])
-                    //     ->where('depo', $koderuangan);
-                    // })
-                    // ->with('retur.rinci');
                 },
 
                 'resepkeluarracikan' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
-                    $q->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
+                    $q->from('resep_keluar_h')
+                        ->select(DB::raw('STRAIGHT_JOIN resep_keluar_racikan_r.*'))
+                        ->join('resep_keluar_racikan_r', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
                         ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
                         ->where('resep_keluar_racikan_r.jumlah', '>', 0)
                         ->whereIn('resep_keluar_h.flag', ['3', '4'])
-                        // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
-                        //     $x->whereBetween('tgl_selesai', [$tglAwal, $tglAkhir])
-                        //     ->where('depo', $koderuangan);
-                        // })
                         ->with('retur.rinci');
                 },
 
@@ -641,6 +629,276 @@ class KartustokController extends Controller
         // ]);
     }
 
+    public function exportExcel()
+    {
+        $koderuangan = request('koderuangan');
+        $bulan = request('bulan');
+        $tahun = request('tahun');
+        
+        $x = $tahun . '-' . $bulan;
+        $tglAwal = $x . '-01';
+        $tglAkhir = $x . date('-t', strtotime($x . '-01'));
+        
+        $dateAwal = Carbon::parse($tglAwal);
+        $dateAkhir = Carbon::parse($tglAkhir);
+        
+        $blnLaluAwal = $dateAwal->subMonth()->format('Y-m');
+        $blnLalu = $blnLaluAwal . '%';
+        
+        $tglAwalFull = $tglAwal . ' 00:00:00';
+        $tglAkhirFull = $tglAkhir . ' 23:59:59';
+        $bulanTahunPattern = $x . '%';
+        
+        $bulanIni = Carbon::now()->format('m');
+        
+        $stokTable = 'stokopname';
+        $stokQueryPart = "SELECT kdobat, SUM(jumlah) as jumlah FROM stokopname WHERE tglopname LIKE :stokBulanTahun AND kdruang = :kdruang15 GROUP BY kdobat";
+        
+        if ($bulan === $bulanIni && $tahun == Carbon::now()->format('Y')) {
+            $stokTable = 'stokreal';
+            $stokQueryPart = "SELECT kdobat, SUM(jumlah) as jumlah FROM stokreal WHERE kdruang = :kdruang15 GROUP BY kdobat";
+        }
+        
+        $sql = "
+            SELECT 
+                m.kd_obat, 
+                m.nama_obat, 
+                m.satuan_k,
+                m.satuan_b,
+                m.merk,
+                m.kandungan,
+                COALESCE(sa.jumlah, 0) as saldo_awal,
+                COALESCE(p.jumlah, 0) as penerimaan,
+                COALESCE(mm.jumlah, 0) as mutasi_masuk,
+                COALESCE(rp.jumlah, 0) as retur_penjualan,
+                COALESCE(pm.jumlah, 0) as penyesuaian_masuk,
+                COALESCE(pr.jumlah, 0) as persiapan_retur,
+                COALESCE(rg.jumlah, 0) as retur_gudang,
+                COALESCE(mk.jumlah, 0) as mutasi_keluar,
+                COALESCE(rk.jumlah, 0) as resep_keluar,
+                COALESCE(rkr.jumlah, 0) as resep_keluar_racikan,
+                COALESCE(pk.jumlah, 0) as penyesuaian_keluar,
+                COALESCE(dp.jumlah, 0) as distribusi_persiapan,
+                COALESCE(br.jumlah, 0) as barang_rusak,
+                COALESCE(rd.jumlah, 0) as retur_depo,
+                COALESCE(rpbf.jumlah, 0) as retur_pbf,
+                COALESCE(pb.jumlah, 0) as pengembalian,
+                COALESCE(ss.jumlah, 0) as stok_sekarang,
+                COALESCE(sf.jumlah, 0) as stok_fisik
+            FROM new_masterobat m
+            LEFT JOIN (
+                SELECT kdobat, SUM(jumlah) as jumlah 
+                FROM stokopname 
+                WHERE tglopname LIKE :blnLalu 
+                  AND kdruang = :kdruang1
+                GROUP BY kdobat
+            ) sa ON sa.kdobat = m.kd_obat
+            LEFT JOIN (
+                SELECT pr.kdobat, 
+                       SUM(CASE WHEN ph.jenis_penerimaan != 'Pesanan' THEN pr.jml_terima_k
+                                WHEN ph.jenissurat = 'Faktur' THEN pr.jml_terima_k 
+                                ELSE 0 END) as jumlah
+                FROM penerimaan_r pr
+                INNER JOIN penerimaan_h ph ON pr.nopenerimaan = ph.nopenerimaan
+                WHERE ph.tglpenerimaan BETWEEN :tglAwal1 AND :tglAkhir1
+                  AND ph.gudang = :kdruang2
+                  AND ph.kunci = '1'
+                GROUP BY pr.kdobat
+            ) p ON p.kdobat = m.kd_obat
+            LEFT JOIN (
+                SELECT mgd.kd_obat, SUM(mgd.jml) as jumlah
+                FROM mutasi_gudangdepo mgd
+                INNER JOIN permintaan_h ph ON ph.no_permintaan = mgd.no_permintaan
+                WHERE ph.tgl_terima_depo BETWEEN :tglAwal2 AND :tglAkhir2
+                  AND ph.dari = :kdruang3
+                GROUP BY mgd.kd_obat
+            ) mm ON mm.kd_obat = m.kd_obat
+            LEFT JOIN (
+                SELECT rpr.kdobat, SUM(rpr.jumlah_retur) as jumlah
+                FROM retur_penjualan_r rpr
+                INNER JOIN retur_penjualan_h rph ON rpr.noretur = rph.noretur
+                INNER JOIN resep_keluar_h rkh ON rpr.noresep = rkh.noresep
+                WHERE rph.tgl_retur BETWEEN :tglAwal3 AND :tglAkhir3
+                  AND rkh.depo = :kdruang4
+                GROUP BY rpr.kdobat
+            ) rp ON rp.kdobat = m.kd_obat
+            LEFT JOIN (
+                SELECT sr.kdobat, SUM(ps.penyesuaian) as jumlah
+                FROM penyesuaian_stoks ps
+                INNER JOIN stokreal sr ON sr.id = ps.stokreal_id
+                WHERE ps.tgl_penyesuaian LIKE :bulanTahun1
+                  AND sr.kdruang = :kdruang5
+                  AND ps.penyesuaian > 0
+                GROUP BY sr.kdobat
+            ) pm ON pm.kdobat = m.kd_obat
+            LEFT JOIN (
+                SELECT pod.kd_obat, SUM(pod.jumlah_retur) as jumlah
+                FROM persiapan_operasi_distribusis pod
+                INNER JOIN persiapan_operasis po ON po.nopermintaan = pod.nopermintaan
+                WHERE po.tgl_retur BETWEEN :tglAwal4 AND :tglAkhir4
+                  AND po.flag IN ('2', '3', '4')
+                GROUP BY pod.kd_obat
+            ) pr ON pr.kd_obat = m.kd_obat
+            LEFT JOIN (
+                SELECT rgd.kd_obat, SUM(rgd.jumlah_retur) as jumlah
+                FROM retur_gudang_details rgd
+                INNER JOIN retur_gudangs rg ON rg.no_retur = rgd.no_retur
+                WHERE rg.tgl_retur BETWEEN :tglAwal5 AND :tglAkhir5
+                  AND rg.gudang = :kdruang6
+                  AND rg.kunci = '1'
+                GROUP BY rgd.kd_obat
+            ) rg ON rg.kd_obat = m.kd_obat
+            LEFT JOIN (
+                SELECT mgd.kd_obat, SUM(mgd.jml) as jumlah
+                FROM mutasi_gudangdepo mgd
+                INNER JOIN permintaan_h ph ON ph.no_permintaan = mgd.no_permintaan
+                WHERE ph.tgl_kirim_depo BETWEEN :tglAwal6 AND :tglAkhir6
+                  AND ph.tujuan = :kdruang7
+                GROUP BY mgd.kd_obat
+            ) mk ON mk.kd_obat = m.kd_obat
+            LEFT JOIN (
+                SELECT r.kdobat, SUM(r.jumlah) as jumlah
+                FROM resep_keluar_h h STRAIGHT_JOIN resep_keluar_r r ON r.noresep = h.noresep
+                WHERE h.tgl_selesai BETWEEN :tglAwal7 AND :tglAkhir7
+                  AND h.depo = :kdruang8
+                  AND h.flag IN ('3', '4')
+                  AND r.jumlah > 0
+                GROUP BY r.kdobat
+            ) rk ON rk.kdobat = m.kd_obat
+            LEFT JOIN (
+                SELECT r.kdobat, SUM(r.jumlah) as jumlah
+                FROM resep_keluar_h h STRAIGHT_JOIN resep_keluar_racikan_r r ON r.noresep = h.noresep
+                WHERE h.tgl_selesai BETWEEN :tglAwal8 AND :tglAkhir8
+                  AND h.depo = :kdruang9
+                  AND h.flag IN ('3', '4')
+                  AND r.jumlah > 0
+                GROUP BY r.kdobat
+            ) rkr ON rkr.kdobat = m.kd_obat
+            LEFT JOIN (
+                SELECT sr.kdobat, SUM(-ps.penyesuaian) as jumlah
+                FROM penyesuaian_stoks ps
+                INNER JOIN stokreal sr ON sr.id = ps.stokreal_id
+                WHERE ps.tgl_penyesuaian LIKE :bulanTahun2
+                  AND sr.kdruang = :kdruang10
+                  AND ps.penyesuaian < 0
+                GROUP BY sr.kdobat
+            ) pk ON pk.kdobat = m.kd_obat
+            LEFT JOIN (
+                SELECT pod.kd_obat, SUM(pod.jumlah) as jumlah
+                FROM persiapan_operasi_distribusis pod
+                INNER JOIN persiapan_operasis po ON po.nopermintaan = pod.nopermintaan
+                WHERE po.tgl_distribusi BETWEEN :tglAwal9 AND :tglAkhir9
+                  AND po.flag IN ('2', '3', '4')
+                GROUP BY pod.kd_obat
+            ) dp ON dp.kd_obat = m.kd_obat
+            LEFT JOIN (
+                SELECT kd_obat, SUM(jumlah) as jumlah
+                FROM barang_rusaks
+                WHERE tgl_kunci BETWEEN :tglAwal10 AND :tglAkhir10
+                  AND gudang = :kdruang11
+                  AND kunci = '1'
+                GROUP BY kd_obat
+            ) br ON br.kd_obat = m.kd_obat
+            LEFT JOIN (
+                SELECT rgd.kd_obat, SUM(rgd.jumlah_retur) as jumlah
+                FROM retur_gudang_details rgd
+                INNER JOIN retur_gudangs rg ON rg.no_retur = rgd.no_retur
+                WHERE rg.tgl_retur BETWEEN :tglAwal11 AND :tglAkhir11
+                  AND rg.depo = :kdruang12
+                  AND rg.kunci = '1'
+                GROUP BY rgd.kd_obat
+            ) rd ON rd.kd_obat = m.kd_obat
+            LEFT JOIN (
+                SELECT rpr.kd_obat, SUM(rpr.jumlah_retur) as jumlah
+                FROM retur_penyedia_r rpr
+                INNER JOIN retur_penyedia_h rph ON rpr.no_retur = rph.no_retur
+                WHERE rph.tgl_kunci BETWEEN :tglAwal12 AND :tglAkhir12
+                  AND rph.gudang = :kdruang13
+                  AND rph.kunci = '1'
+                GROUP BY rpr.kd_obat
+            ) rpbf ON rpbf.kd_obat = m.kd_obat
+            LEFT JOIN (
+                SELECT r.kdobat, SUM(r.jml_dikembalikan) as jumlah
+                FROM pengembalian_rinci_fifos r
+                INNER JOIN pengembalians p ON p.nopengembalian = r.nopengembalian
+                WHERE p.tgl_kunci BETWEEN :tglAwal13 AND :tglAkhir13
+                  AND p.kdruang = :kdruang14
+                  AND p.flag = '1'
+                GROUP BY r.kdobat
+            ) pb ON pb.kdobat = m.kd_obat
+            LEFT JOIN (
+                {$stokQueryPart}
+            ) ss ON ss.kdobat = m.kd_obat
+            LEFT JOIN (
+                SELECT kdobat, SUM(jumlah) as jumlah
+                FROM stok_opname_fisiks
+                WHERE tglopname BETWEEN :tglAwal14 AND :tglAkhir14
+                  AND kdruang = :kdruang16
+                GROUP BY kdobat
+            ) sf ON sf.kdobat = m.kd_obat
+            WHERE m.flag = ''
+            ORDER BY m.nama_obat ASC
+        ";
+        
+        $bindings = [
+            'blnLalu' => $blnLalu,
+            'kdruang1' => $koderuangan,
+            'tglAwal1' => $tglAwalFull,
+            'tglAkhir1' => $tglAkhirFull,
+            'kdruang2' => $koderuangan,
+            'tglAwal2' => $tglAwalFull,
+            'tglAkhir2' => $tglAkhirFull,
+            'kdruang3' => $koderuangan,
+            'tglAwal3' => $tglAwalFull,
+            'tglAkhir3' => $tglAkhirFull,
+            'kdruang4' => $koderuangan,
+            'bulanTahun1' => $bulanTahunPattern,
+            'kdruang5' => $koderuangan,
+            'tglAwal4' => $tglAwalFull,
+            'tglAkhir4' => $tglAkhirFull,
+            'tglAwal5' => $tglAwalFull,
+            'tglAkhir5' => $tglAkhirFull,
+            'kdruang6' => $koderuangan,
+            'tglAwal6' => $tglAwalFull,
+            'tglAkhir6' => $tglAkhirFull,
+            'kdruang7' => $koderuangan,
+            'tglAwal7' => $tglAwalFull,
+            'tglAkhir7' => $tglAkhirFull,
+            'kdruang8' => $koderuangan,
+            'tglAwal8' => $tglAwalFull,
+            'tglAkhir8' => $tglAkhirFull,
+            'kdruang9' => $koderuangan,
+            'bulanTahun2' => $bulanTahunPattern,
+            'kdruang10' => $koderuangan,
+            'tglAwal9' => $tglAwalFull,
+            'tglAkhir9' => $tglAkhirFull,
+            'tglAwal10' => $tglAwalFull,
+            'tglAkhir10' => $tglAkhirFull,
+            'kdruang11' => $koderuangan,
+            'tglAwal11' => $tglAwalFull,
+            'tglAkhir11' => $tglAkhirFull,
+            'kdruang12' => $koderuangan,
+            'tglAwal12' => $tglAwalFull,
+            'tglAkhir12' => $tglAkhirFull,
+            'kdruang13' => $koderuangan,
+            'tglAwal13' => $tglAwalFull,
+            'tglAkhir13' => $tglAkhirFull,
+            'kdruang14' => $koderuangan,
+            'kdruang15' => $koderuangan,
+            'tglAwal14' => $tglAwalFull,
+            'tglAkhir14' => $tglAkhirFull,
+            'kdruang16' => $koderuangan,
+        ];
+        
+        if ($stokTable === 'stokopname') {
+            $bindings['stokBulanTahun'] = $bulanTahunPattern;
+        }
+        
+        $results = DB::connection('farmasi')->select($sql, $bindings);
+        
+        return Excel::download(new KartuStokExport($results, $koderuangan), "kartu-stok-{$bulan}-{$tahun}.xlsx");
+    }
+
     public function cariobat()
     {
 
@@ -655,5 +913,92 @@ class KartustokController extends Controller
             })->orderBy('nama_obat')
             ->get();
         return new JsonResponse($query);
+    }
+}
+
+class KartuStokExport implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithMapping, \Maatwebsite\Excel\Concerns\ShouldAutoSize
+{
+    protected $results;
+    protected $koderuangan;
+    protected $rowNumber = 0;
+
+    public function __construct($results, $koderuangan)
+    {
+        $this->results = $results;
+        $this->koderuangan = $koderuangan;
+    }
+
+    public function collection()
+    {
+        return collect($this->results);
+    }
+
+    public function headings(): array
+    {
+        return [
+            'No', 
+            'Kode Obat', 
+            'Nama Obat', 
+            'Satuan',
+            'Merk',
+            'Kandungan',
+            'Saldo Awal', 
+            'Stok Masuk', 
+            'Stok Keluar', 
+            'Stok Akhir', 
+            'Stok Sekarang', 
+            'Stok Fisik'
+        ];
+    }
+
+    public function map($row): array
+    {
+        $this->rowNumber++;
+        
+        $gudangList = ['Gd-05010100', 'Gd-03010100'];
+        $isGudang = in_array($this->koderuangan, $gudangList);
+        
+        // Calculate Masuk
+        $masuk = floatval($row->penerimaan) + 
+                 floatval($row->mutasi_masuk) + 
+                 floatval($row->retur_penjualan) + 
+                 floatval($row->penyesuaian_masuk) + 
+                 floatval($row->persiapan_retur) + 
+                 floatval($row->retur_gudang);
+                 
+        // Calculate Keluar
+        $isDepoOk = ($this->koderuangan === 'Gd-04010103');
+        
+        $resepKeluarJml = floatval($row->resep_keluar);
+        $resepRacikanJml = floatval($row->resep_keluar_racikan);
+        $distPersiapanJml = $isDepoOk ? floatval($row->distribusi_persiapan) : 0;
+        $barangRusakJml = $isGudang ? floatval($row->barang_rusak) : 0;
+        
+        $keluar = floatval($row->mutasi_keluar) + 
+                  $resepKeluarJml + 
+                  $resepRacikanJml + 
+                  floatval($row->penyesuaian_keluar) + 
+                  $distPersiapanJml + 
+                  $barangRusakJml + 
+                  floatval($row->retur_depo) + 
+                  floatval($row->retur_pbf) + 
+                  floatval($row->pengembalian);
+                  
+        $stokAkhir = floatval($row->saldo_awal) + $masuk - $keluar;
+        
+        return [
+            $this->rowNumber,
+            $row->kd_obat,
+            $row->nama_obat,
+            $row->satuan_k,
+            $row->merk ?? '-',
+            $row->kandungan ?? '-',
+            floatval($row->saldo_awal),
+            $masuk,
+            $keluar,
+            $stokAkhir,
+            floatval($row->stok_sekarang),
+            floatval($row->stok_fisik)
+        ];
     }
 }

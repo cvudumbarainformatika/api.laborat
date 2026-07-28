@@ -10,5 +10,6 @@ Route::group([
 ], function () {
     Route::get('/listobat', [KartustokController::class, 'index']);
     Route::get('/rinciobat', [KartustokController::class, 'rinci']);
+    Route::get('/export-excel', [KartustokController::class, 'exportExcel']);
     // Route::get('/listobat', [KartustokController::class, 'listkartuStok']); //ooo
 });
