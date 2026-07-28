@@ -26,7 +26,7 @@ class CekPerbaikanHargaController extends Controller
     {
         $data['awal'] = Stokopname::where('kdobat', $request->kdobat)
             ->where('nopenerimaan', $request->nopenerimaan)
-            ->where('tglopname', 'LIKE', '%2024-05%')
+            ->where('tglopname', 'LIKE', '%' . SetNewStokController::getTglOpnameAwal() . '%')
             ->get();
         $data['penerimaan'] = PenerimaanRinci::select('id', 'nopenerimaan', 'kdobat', 'jml_terima_k as jumlah', 'tgl_exp as tglexp', 'no_batch as nobatch', 'harga_netto_kecil as harga')
             ->with('header:nopenerimaan,tglpenerimaan')
@@ -195,7 +195,7 @@ class CekPerbaikanHargaController extends Controller
             if ($str) {
                 $penerimaan = Stokopname::where('nopenerimaan', $request->targetNoper)
                     ->where('kdobat', $request->kdobat)
-                    ->where('tglOpname', 'like', '%2024-05%')
+                    ->where('tglOpname', 'like', '%' . SetNewStokController::getTglOpnameAwal() . '%')
                     ->first();
             } else {
                 $penerimaan = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'jml_terima_k as jumlah', 'tgl_exp as tglexp', 'no_batch as nobatch', 'harga_netto_kecil as harga')
@@ -342,7 +342,7 @@ class CekPerbaikanHargaController extends Controller
             );
 
             $data['noper'] = array_unique($noper);
-            $data['awal'] = Stokopname::whereIn('kdobat', $data['kode'])->whereIn('nopenerimaan', $data['noper'])->where('tglOpname', 'like', '%2024-05%')->get();
+            $data['awal'] = Stokopname::whereIn('kdobat', $data['kode'])->whereIn('nopenerimaan', $data['noper'])->where('tglOpname', 'like', '%' . SetNewStokController::getTglOpnameAwal() . '%')->get();
             $penerimaan = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'jml_terima_k as jumlah', 'tgl_exp as tglexp', 'no_batch as nobatch', 'harga_netto_kecil as harga')
                 ->with('header:nopenerimaan,tglpenerimaan')
                 ->whereIn('kdobat', $data['kode'])

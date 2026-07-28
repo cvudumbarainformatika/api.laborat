@@ -3974,7 +3974,7 @@ class SetNewStokController extends Controller
                 ->where('kdobat', $head['kdobat'])
                 ->where('kdruang', $head['koderuangan'])
                 ->where('nopenerimaan', $penyesuaianDepoRinci->nopenerimaan)
-                ->where('tglopname', 'LIKE', '%2024-05%')
+                ->where('tglopname', 'LIKE', '%' . self::getTglOpnameAwal() . '%')
                 ->orderBy('tglpenerimaan', 'DESC')
                 ->first();
             array_push($penerimaan, [
@@ -4064,7 +4064,7 @@ class SetNewStokController extends Controller
                 ->where('kdobat', $head['kdobat'])
                 ->where('kdruang', $head['koderuangan'])
                 ->where('nopenerimaan', $penyesuaianDepoRinci->nopenerimaan)
-                ->where('tglopname', 'LIKE', '%2024-05%')
+                ->where('tglopname', 'LIKE', '%' . self::getTglOpnameAwal() . '%')
                 ->orderBy('nopenerimaan', 'DESC')
                 ->first();
             if ($opnameAwal) {
@@ -4957,5 +4957,12 @@ class SetNewStokController extends Controller
             ];
         }
         return $data;
+    }
+
+    public static function getTglOpnameAwal()
+    {
+        $opnameAwal = StokStokopname::where('nopenerimaan', 'LIKE', '%awal%')
+            ->min('tglopname');
+        return $opnameAwal ? date('Y-m', strtotime($opnameAwal)) : '2024-05';
     }
 }
