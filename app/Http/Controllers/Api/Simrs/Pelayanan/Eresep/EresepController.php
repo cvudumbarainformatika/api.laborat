@@ -866,13 +866,17 @@ class EresepController extends Controller
                 $existingObats = [];
                 $existingRacikans = [];
                 if ($draftResep) {
-                    $existingObats = Permintaanresep::where('noresep', $noresep)
-                        ->pluck('kdobat')
-                        ->toArray();
+                    $existingObats = array_unique(
+                        Permintaanresep::where('noresep', $noresep)
+                            ->pluck('kdobat')
+                            ->toArray()
+                    );
 
-                    $existingRacikans = Permintaanresepracikan::where('noresep', $noresep)
-                        ->pluck('namaracikan')
-                        ->toArray();
+                    $existingRacikans = array_unique(
+                        Permintaanresepracikan::where('noresep', $noresep)
+                            ->pluck('namaracikan')
+                            ->toArray()
+                    );
                 }
 
                 // Validasi limit jumlah obat BPJS (5 Rajal, 7 Ranap)
