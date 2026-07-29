@@ -879,6 +879,49 @@ class EresepController extends Controller
                     );
                 }
 
+                // Resolve and rename colliding incoming racikan names to next available (e.g. "Racikan 1" -> "Racikan 2")
+                $incomingRacikanNames = [];
+                foreach ($kirimResep as $record) {
+                    if (isset($record['jenisresep']) && $record['jenisresep'] === 'Racikan' && !empty($record['namaracikan'])) {
+                        $incomingRacikanNames[] = $record['namaracikan'];
+                    }
+                }
+                $incomingRacikanNames = array_unique($incomingRacikanNames);
+
+                $resolvedRacikanNames = [];
+                foreach ($incomingRacikanNames as $namaRacik) {
+                    $checkName = $namaRacik;
+                    if (in_array($checkName, $existingRacikans)) {
+                        $prefix = 'Racikan ';
+                        $num = 1;
+                        if (preg_match('/^(.*?)(\d+)$/', $namaRacik, $matches)) {
+                            $prefix = $matches[1];
+                            $num = (int)$matches[2] + 1;
+                        } else {
+                            $prefix = $namaRacik . ' ';
+                            $num = 1;
+                        }
+
+                        $checkName = $prefix . $num;
+                        while (in_array($checkName, $existingRacikans) || in_array($checkName, $resolvedRacikanNames)) {
+                            $num++;
+                            $checkName = $prefix . $num;
+                        }
+                    }
+                    $resolvedRacikanNames[$namaRacik] = $checkName;
+                }
+
+                if (!empty($resolvedRacikanNames)) {
+                    foreach ($kirimResep as $idx => $record) {
+                        if (isset($record['jenisresep']) && $record['jenisresep'] === 'Racikan' && !empty($record['namaracikan'])) {
+                            $oldName = $record['namaracikan'];
+                            if (isset($resolvedRacikanNames[$oldName])) {
+                                $kirimResep[$idx]['namaracikan'] = $resolvedRacikanNames[$oldName];
+                            }
+                        }
+                    }
+                }
+
                 // Validasi limit jumlah obat BPJS (5 Rajal, 7 Ranap)
                 $groupsistembayar = (int)$request->groupsistembayar;
                 if ($groupsistembayar === 1) {
@@ -940,7 +983,6 @@ class EresepController extends Controller
                             $skippedObats[] = $namaRacik . ' (Racikan)';
                             continue;
                         }
-                        $existingRacikans[] = $namaRacik; // cegah duplikat dalam satu request copy ini
 
                         Permintaanresepracikan::create([
                             'noreg' => $noreg,
