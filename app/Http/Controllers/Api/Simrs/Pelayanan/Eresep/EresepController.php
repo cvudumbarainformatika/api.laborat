@@ -729,17 +729,20 @@ class EresepController extends Controller
             // 3. Validasi Semua Item (All-or-Nothing)
             $errors = [];
             $validObatData = [];
+            $masterObats = Mobatnew::whereIn('kd_obat', $kdobats)->get()->keyBy('kd_obat');
 
             foreach ($kirimResep as $record) {
                 $kodeobat = $record['kodeobat'];
                 $qty_diminta = $record['jenisresep'] === 'nonRacikan' ? $record['jumlah_diminta'] : $record['jumlah'];
+                $mObat = $masterObats->get($kodeobat);
+                $namaObat = $mObat ? $mObat->nama_obat : $kodeobat;
 
                 // A. Cek Alokasi Stok
                 $stokTersedia = $alokasiMap->get($kodeobat, 0);
                 if ($qty_diminta > $stokTersedia) {
                     $errors[] = [
                         'kdobat' => $kodeobat,
-                        'message' => 'Maaf Stok Alokasi Tidak Mencukupi...!!! (Diminta: ' . $qty_diminta . ', Tersedia: ' . $stokTersedia . ')'
+                        'message' => $namaObat . ' - Stok kurang (Minta: ' . $qty_diminta . ', Sedia: ' . $stokTersedia . ')'
                     ];
                     continue;
                 }
@@ -749,7 +752,7 @@ class EresepController extends Controller
                 if ($har['res']) {
                     $errors[] = [
                         'kdobat' => $kodeobat,
-                        'message' => 'Obat ini tidak mempunyai harga'
+                        'message' => $namaObat . ' - Belum ada harga'
                     ];
                     continue;
                 }
