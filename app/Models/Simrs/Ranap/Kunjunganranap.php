@@ -630,6 +630,14 @@ class Kunjunganranap extends Model
     {
         return $this->hasMany(SkriningPulang::class, 'rs1', 'rs1');
     }
+    public function rekonsiliasiobats()
+    {
+        return $this->hasMany(RekonsiliasiObat::class, 'noreg', 'rs1');
+    }
+    public function rekonsiliasi_obat_persetujuan()
+    {
+        return $this->hasOne(RekonsiliasiObatPersetujuan::class, 'noreg', 'rs1');
+    }
     public function summarydischargeplannings()
     {
         return $this->hasMany(SummaryPulang::class, 'rs1', 'rs1');
