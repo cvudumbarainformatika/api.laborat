@@ -136,4 +136,6 @@ Route::group([
     Route::get('/listresepbynoreg', [EresepController::class, 'listresepbynoreg']);
 
     Route::post('/kirimpenjaminan', [PoliController::class, 'kirimpenjaminan']);
+    Route::post('/prmrj', [PoliController::class, 'prmrj']);
+    Route::get('/prmrjdokumen', [PoliController::class, 'prmrjdokumen']);
 });

@@ -20,6 +20,8 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Penjaminan\listcasmixrajal;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Rajal\Memodiagnosadokter;
+use App\Models\Simrs\Rajal\Prmrjflag;
+use App\Models\Simrs\Rajal\Prmrjhis;
 use App\Models\Simrs\Rajal\WaktupulangPoli;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -657,6 +659,8 @@ class PoliController extends Controller
                     $suratketerangandokter->with(['dokter:nama,kdpegsimrs', 'tindakaanbilling'])
                         ->orderBy('id', 'DESC');
                 },
+                'prmrjflag',
+                'prmrjhis'
                 // ini buat satset
                 // resep keluar fix
                 // 'apotek' => function ($apot) {
@@ -1023,4 +1027,76 @@ class PoliController extends Controller
 
         return new JsonResponse(['message' => 'Data Pasien Sudah Terkirim Ke Penjaminan'], 200);
     }
+
+    public function prmrj(Request $request)
+    {
+        $cek = KunjunganPoli::where('rs1', $request->noreg)->where('rs19', '1')->count();
+        if($cek > 0){
+            return new JsonResponse(
+                [
+                    'message' => 'Pasien Sudah Di pulangkan...!!!'
+                ],412
+            );
+        }
+        try {
+            DB::beginTransaction();
+
+            $cek = Prmrjflag::updateOrCreate(
+                [
+                    'norm' => $request->norm,
+                ],
+                [
+                    'flaging' => $request->flaging,
+                ]
+            );
+
+            Prmrjhis::create(
+                [
+                    'noreg' => $request->noreg,
+                    'norm' => $request->norm,
+                    'tgl' => date('Y-m-d H:i:s'),
+                    'flaging' => $request->flaging,
+                ]
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'succes',
+                'data' => $cek,
+            ], 200);
+        } catch (\Throwable $error) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Flag PRMRJ gagal disimpan.',
+                'error' => $error->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function prmrjdokumen()
+    {
+        $hidden = ['POL014','PEN004'];
+        $data = KunjunganPoli::with(
+            [
+                'masterpasien',
+                'relmpoli',
+                'msistembayar',
+                'datasimpeg',
+                'manymemo',
+                'anamnesis',
+                'diagnosa.masterdiagnosa',
+                'apotekrajalpolilalu',
+                'apotekrajal',
+                'apotekracikanrajallalu',
+                'newapotekrajal.rincian.mobat'
+            ]
+        )
+        ->where('rs2', request('norm'))
+        ->whereNotIn('rs8', $hidden)
+        ->get();
+         return new JsonResponse($data);
+    }
+
 }

@@ -659,4 +659,12 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(FisioSoap::class, 'noreg', 'link_noreg');
     }
+
+    public function prmrjflag(){
+        return $this->hasOne(Prmrjflag::class, 'norm', 'rs2');
+    }
+
+    public function prmrjhis(){
+        return $this->hasMany(Prmrjhis::class, 'noreg', 'rs1');
+    }
 }
