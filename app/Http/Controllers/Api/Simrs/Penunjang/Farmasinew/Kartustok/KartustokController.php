@@ -464,7 +464,7 @@ class KartustokController extends Controller
 
                 'resepkeluarracikan' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
                     $q->from('resep_keluar_h')
-                        ->select(DB::raw('STRAIGHT_JOIN resep_keluar_racikan_r.*'))
+                        ->select(DB::raw('STRAIGHT_JOIN resep_keluar_racikan_r.*, resep_keluar_h.tgl_selesai'))
                         ->join('resep_keluar_racikan_r', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
                         ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
