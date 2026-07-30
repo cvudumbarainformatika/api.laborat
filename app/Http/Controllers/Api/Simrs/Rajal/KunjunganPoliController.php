@@ -67,7 +67,8 @@ class KunjunganPoliController extends Controller
                 'rs17.rs9',
                 'rs17.rs14',
                 'rs17.rs19',
-                'rs17.rs21'
+                'rs17.rs21',
+                'prmrj_flaging.flaging as prmrj'
             )->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
                 ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
                 ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
@@ -75,7 +76,8 @@ class KunjunganPoliController extends Controller
                 ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
                 ->leftjoin('master_poli_bpjs', 'rs19.rs6', '=', 'master_poli_bpjs.kode')
                 ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
-                ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1');
+                ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
+                ->leftjoin('prmrj_flaging', 'prmrj_flaging.norm', 'rs17.rs2');
         } else {
             $select = $query->select(
                 'rs17.rs1',
@@ -95,6 +97,7 @@ class KunjunganPoliController extends Controller
                 'rs9.rs2 as sistembayar',
                 'rs9.groups as groups',
                 'rs15.rs2 as nama_panggil',
+                'prmrj_flaging.flaging as prmrj',
                 DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
                 DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
                 DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
@@ -129,6 +132,7 @@ class KunjunganPoliController extends Controller
                 ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
                 ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
                 ->leftjoin('listkirimcasmixRajal', 'listkirimcasmixRajal.noreg', 'rs17.rs1')
+                ->leftjoin('prmrj_flaging', 'prmrj_flaging.norm', 'rs17.rs2')
                 ->whereBetween('rs17.rs3', [$tgl, $tglx])
                 ->where('rs19.rs4', '=', 'Poliklinik')
                 ->whereIn('rs17.rs8', $ruangan)
