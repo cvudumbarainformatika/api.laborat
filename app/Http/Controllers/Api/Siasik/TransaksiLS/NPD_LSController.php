@@ -21,6 +21,7 @@ use App\Models\Siasik\TransaksiLS\NpkLS_rinci;
 use App\Models\Siasik\TransaksiLS\Serahterima_header;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Pegawai\Mpegawaisimpeg;
+use App\Models\Siasik\Anggaran\Tampung_batasan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 
 class NPD_LSController extends Controller
@@ -565,6 +566,114 @@ class NPD_LSController extends Controller
 
         return new JsonResponse($pegawai);
     }
+
+
+    private function validasiPaguItem(Request $request)
+    {
+        foreach ($request->rincians as $rinci) {
+
+            $idpp = $rinci['idserahterima_rinci'];
+
+            $anggaran = PergeseranPaguRinci::with([
+                'realisasi_spjpanjar',
+                'realisasi',
+                'contrapost'
+            ])
+            ->where('idpp', $idpp)
+            ->first();
+
+            if (!$anggaran) {
+                throw new \Exception("Data anggaran IDPP {$idpp} tidak ditemukan.");
+            }
+
+            $realisasiPanjar = $anggaran->realisasi_spjpanjar->sum('jumlahbelanjapanjar');
+
+            $realisasiNpd = $anggaran->realisasi->sum('nominalpembayaran');
+
+            $contrapost = $anggaran->contrapost->sum('nominalcontrapost');
+
+            $terpakai = ($realisasiPanjar + $realisasiNpd) - $contrapost;
+
+            $nominalBaru = $rinci['nominalpembayaran'];
+
+            if (($terpakai + $nominalBaru) > $anggaran->pagu) {
+
+                return response()->json([
+                    'message' => 'Gagal Simpan! Anggaran item "' .
+                        $anggaran->uraian50 .
+                        '" melebihi pagu.'
+                ], 422);
+            }
+        }
+        return null;
+    }
+
+
+    private function validasiBatasanGlobal(Request $request)
+    {
+        $groups = collect($request->rincians)
+            ->groupBy('koderek50');
+
+        foreach ($groups as $koderek50 => $items) {
+
+            $batasan = Tampung_batasan::where('notrans', $request->notrans)
+                ->where('kodekegiatanblud', $request->kodekegiatanblud)
+                ->where('koderek50', $koderek50)
+                ->where('flag', '1')
+                ->first();
+
+            if (!$batasan) {
+                continue;
+            }
+
+            $totalRequest = $items->sum('nominalpembayaran');
+
+            $totalRealisasi = DB::connection('siasik')->table('npdls_rinci as r')
+                ->join('npdls_heder as h', 'h.nonpdls', '=', 'r.nonpdls')
+                // ->where('h.notrans', $request->notrans)
+                ->where('h.kodekegiatanblud', $request->kodekegiatanblud)
+                ->where('r.koderek50', $koderek50)
+                ->sum('r.nominalpembayaran');
+
+            // Realisasi NPD
+            $realisasiNpd = DB::connection('siasik')->table('npdls_rinci as r')
+                ->join('npdls_heder as h', 'h.nonpdls', '=', 'r.nonpdls')
+                ->where('h.kodekegiatanblud', $request->kodekegiatanblud)
+                ->where('r.koderek50', $koderek50)
+                ->sum('r.nominalpembayaran');
+
+            // Realisasi SPJ Panjar
+            $realisasiPanjar = DB::connection('siasik')->table('spjpanjar_rinci as r')
+                ->join('spjpanjar_heder as h', 'h.nospjpanjar', '=', 'r.nospjpanjar')
+                ->where('h.kodekegiatanblud', $request->kodekegiatanblud)
+                ->where('r.koderek50', $koderek50)
+                ->sum('r.jumlahbelanjapanjar');
+
+            // Contrapost
+            $contrapost = DB::connection('siasik')->table('contrapost')
+                ->where('kodekegiatanblud', $request->kodekegiatanblud)
+                ->where('koderek50', $koderek50)
+                ->sum('nominalcontrapost');
+
+            // Total realisasi
+            $totalRealisasi = ($realisasiNpd + $realisasiPanjar) - $contrapost;
+
+            $total = $totalRealisasi + $totalRequest;
+
+            if ($total > $batasan->batasan) {
+
+                return response()->json([
+                    'message' =>
+                        'Gagal Simpan! Rekening '.$koderek50.
+                        ' melebihi batasan anggaran. '.
+                        'Batas Realisasi : '.number_format($batasan->batasan,2).
+                        ' | Total Realisasi : '.number_format($total,2)
+                ],422);
+            }
+            return null;
+        }
+    }
+
     public function simpannpd(Request $request)
     {
         $this->validate($request,[
@@ -626,6 +735,14 @@ class NPD_LSController extends Controller
                 'message' => 'Gagal Simpan!! BAST ini sudah pernah di simpan sebelumnya.'
             ], 422);
         }
+        if ($response = $this->validasiPaguItem($request)) {
+            return $response;
+        }
+
+        if ($response = $this->validasiBatasanGlobal($request)) {
+            return $response;
+        }
+
         DB::beginTransaction();
         try {
             $save = NpdLS_heder::updateOrCreate(

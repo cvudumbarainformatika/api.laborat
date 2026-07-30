@@ -33,6 +33,23 @@ class KunjunganPoliController extends Controller
         $query = $this->query_table('table');
         $data = $query->simplePaginate(request('per_page'));
 
+        $norms = $data->pluck('norm')->unique()->filter()->toArray();
+        if (count($norms) > 0) {
+            $geriatriNorms = DB::connection('mysql')->table('rs17')
+                ->join('rs15', 'rs15.rs1', '=', 'rs17.rs2')
+                ->whereIn('rs17.rs2', $norms)
+                ->whereRaw('TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE()) >= 60')
+                ->whereNotIn('rs17.rs8', ['POL017', 'POL012', 'POL038', 'POL039', 'POL040', 'POL015', 'POL023', 'POL014'])
+                ->groupBy('rs17.rs2')
+                ->havingRaw('COUNT(DISTINCT rs17.rs8) > 2')
+                ->pluck('rs17.rs2')
+                ->toArray();
+
+            $data->each(function ($item) use ($geriatriNorms) {
+                $item->is_geriatri = in_array($item->norm, $geriatriNorms) ? 1 : 0;
+            });
+        }
+
         // $total = 0;
         $total = $this->query_table('total')->get()->count();
         $result = [

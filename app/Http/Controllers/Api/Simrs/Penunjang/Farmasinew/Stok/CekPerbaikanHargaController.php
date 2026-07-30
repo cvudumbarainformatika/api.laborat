@@ -26,7 +26,7 @@ class CekPerbaikanHargaController extends Controller
     {
         $data['awal'] = Stokopname::where('kdobat', $request->kdobat)
             ->where('nopenerimaan', $request->nopenerimaan)
-            ->where('tglopname', 'LIKE', '%2024-05%')
+            ->where('tglopname', 'LIKE', '%' . SetNewStokController::getTglOpnameAwal() . '%')
             ->get();
         $data['penerimaan'] = PenerimaanRinci::select('id', 'nopenerimaan', 'kdobat', 'jml_terima_k as jumlah', 'tgl_exp as tglexp', 'no_batch as nobatch', 'harga_netto_kecil as harga')
             ->with('header:nopenerimaan,tglpenerimaan')
@@ -195,7 +195,7 @@ class CekPerbaikanHargaController extends Controller
             if ($str) {
                 $penerimaan = Stokopname::where('nopenerimaan', $request->targetNoper)
                     ->where('kdobat', $request->kdobat)
-                    ->where('tglOpname', 'like', '%2024-05%')
+                    ->where('tglOpname', 'like', '%' . SetNewStokController::getTglOpnameAwal() . '%')
                     ->first();
             } else {
                 $penerimaan = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'jml_terima_k as jumlah', 'tgl_exp as tglexp', 'no_batch as nobatch', 'harga_netto_kecil as harga')
@@ -342,7 +342,7 @@ class CekPerbaikanHargaController extends Controller
             );
 
             $data['noper'] = array_unique($noper);
-            $data['awal'] = Stokopname::whereIn('kdobat', $data['kode'])->whereIn('nopenerimaan', $data['noper'])->where('tglOpname', 'like', '%2024-05%')->get();
+            $data['awal'] = Stokopname::whereIn('kdobat', $data['kode'])->whereIn('nopenerimaan', $data['noper'])->where('tglOpname', 'like', '%' . SetNewStokController::getTglOpnameAwal() . '%')->get();
             $penerimaan = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'jml_terima_k as jumlah', 'tgl_exp as tglexp', 'no_batch as nobatch', 'harga_netto_kecil as harga')
                 ->with('header:nopenerimaan,tglpenerimaan')
                 ->whereIn('kdobat', $data['kode'])
@@ -469,15 +469,15 @@ class CekPerbaikanHargaController extends Controller
                     if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
                     $data->update(['harga' => $request->harga]);
                     if ($data->nobatch != $request->penerimaan['nobatch']) $data->update(['nobatch' => $request->penerimaan['nobatch']]);
-                    if ($data->nobatch != $request->penerimaan['tglexp']) $data->update(['tglexp' => $request->penerimaan['tglexp']]);
+                    if (isset($request->penerimaan['tglexp']) && $data->tglexp != $request->penerimaan['tglexp']) $data->update(['tglexp' => $request->penerimaan['tglexp']]);
 
-                    $tglpenerimaan = $request->penerimaan['header']['tglpenerimaan'] ?? $request->penerimaan['tglpenerimaan'];
-                    if ($data->nobatch != $tglpenerimaan) $data->update(['tglpenerimaan' => $tglpenerimaan]);
+                    $tglpenerimaan = $request->penerimaan['header']['tglpenerimaan'] ?? $request->penerimaan['tglpenerimaan'] ?? null;
+                    if ($tglpenerimaan && $data->tglpenerimaan != $tglpenerimaan) $data->update(['tglpenerimaan' => $tglpenerimaan]);
                     return [
                         'data' => $data,
                         'penerimaan' => $request->penerimaan,
-                        'nobatch' => $request->penerimaan['nobatch'],
-                        'tglexp' => $request->penerimaan['tglexp'],
+                        'nobatch' => $request->penerimaan['nobatch'] ?? null,
+                        'tglexp' => $request->penerimaan['tglexp'] ?? null,
                         'tglpenerimaan' => $tglpenerimaan,
                     ];
                 }

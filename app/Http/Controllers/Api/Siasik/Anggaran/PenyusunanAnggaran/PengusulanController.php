@@ -225,8 +225,8 @@ class PengusulanController extends Controller
                     'kode50' => $validated['kode50'],
                     'uraian' => $validated['uraian'],
                     'paguanggaran' => $validated['paguanggaran'],
-                    'tgl_entry' => $time,
-                    'user_entry' => $pegawai,
+                    'tglEntry' => $time,
+                    'userEntry' => $pegawai,
                 ]
             );
             if ($anggaran) {

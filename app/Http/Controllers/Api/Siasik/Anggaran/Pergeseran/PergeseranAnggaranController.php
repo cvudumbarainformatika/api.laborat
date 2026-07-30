@@ -350,6 +350,7 @@ class PergeseranAnggaranController extends Controller
                         't_tampung.kodekegiatanblud',
                         't_tampung.bidang as kodebidang',
                         't_tampung.usulan',
+                        't_tampung.koderek50',
                         't_tampung.koderek108',
                         't_tampung.uraian108',
                         't_tampung.volume',
@@ -405,6 +406,7 @@ class PergeseranAnggaranController extends Controller
                         'perubahanrincianbelanja.kodekegiatanblud',
                         'perubahanrincianbelanja.kodebidang',
                         'perubahanrincianbelanja.usulan',
+                        'perubahanrincianbelanja.koderek50',
                         'perubahanrincianbelanja.koderek108',
                         'perubahanrincianbelanja.uraian108',
                         'perubahanrincianbelanja.satuan',
@@ -481,6 +483,7 @@ class PergeseranAnggaranController extends Controller
                         'kodebidang' => $rincian['kodebidang'] ?? '',
                         'tahun' => $rincian['tahun'] ?? '',
                         'usulan' => $rincian['usulan'] ?? '',
+                        'koderek50' => $rincian['koderek50'] ?? '',
                         'koderek108' => $rincian['koderek108'] ?? '',
                         'uraian108' => $rincian['uraian108'] ?? '',
                         'volume' => $rincian['volume'] ?? 0,
@@ -517,6 +520,7 @@ class PergeseranAnggaranController extends Controller
                             'kodebidang' => $pergeseran['kodebidang'] ?? '',
                             'tahun' => $pergeseran['tahun'] ?? '',
                             'usulan' => $pergeseran['usulan'] ?? '',
+                            'koderek50' => $pergeseran['koderek50'] ?? '',
                             'koderek108' => $pergeseran['koderek108'] ?? '',
                             'uraian108' => $pergeseran['uraian108'] ?? '',
                             'volume' => 0,
@@ -578,6 +582,7 @@ class PergeseranAnggaranController extends Controller
                         'usulanHonor_r_pak.idpp',
                         'usulanHonor_r_pak.notrans',
                         'usulanHonor_r_pak.keterangan as usulan',
+                        'usulanHonor_r_pak.koderek50',
                         'usulanHonor_r_pak.koderek108',
                         'usulanHonor_r_pak.uraian108',
                         'usulanHonor_r_pak.volume',
@@ -610,6 +615,7 @@ class PergeseranAnggaranController extends Controller
                         'perubahanrincianbelanja.idpp',
                         'perubahanrincianbelanja.notrans',
                         'perubahanrincianbelanja.usulan',
+                        'perubahanrincianbelanja.koderek50',
                         'perubahanrincianbelanja.koderek108',
                         'perubahanrincianbelanja.uraian108',
                         'perubahanrincianbelanja.satuan',
@@ -673,6 +679,7 @@ class PergeseranAnggaranController extends Controller
                 'usulan' => $rincian['usulan'] ?? '',
                 'tahun' => $rincian['tahun'] ?? '',
 
+                'koderek50' => $rincian['koderek50'] ?? '',
                 'koderek108' => $rincian['koderek108'] ?? '',
                 'uraian108' => $rincian['uraian108'] ?? '',
 
@@ -713,6 +720,7 @@ class PergeseranAnggaranController extends Controller
                     'idpp' => $idpp,
                     'tahun' => $rincipak['tahun'] ?? '',
                     'usulan' => $rincipak['usulan'] ?? '',
+                    'koderek50' => $rincipak['koderek50'] ?? '',
                     'koderek108' => $rincipak['koderek108'] ?? '',
                     'uraian108' => $rincipak['uraian108'] ?? '',
 
@@ -749,6 +757,7 @@ class PergeseranAnggaranController extends Controller
                     'idpp' => $idpp,
                     'tahun' => $pergespak['tahun'] ?? '',
                     'usulan' => $pergespak['usulan'] ?? '',
+                    'koderek50' => $pergespak['koderek50'] ?? '',
                     'koderek108' => $pergespak['koderek108'] ?? '',
                     'uraian108' => $pergespak['uraian108'] ?? '',
 
@@ -802,6 +811,43 @@ class PergeseranAnggaranController extends Controller
         })->all();
 
             return new JsonResponse($finalData);
+    }
+
+
+    public function getBatasan(Request $request)
+    {
+        $batasan = Tampung_batasan::where('notrans', $request->notrans)
+            ->where('kodekegiatanblud', $request->kodekegiatanblud)
+            ->where('koderek50', $request->koderek50)
+            ->first();
+
+        // Realisasi NPD
+        $realisasiNpd = DB::connection('siasik')->table('npdls_rinci as r')
+            ->join('npdls_heder as h', 'h.nonpdls', '=', 'r.nonpdls')
+            ->where('h.kodekegiatanblud', $request->kodekegiatanblud)
+            ->where('r.koderek50', $request->koderek50)
+            ->sum('r.nominalpembayaran');
+
+        // Realisasi SPJ Panjar
+        $realisasiPanjar = DB::connection('siasik')->table('spjpanjar_rinci as r')
+            ->join('spjpanjar_heder as h', 'h.nospjpanjar', '=', 'r.nospjpanjar')
+            ->where('h.kodekegiatanblud', $request->kodekegiatanblud)
+            ->where('r.koderek50', $request->koderek50)
+            ->sum('r.jumlahbelanjapanjar');
+
+        // Contrapost
+        $contrapost = DB::connection('siasik')->table('contrapost')
+            ->where('kodekegiatanblud', $request->kodekegiatanblud)
+            ->where('koderek50', $request->koderek50)
+            ->sum('nominalcontrapost');
+
+        // Total realisasi
+        $totalRealisasi = ($realisasiNpd + $realisasiPanjar) - $contrapost;
+        $data = [
+            'databatasan' => $batasan,
+            'datarealisasi' => $totalRealisasi
+        ];
+        return new JsonResponse($data);
     }
 
     public function simpanBatasan(Request $request)

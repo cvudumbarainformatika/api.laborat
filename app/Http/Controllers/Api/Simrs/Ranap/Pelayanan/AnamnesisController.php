@@ -149,7 +149,7 @@ class AnamnesisController extends Controller
               "siklus" => $request->formKebidanan['siklus'],
               "lamaMens" => $request->formKebidanan['lamaMens'],
               "kondisiMens" => $request->formKebidanan['kondisiMens'],
-              "hpht" => !empty($request->formKebidanan['hpht']) ? Carbon::parse($request->formKebidanan['hpht'])->format('Ymd') : null,
+              "hpht" => !empty($request->formKebidanan['hpht']) ? Carbon::createFromFormat('dmY', $request->formKebidanan['hpht'])->format('Ymd') : null,
               "tglPerkPersalinan" => $request->formKebidanan['tglPerkPersalinan'],
               "rwKawinStatus" => $request->formKebidanan['rwKawinStatus'],
               "kawinKe" => $request->formKebidanan['kawinKe'],

@@ -1370,6 +1370,7 @@ class EresepController extends Controller
     }
     public function newlistresepbydokter()
     {
+        $db = config('database.connections.mysql.database');
 
         $rm = [];
         if (request('q') !== null) {
@@ -1480,14 +1481,16 @@ class EresepController extends Controller
                 DB::raw('((TIMESTAMPDIFF(MINUTE,resep_keluar_h.tgl_kirim,resep_keluar_h.tgl_selesai))%60) AS rt_menit'),
                 DB::raw('((TIMESTAMPDIFF(SECOND,resep_keluar_h.tgl_kirim,resep_keluar_h.tgl_selesai))%60) AS rt_detik'),
             )
-            ->where(function ($query) use ($rm) {
-                $query->when(count($rm) > 0, function ($wew) use ($rm) {
-                    $wew->whereIn('resep_keluar_h.norm', $rm);
-                })
-                    ->orWhere('resep_keluar_h.noresep', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('resep_keluar_h.norm', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('antrian_ambil.nomor', 'LIKE', '%' . request('q') . '%');
+            ->when(request('q'), function ($query) use ($rm) {
+                $query->where(function ($w) use ($rm) {
+                    $w->when(count($rm) > 0, function ($wew) use ($rm) {
+                        $wew->whereIn('resep_keluar_h.norm', $rm);
+                    })
+                        ->orWhere('resep_keluar_h.noresep', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('resep_keluar_h.norm', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('antrian_ambil.nomor', 'LIKE', '%' . request('q') . '%');
+                });
             })
             ->where('resep_keluar_h.tiperesep', '!=', 'penjualan')
             ->where('resep_keluar_h.depo', request('kddepo'))
@@ -1558,6 +1561,23 @@ class EresepController extends Controller
 
         // Get paginated results
         $listresep = $query->paginate(request('per_page'));
+
+        $norms = $listresep->getCollection()->pluck('norm')->unique()->filter()->toArray();
+        if (count($norms) > 0) {
+            $geriatriNorms = DB::connection('mysql')->table('rs17')
+                ->join('rs15', 'rs15.rs1', '=', 'rs17.rs2')
+                ->whereIn('rs17.rs2', $norms)
+                ->whereRaw('TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE()) >= 60')
+                ->whereNotIn('rs17.rs8', ['POL017', 'POL012', 'POL038', 'POL039', 'POL040', 'POL015', 'POL023', 'POL014'])
+                ->groupBy('rs17.rs2')
+                ->havingRaw('COUNT(DISTINCT rs17.rs8) > 2')
+                ->pluck('rs17.rs2')
+                ->toArray();
+
+            $listresep->getCollection()->each(function ($item) use ($geriatriNorms) {
+                $item->is_geriatri = in_array($item->norm, $geriatriNorms) ? 1 : 0;
+            });
+        }
 
         return new JsonResponse($listresep);
         // $addThree = ((int)date('m') + 3) < 10 ? Carbon::now()->addMonth(3)->format('m') : (((int)date('m') + 3) > 12 ? ('0' . ((int)date('m') + 3) - 12) : ((int)date('m') + 3));
@@ -3872,6 +3892,20 @@ class EresepController extends Controller
             $data['caristok'] = $caristok ?? false;
             $data['jmldiminta'] = $jmldiminta ?? false;
             $data['message'] = 'Copy Resep selesai dan Obat sudah berkurang';
+            
+            // cek apakah pasien rawat jalan, dan ambil antrian farmasi jika belum ada
+            $updatekunjungan = KunjunganPoli::where('rs1', $head['noreg'])->where('rs17.rs8', '!=', 'POL014')->first();
+            if ($updatekunjungan) {
+                $newData = new Request([
+                    'norm' => $head['norm'],
+                    'kodepoli' => 'AP0001',
+                ]);
+                $input = new Request([
+                    'noreg' => $head['noreg']
+                ]);
+                AntrianController::ambilnoantrian($newData, $input);
+            }
+
             DB::connection('farmasi')->commit();
             return new JsonResponse($data);
         } catch (\Exception $e) {

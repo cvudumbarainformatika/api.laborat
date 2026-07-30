@@ -143,13 +143,14 @@ class AntrianController extends Controller
         $tglBooking = date('Y-m-d');
         $norm = $request->norm;
         $pelayanan_id_tujuan = $request->kodepoli;
-        $unitantrian = Unitantrianbpjs::select('tersedia')->where('pelayanan_id', $pelayanan_id_tujuan)->first();
-        $tersedia = $unitantrian->tersedia;
+        $unitantrian = Unitantrianbpjs::select('tersedia', 'unit_group')->where('pelayanan_id', $pelayanan_id_tujuan)->first();
+        $tersedia = $unitantrian ? $unitantrian->tersedia : false;
         $unitgroup = '';
         if ($idUnitAntrian === '') {
             $pelayanan_id = $pelayanan_id_tujuan;
+            $unitgroup = $unitantrian ? $unitantrian->unit_group : '';
         } else {
-            $sqlUnitAntrian = Unitantrianbpjs::select('pelayanan_id')->where('id', $idUnitAntrian)->first();
+            $sqlUnitAntrian = Unitantrianbpjs::select('pelayanan_id', 'unit_group')->where('id', $idUnitAntrian)->first();
             $pelayanan_id = $sqlUnitAntrian->pelayanan_id;
             $unitgroup = $sqlUnitAntrian->unit_group;
         }
@@ -159,7 +160,13 @@ class AntrianController extends Controller
         if (count($sqlCekAntrian) > 0) {
             $sqlCekBatal = Antrianbatal::where('id', $sqlCekAntrian[0]->id)->count();
             if ($sqlCekBatal === 0) {
-                return new JsonResponse(['message' => 'Maaf, pasien tersebut telah mengambil antrian'], 500);
+                return (object)[
+                    'status' => 200,
+                    'message' => 'Pasien sudah mengambil antrian',
+                    'data' => (object)[
+                        'nomor' => $sqlCekAntrian[0]->nomor
+                    ]
+                ];
             }
         }
 
@@ -197,7 +204,7 @@ class AntrianController extends Controller
             if ($unitgroup === 'Farmasi') {
                 BridantrianbpjsController::updateWaktu($input, 6);
             } else {
-                $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 3)->first();
+                $cek = Bpjsrespontime::where('noreg', $noreg)->where('taskid', 3)->first();
                 if (!$cek) BridantrianbpjsController::updateWaktu($input, 3);
             }
         }
