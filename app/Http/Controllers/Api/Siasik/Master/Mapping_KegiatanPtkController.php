@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Siasik\Master;
 
 use App\Http\Controllers\Controller;
 use App\Models\Siasik\Anggaran\Penetapan_Pagu;
+use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Header;
 use App\Models\Siasik\Master\Mapping_Bidang_Ptk_Kegiatan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -84,6 +85,14 @@ class Mapping_KegiatanPtkController extends Controller
                     'alias' => $validated['alias']
                 ]
             );
+
+            if ($data) {
+                Penyesuaian_Prioritas_Header::where('kodekegiatan', $data->kodekegiatan)
+                    ->update([
+                        'kodepptk' => $data->kodepptk,
+                        'pptk' => $data->namapptk,
+                    ]);
+            }
             // if ($anggaran) {
             //     Tampung_pendapatan::create([
             //         'notrans' => $anggaran->notrans,
