@@ -33,35 +33,38 @@ class RekonsiliasiObatController extends Controller
         $user = Pegawai::find(auth()->user()->pegawai_id);
         $kdpegsimrs = $user ? $user->kdpegsimrs : null;
 
-        $data = RekonsiliasiObat::create([
-            'noreg' => $request->noreg,
-            'norm' => $request->norm,
-            'tgl' => $request->tgl ?? date('Y-m-d'),
-            'petugas' => $kdpegsimrs,
-            'tipe' => $request->tipe,
-            'nama_obat' => $request->nama_obat,
-            'dosis' => $request->dosis,
-            
-            // tipe 'mrs'
-            'lama_pakai' => $request->lama_pakai,
-            'dibawa_saat_mrs' => $request->dibawa_saat_mrs,
-            'berlanjut_ke_ranap' => $request->berlanjut_ke_ranap,
-            'berlanjut_saat_krs' => $request->berlanjut_saat_krs,
-            
-            // tipe 'pindah'
-            'frekuensi' => $request->frekuensi,
-            'cara_pemberian' => $request->cara_pemberian,
-            'waktu_pemberian_terakhir' => $request->waktu_pemberian_terakhir,
-            'tindak_lanjut' => $request->tindak_lanjut,
-            'perubahan_aturan_pakai' => $request->perubahan_aturan_pakai,
-            
-            // tipe 'krs'
-            'aturan_pakai' => $request->aturan_pakai,
-            'rekonsiliasi' => $request->rekonsiliasi,
-            'aturan_pakai_saat_pulang' => $request->aturan_pakai_saat_pulang,
-            
-            'kdruang' => $request->kdruang
-        ]);
+        $data = RekonsiliasiObat::updateOrCreate(
+            ['id' => $request->id ?? null],
+            [
+                'noreg' => $request->noreg,
+                'norm' => $request->norm,
+                'tgl' => $request->tgl ?? date('Y-m-d'),
+                'petugas' => $kdpegsimrs,
+                'tipe' => $request->tipe,
+                'nama_obat' => $request->nama_obat,
+                'dosis' => $request->dosis,
+                
+                // tipe 'mrs'
+                'lama_pakai' => $request->lama_pakai,
+                'dibawa_saat_mrs' => $request->dibawa_saat_mrs,
+                'berlanjut_ke_ranap' => $request->berlanjut_ke_ranap,
+                'berlanjut_saat_krs' => $request->berlanjut_saat_krs,
+                
+                // tipe 'pindah'
+                'frekuensi' => $request->frekuensi,
+                'cara_pemberian' => $request->cara_pemberian,
+                'waktu_pemberian_terakhir' => $request->waktu_pemberian_terakhir,
+                'tindak_lanjut' => $request->tindak_lanjut,
+                'perubahan_aturan_pakai' => $request->perubahan_aturan_pakai,
+                
+                // tipe 'krs'
+                'aturan_pakai' => $request->aturan_pakai,
+                'rekonsiliasi' => $request->rekonsiliasi,
+                'aturan_pakai_saat_pulang' => $request->aturan_pakai_saat_pulang,
+                
+                'kdruang' => $request->kdruang
+            ]
+        );
 
         if (!$data) {
             return new JsonResponse([
