@@ -1196,6 +1196,8 @@ class RanapController extends Controller
                 'dischargeplanning',
                 'skriningdischargeplannings',
                 'summarydischargeplannings',
+                'rekonsiliasiobats.user_petugas:kdpegsimrs,nama',
+                'rekonsiliasi_obat_persetujuan.user_petugas:kdpegsimrs,nama',
                 'procedure',
                 'planningdokter',
                 'keterangantindakan:noreg,keterangan',
