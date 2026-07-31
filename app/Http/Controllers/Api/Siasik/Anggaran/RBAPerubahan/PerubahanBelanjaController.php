@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Siasik\Anggaran\RBAPerubahan;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Siasik\Anggaran\Penetapan_Pagu_pak;
-use App\Models\Siasik\Anggaran\Pengusulan_header;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Anggaran\Perubahan_pak_header;
 use App\Models\Siasik\Anggaran\Perubahan_pak_rinci;
@@ -18,19 +17,30 @@ class PerubahanBelanjaController extends Controller
 {
      public function selectKegiatan()
     {
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->nip;
+        $sa = $pg->kdpegsimrs;
         $perPage = request('per_page', 50);
         $tahun = request('tahun','Y');
         $query = Penetapan_Pagu_pak::where('penetapan_pagu_pak.tahun',$tahun)
         ->join('kegiatan_blud', 'kegiatan_blud.no', 'penetapan_pagu_pak.kodekegiatan')
-        ->select('penetapan_pagu_pak.*', 'kegiatan_blud.no', 'kegiatan_blud.nomenklatur', 'kegiatan_blud.kode');
-         if (request('q')) {
+        ->join('mappingpptkkegiatan', 'mappingpptkkegiatan.kodekegiatan', 'penetapan_pagu_pak.kodekegiatan')
+        ->select('penetapan_pagu_pak.*', 'kegiatan_blud.no', 'kegiatan_blud.nomenklatur', 'kegiatan_blud.kode',
+            'mappingpptkkegiatan.kodepptk',
+            'mappingpptkkegiatan.namapptk' 
+        );
+        if (request('q')) {
             $cari = request('q');
             $query->where(function ($q) use ($cari) {
                 $q->where('nomenklatur', 'like', '%' . $cari . '%')
                   ->orWhere('kegiatanblud', 'like', '%' . $cari . '%');
             });
         }
-         if ($perPage <= 0) {
+        if ($sa !== 'sa' && $sa !== '1619' && $sa !== '38' && $sa !== '39' && $sa !== '81_X' && $sa !== '1215') {
+                $query->where('kodepptk', $pegawai);
+            }
+        if ($perPage <= 0) {
             $data = $query->get();
             return new JsonResponse(['data' => $data]);
         }
@@ -117,6 +127,8 @@ class PerubahanBelanjaController extends Controller
             'kodeRuangan' => 'required',
             'ruangan' => 'required',
             'kodeKegiatan' => 'required',
+            'kodepptk' => 'required',
+            'pptk' => 'required',
             'kegiatan' => 'required',
             'kodebagian' => 'nullable',
             'organisasi_nama' => 'nullable',
@@ -124,6 +136,13 @@ class PerubahanBelanjaController extends Controller
             'uraian' => 'nullable',
             'paguanggaran' => 'required',
             'tglTransaksi' => 'required',
+            'capaianprogram' => 'required',
+            // 'masukan' => 'required',
+            'keluaran' => 'required',
+            'hasil' => 'required',
+            'targetcapaian' => 'required',
+            'targetkeluaran' => 'required',
+            'targethasil' => 'required',
         ], [
             // 'notrans.required' => 'Nomer Transaksi Gagal Generate.',
             'kodeRuangan.required' => 'Kode Ruangan Harus Di isi.',
@@ -132,6 +151,15 @@ class PerubahanBelanjaController extends Controller
             'kegiatan.required' => 'Kegiatan Harus Di isi.',
             'paguanggaran.required' => 'Pagu Anggaran Harus Di isi.',
             'tglTransaksi.required' => 'Tanggal Transaksi Harus Di isi.',
+            'kodepptk.required' => 'PPTK Tidak ditemukan, Silahkan Hubungi Admin',
+            'pptk.required' => 'PPTK Tidak ditemukan, Silahkan Hubungi Admin',
+            'capaianprogram.required' => 'Capaianprogram Harus Di isi.',
+            // 'masukan.required' => 'Masukan Harus Di isi.',
+            'keluaran.required' => 'Keluaran Harus Di isi.',
+            'hasil.required' => 'Hasil Harus Di isi.',
+            'targetcapaian.required' => 'Target Capaian Harus Di isi.',
+            'targetkeluaran.required' => 'Target Keluaran Harus Di isi.',
+            'targethasil.required' => 'Target Hasil Harus Di isi.',
         ]);
 
         $time = date('Y-m-d H:i:s');
@@ -169,6 +197,16 @@ class PerubahanBelanjaController extends Controller
                     'kode50' => $validated['kode50'],
                     'uraian' => $validated['uraian'],
                     'paguanggaran' => $validated['paguanggaran'],
+                    'kodepptk' => $validated['kodepptk'],
+                    'pptk' => $validated['pptk'],
+                    'capaianprogram' => $validated['capaianprogram'],
+                    // 'masukan' => $validated['masukan'],
+                    'masukan' => 'Dana yang Dibutuhkan',
+                    'keluaran' => $validated['keluaran'],
+                    'hasil' => $validated['hasil'],
+                    'targetcapaian' => $validated['targetcapaian'],
+                    'targetkeluaran' => $validated['targetkeluaran'],
+                    'targethasil' => $validated['targethasil'],
                     'tglEntry' => $time,
                     'userEntry' => $pegawai,
                 ]
@@ -179,6 +217,7 @@ class PerubahanBelanjaController extends Controller
                     ->exists();
 
                 if ($exists) {
+                    DB::rollBack();
                     return new JsonResponse([
                         'message' => 'Item Pengusulan Sudah ada di Rincian'
                     ], 422);
@@ -186,27 +225,42 @@ class PerubahanBelanjaController extends Controller
                 $volume = (int) $request->volume;
                 $harga  = (int) $request->harga;
                 $nilai  = $volume * $harga;
-                Perubahan_pak_rinci::create([
-                    'notrans' => $anggaran->notrans,
-                    'kode' => $request->kode,
-                    'keterangan' => $request->keterangan,
-                    'volume' => $volume,
-                    'harga' => $harga,
-                    'nilai' => $nilai,
-                    'satuan' => $request->satuan,
-                    'jenis' => $request->jenis,
-                    'koderek50' => $request->koderek50,
-                    'uraian50' => $request->uraian50,
-                    'koderek108' => $request->koderek108,
-                    'uraian108' => $request->uraian108,
-                    'tglEntry' => $time,
-                    'userEntry' => $pegawai,
+                $rinci = Perubahan_pak_rinci::create([
+                    'notrans' => $anggaran->notrans ?? '',
+                    'kode' => $request->kode ?? '',
+                    'keterangan' => $request->keterangan ?? '',
+                    'volume' => $volume ?? 0,
+                    'harga' => $harga ?? 0,
+                    'nilai' => $nilai ?? 0,
+                    'satuan' => $request->satuan ?? '',
+                    'jenis' => $request->jenis ?? '',
+                    // 'kodebidangpengusul' => $request->kodebidangpengusul ?? '',
+                    // 'bidangPengusul' => $request->bidangPengusul ?? '',
+                    'idpp' => $request->idpp ?? '',
+                    'paguterakhir' => $request->paguterakhir ?? 0,
+                    'realisasi' => $request->realisasi ?? 0,
+                    'sisaanggaran' => $request->sisaanggaran ?? 0,
+                    'npdbelumcair' => $request->npdbelumcair ?? 0,
+                    'pagualokasi' => $request->pagualokasi ?? 0,
+                    'koderek50' => $request->koderek50 ?? '',
+                    'uraian50' => $request->uraian50 ?? '',
+                    'koderek108' => $request->koderek108 ?? '',
+                    'uraian108' => $request->uraian108 ?? '',
+                    'tglEntry' => $time ?? '',
+                    'userEntry' => $pegawai ?? '',
 
                 ]);
+
+                if (!$rinci) {
+                    DB::rollBack();
+                    return new JsonResponse([
+                        'message' => 'Gagal menyimpan rincian'
+                    ], 500);
+                }
             }
 
             DB::commit();
-            $anggaran = Pengusulan_header::with(['rincian'])->find($anggaran->id);
+            $anggaran = Perubahan_pak_header::with(['rincian'])->find($anggaran->id);
             return new JsonResponse(['status' => 'success', 'message' => 'Data berhasil disimpan', 'data' => $anggaran]);
         } catch (\Exception $e) {
             DB::rollBack();
