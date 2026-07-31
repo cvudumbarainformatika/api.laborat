@@ -24,11 +24,13 @@ class Mpasienx extends Model
 
     public function getUsiaAttribute()
     {
-        $dateOfBirth = $this->tgllahir;
-        $years = Carbon::parse($dateOfBirth)->age;
-        $month = Carbon::parse($dateOfBirth)->month;
-        $day = Carbon::parse($dateOfBirth)->day;
-        return $years . " Tahun " . $month . " Bulan " . $day . " Hari";
+        $dateOfBirth = $this->tgllahir ?? $this->rs16 ?? null;
+        if (!$dateOfBirth) {
+            return "-";
+        }
+        $birth = Carbon::parse($dateOfBirth);
+        $diff = $birth->diff(Carbon::now());
+        return $diff->y . " Tahun " . $diff->m . " Bulan " . $diff->d . " Hari";
     }
 
     public function scopePasienx($data)

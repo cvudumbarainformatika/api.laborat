@@ -27,11 +27,13 @@ class Pasien extends Model
 
     public function getUsiaAttribute()
     {
-        $dateOfBirth = $this->rs16;
-        $years = Carbon::parse($dateOfBirth)->age;
-        $month = Carbon::parse($dateOfBirth)->month;
-        $day = Carbon::parse($dateOfBirth)->day;
-        return $years . " Tahun, " . $month . " Bulan, " . $day . " Hari";
+        $dateOfBirth = $this->rs16 ?? $this->tgllahir ?? null;
+        if (!$dateOfBirth) {
+            return "-";
+        }
+        $birth = Carbon::parse($dateOfBirth);
+        $diff = $birth->diff(Carbon::now());
+        return $diff->y . " Tahun " . $diff->m . " Bulan " . $diff->d . " Hari";
     }
 
     public function scopeGetByNoBpjs($query, $nobpjs)
