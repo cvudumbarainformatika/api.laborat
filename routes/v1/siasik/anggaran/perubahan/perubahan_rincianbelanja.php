@@ -12,6 +12,7 @@ Route::group([
     Route::get('/selectitemlama', [PerubahanBelanjaController::class, 'selectItemlama']);
     // Route::get('/selectitem', [PerubahanBelanjaController::class, 'selectItem']);
     Route::get('/index', [PerubahanBelanjaController::class, 'index']);
+    Route::get('/cetak', [PerubahanBelanjaController::class, 'cetakData']);
     Route::post('/save', [PerubahanBelanjaController::class, 'save']);
     Route::post('/deleterinci', [PerubahanBelanjaController::class, 'deleterinci']);
     Route::post('/kunci', [PerubahanBelanjaController::class, 'kunci']);

@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api\Siasik\Anggaran\RBAPerubahan;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Siasik\Anggaran\Penetapan_Pagu_pak;
+use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Header;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Anggaran\Perubahan_pak_header;
 use App\Models\Siasik\Anggaran\Perubahan_pak_rinci;
+use App\Models\Siasik\Anggaran\Tampung_Pagu_pak;
 use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class PerubahanBelanjaController extends Controller
 {
-     public function selectKegiatan()
+    public function selectKegiatan()
     {
         $user = auth()->user()->pegawai_id;
         $pg= Pegawai::find($user);
@@ -33,8 +35,9 @@ class PerubahanBelanjaController extends Controller
         if (request('q')) {
             $cari = request('q');
             $query->where(function ($q) use ($cari) {
-                $q->where('nomenklatur', 'like', '%' . $cari . '%')
-                  ->orWhere('kegiatanblud', 'like', '%' . $cari . '%');
+                $q->where('kegiatan_blud.no', 'like', '%' . $cari . '%')
+                  ->orWhere('kegiatan_blud.nomenklatur', 'like', '%' . $cari . '%')
+                  ->orWhere('mappingpptkkegiatan.namapptk', 'like', '%' . $cari . '%');
             });
         }
         if ($sa !== 'sa' && $sa !== '1619' && $sa !== '38' && $sa !== '39' && $sa !== '81_X' && $sa !== '1215') {
@@ -121,6 +124,247 @@ class PerubahanBelanjaController extends Controller
             $query->orderBy('id', 'asc')->get()
         );
     }
+    public function cetakData()
+    {
+        $tahun = request('tahun', date('Y'));
+        $kodeKegiatan = request('kodeKegiatan');
+        $notrans = request('notrans');
+
+        $dataAwalQuery = PergeseranPaguRinci::query()
+            ->leftJoin('akun50_2024', function ($join) {
+                $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+                    ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
+            })
+            ->join('penyesesuaianperioritas_heder', 'penyesesuaianperioritas_heder.kodekegiatan', '=', 't_tampung.kodekegiatanblud')
+            ->select(
+                't_tampung.idpp',
+                't_tampung.tgl as tahun',
+                't_tampung.notrans',
+                't_tampung.kodekegiatanblud',
+                't_tampung.bidang as kodebidang',
+                't_tampung.usulan',
+                't_tampung.koderek50',
+                't_tampung.koderek108',
+                't_tampung.uraian108',
+                't_tampung.volume',
+                't_tampung.harga',
+                't_tampung.pagu as total',
+                't_tampung.satuan',
+                't_tampung.koders',
+                't_tampung.bidang',
+                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
+                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
+                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
+                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'),
+                'akun50_2024.kodeall3 as kode6',
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 1) LIMIT 1) as uraian1'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 2) LIMIT 1) as uraian2'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 3) LIMIT 1) as uraian3'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 4) LIMIT 1) as uraian4'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 5) LIMIT 1) as uraian5'),
+                'akun50_2024.uraian as uraian6'
+            );
+
+        if ($tahun) {
+            $dataAwalQuery->where(function ($query) use ($tahun) {
+                $query->where('tgl', (string) $tahun)
+                    ->orWhere('tgl', 'like', (string) $tahun . '%')
+                    ->orWhereRaw('YEAR(tgl) = ?', [(int) $tahun]);
+            });
+        }
+
+        if ($kodeKegiatan) {
+            $dataAwalQuery->where('kodekegiatanblud', $kodeKegiatan);
+        }
+
+        $dataAwal = $dataAwalQuery->get();
+
+        $headerPak = Perubahan_pak_header::query()
+            ->where('notrans', $notrans)
+            ->first();
+
+        if (!$headerPak && $kodeKegiatan) {
+            $headerPak = Perubahan_pak_header::query()
+                ->where('kodeKegiatan', $kodeKegiatan)
+                ->first();
+        }
+
+        // $capaianProgramLama = null;
+        if ($kodeKegiatan) {
+            $prioritasHeader = Penyesuaian_Prioritas_Header::query()
+                ->join('t_tampung', 'penyesesuaianperioritas_heder.kodekegiatan', '=', 't_tampung.kodekegiatanblud')
+                ->where('penyesesuaianperioritas_heder.kodekegiatan', $kodeKegiatan)
+                ->select('penyesesuaianperioritas_heder.capaianprogram',
+                    'penyesesuaianperioritas_heder.masukan',
+                    'penyesesuaianperioritas_heder.keluaran',
+                    'penyesesuaianperioritas_heder.hasil',
+                    'penyesesuaianperioritas_heder.targetcapaian',
+                    'penyesesuaianperioritas_heder.targetkeluaran',
+                    'penyesesuaianperioritas_heder.targethasil'
+                    )
+                ->first();
+
+            // $capaianProgramLama = $prioritasHeader?->capaianprogram;
+        }
+
+        // $capaianProgramBaru = $headerPak?->capaianprogram;
+
+        $dataPak = collect();
+        if ($headerPak) {
+            $dataPak = $headerPak->rincipak()
+                ->leftJoin('akun50_2024', function ($join) {
+                    $join->on('usulanHonor_r_pak.koderek50', '=', 'akun50_2024.kodeall2')
+                        ->orOn('usulanHonor_r_pak.koderek50', '=', 'akun50_2024.kodeall3');
+                })
+                ->select(
+                    'usulanHonor_r_pak.idpp',
+                    'usulanHonor_r_pak.notrans',
+                    'usulanHonor_r_pak.keterangan as usulan',
+                    'usulanHonor_r_pak.volume',
+                    'usulanHonor_r_pak.harga',
+                    'usulanHonor_r_pak.nilai as total',
+                    'usulanHonor_r_pak.satuan',
+                    'usulanHonor_r_pak.koderek50',
+                    'usulanHonor_r_pak.koderek108',
+                    'usulanHonor_r_pak.uraian108',
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'),
+                    'akun50_2024.kodeall3 as kode6',
+                    DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(usulanHonor_r_pak.koderek50, ".", 1) LIMIT 1) as uraian1'),
+                    DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(usulanHonor_r_pak.koderek50, ".", 2) LIMIT 1) as uraian2'),
+                    DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(usulanHonor_r_pak.koderek50, ".", 3) LIMIT 1) as uraian3'),
+                    DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(usulanHonor_r_pak.koderek50, ".", 4) LIMIT 1) as uraian4'),
+                    DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(usulanHonor_r_pak.koderek50, ".", 5) LIMIT 1) as uraian5'),
+                    'akun50_2024.uraian as uraian6'
+                )
+                ->get();
+        }
+
+        $dataAwalMap = $dataAwal->map(function ($item) {
+            $data = $item->toArray();
+            $data['idpp'] = (string) $item->idpp;
+            return $data;
+        })->keyBy('idpp')->all();
+
+        $dataPakMap = $dataPak->map(function ($item) {
+            $data = $item->toArray();
+            $data['idpp'] = (string) $item->idpp;
+            return $data;
+        })->keyBy('idpp')->all();
+
+        $paguAwal = (int) $dataAwal->sum('total');
+        $paguBaru = (int) $dataPak->sum('total');
+
+        $hasil = [];
+
+        foreach ($dataAwalMap as $idpp => $awal) {
+            $pak = $dataPakMap[$idpp] ?? null;
+            $hasil[] = [
+                'idpp' => $idpp,
+                'notrans' => $awal['notrans'] ?? $pak['notrans'] ?? '',
+                'kodekegiatanblud' => $awal['kodekegiatanblud'] ?? $pak['kodeKegiatan'] ?? '',
+                'usulan' => $awal['usulan'] ?? '',
+                'usulanbaru' => $pak['usulan'] ?? '',
+                'volume' => (int) ($awal['volume'] ?? 0),
+                'harga' => (int) ($awal['harga'] ?? 0),
+                'total' => (int) ($awal['total'] ?? 0),
+                'volumebaru' => (int) ($pak['volume'] ?? 0),
+                'hargabaru' => (int) ($pak['harga'] ?? 0),
+                'totalbaru' => (int) ($pak['total'] ?? 0),
+                'satuan' => $awal['satuan'] ?? $pak['satuan'] ?? '',
+                'koderek50' => $awal['koderek50'] ?? $pak['koderek50'] ?? '',
+                'koderek108' => $awal['koderek108'] ?? $pak['koderek108'] ?? '',
+                'uraian108' => $awal['uraian108'] ?? $pak['uraian108'] ?? '',
+                'kode1' => $awal['kode1'] ?? $pak['kode1'] ?? '',
+                'kode2' => $awal['kode2'] ?? $pak['kode2'] ?? '',
+                'kode3' => $awal['kode3'] ?? $pak['kode3'] ?? '',
+                'kode4' => $awal['kode4'] ?? $pak['kode4'] ?? '',
+                'kode5' => $awal['kode5'] ?? $pak['kode5'] ?? '',
+                'kode6' => $awal['kode6'] ?? $pak['kode6'] ?? '',
+                'uraian1' => $awal['uraian1'] ?? $pak['uraian1'] ?? '',
+                'uraian2' => $awal['uraian2'] ?? $pak['uraian2'] ?? '',
+                'uraian3' => $awal['uraian3'] ?? $pak['uraian3'] ?? '',
+                'uraian4' => $awal['uraian4'] ?? $pak['uraian4'] ?? '',
+                'uraian5' => $awal['uraian5'] ?? $pak['uraian5'] ?? '',
+                'uraian6' => $awal['uraian6'] ?? $pak['uraian6'] ?? '',
+                'koders' => $awal['koders'] ?? '',
+                'bidang' => $awal['bidang'] ?? '',
+            ];
+        }
+
+        foreach ($dataPakMap as $idpp => $pak) {
+            if (!isset($dataAwalMap[$idpp])) {
+                $hasil[] = [
+                    'idpp' => $idpp,
+                    'notrans' => $pak['notrans'] ?? '',
+                    'kodekegiatanblud' => '',
+                    'usulan' => '',
+                    'usulanbaru' => $pak['usulan'] ?? '',
+                    'volume' => 0,
+                    'harga' => 0,
+                    'total' => 0,
+                    'volumebaru' => (int) ($pak['volume'] ?? 0),
+                    'hargabaru' => (int) ($pak['harga'] ?? 0),
+                    'totalbaru' => (int) ($pak['total'] ?? 0),
+                    'satuan' => $pak['satuan'] ?? '',
+                    'koderek50' => $pak['koderek50'] ?? '',
+                    'koderek108' => $pak['koderek108'] ?? '',
+                    'uraian108' => $pak['uraian108'] ?? '',
+                    'kode1' => $pak['kode1'] ?? '',
+                    'kode2' => $pak['kode2'] ?? '',
+                    'kode3' => $pak['kode3'] ?? '',
+                    'kode4' => $pak['kode4'] ?? '',
+                    'kode5' => $pak['kode5'] ?? '',
+                    'kode6' => $pak['kode6'] ?? '',
+                    'uraian1' => $pak['uraian1'] ?? '',
+                    'uraian2' => $pak['uraian2'] ?? '',
+                    'uraian3' => $pak['uraian3'] ?? '',
+                    'uraian4' => $pak['uraian4'] ?? '',
+                    'uraian5' => $pak['uraian5'] ?? '',
+                    'uraian6' => $pak['uraian6'] ?? '',
+                    'koders' => '',
+                    'bidang' => '',
+                ];
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'header' => $headerPak ? [
+                    'notrans' => $headerPak->notrans,
+                    'kegiatan' => $headerPak->kegiatan,
+                    'kodepptk' => $headerPak->kodepptk,
+                    'pptk' => $headerPak->pptk,
+                ] : null,
+                'hasilperubahan' => $hasil,
+                'pagu' => $paguAwal,
+                'pagubaru' => $paguBaru,
+                'capaianprogramlama' => $prioritasHeader?->capaianprogram,
+                'masukanlama' => $prioritasHeader?->masukan,
+                'keluaranlama' => $prioritasHeader?->keluaran,
+                'hasillama' => $prioritasHeader?->hasil,
+                'targetcapaianlama' => $prioritasHeader?->targetcapaian,
+                'targetkeluaranlama' => $prioritasHeader?->targetkeluaran,
+                'targethasillama' => $prioritasHeader?->targethasil,
+
+
+                'capaianprogrambaru' => $headerPak?->capaianprogram,
+                'masukanbaru' => $headerPak->masukan,
+                'keluaranbaru' => $headerPak->keluaran,
+                'hasilbaru' => $headerPak->hasil,
+                'targetcapaianbaru' => $headerPak->targetcapaian,
+                'targetkeluaranbaru' => $headerPak->targetkeluaran,
+                'targethasilbaru' => $headerPak->targethasil,
+
+            ],
+        ]);
+    }
+
     public function save(Request $request){
         $validated = $request->validate([
             'notrans' => 'nullable',
@@ -137,6 +381,7 @@ class PerubahanBelanjaController extends Controller
             'paguanggaran' => 'required',
             'tglTransaksi' => 'required',
             'capaianprogram' => 'required',
+            'idpp' => 'nullable',
             // 'masukan' => 'required',
             'keluaran' => 'required',
             'hasil' => 'required',
@@ -166,6 +411,14 @@ class PerubahanBelanjaController extends Controller
         $user = auth()->user()->pegawai_id;
         $pg= Pegawai::find($user);
         $pegawai= $pg->kdpegsimrs;
+        $noperubahan = round(microtime(true) * 100);
+        $labelitem = '-RPAK';
+
+        if ($request->filled('idpp')) {
+            $idpp = $request->idpp;
+        } else {
+            $idpp = $noperubahan . $labelitem;
+        }
 
         if (empty($request->notrans)) {
             DB::connection('siasik')->select('call usulan_honor(@nomor)');
@@ -182,6 +435,15 @@ class PerubahanBelanjaController extends Controller
         try {
             DB::beginTransaction();
 
+            $header = Tampung_Pagu_pak::where('kodekegiatanblud', $validated['kodeKegiatan'])
+                ->first();
+            if (!$header) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Data Prioritas tidak ditemukan'
+                ], 422);
+            }
+            $paguHeader = (int) $header->pagu;
             $anggaran = Perubahan_pak_header::updateOrCreate(
                 [
                     'notrans' => $notrans
@@ -214,6 +476,9 @@ class PerubahanBelanjaController extends Controller
             if ($anggaran) {
                 $exists = Perubahan_pak_rinci::where('notrans', $anggaran->notrans)
                     ->where('kode', $request->kode)
+                    ->when($request->filled('idpp'), function ($query) use ($idpp) {
+                        $query->where('idpp', '!=', $idpp);
+                    })
                     ->exists();
 
                 if ($exists) {
@@ -225,31 +490,50 @@ class PerubahanBelanjaController extends Controller
                 $volume = (int) $request->volume;
                 $harga  = (int) $request->harga;
                 $nilai  = $volume * $harga;
-                $rinci = Perubahan_pak_rinci::create([
-                    'notrans' => $anggaran->notrans ?? '',
-                    'kode' => $request->kode ?? '',
-                    'keterangan' => $request->keterangan ?? '',
-                    'volume' => $volume ?? 0,
-                    'harga' => $harga ?? 0,
-                    'nilai' => $nilai ?? 0,
-                    'satuan' => $request->satuan ?? '',
-                    'jenis' => $request->jenis ?? '',
-                    // 'kodebidangpengusul' => $request->kodebidangpengusul ?? '',
-                    // 'bidangPengusul' => $request->bidangPengusul ?? '',
-                    'idpp' => $request->idpp ?? '',
-                    'paguterakhir' => $request->paguterakhir ?? 0,
-                    'realisasi' => $request->realisasi ?? 0,
-                    'sisaanggaran' => $request->sisaanggaran ?? 0,
-                    'npdbelumcair' => $request->npdbelumcair ?? 0,
-                    'pagualokasi' => $request->pagualokasi ?? 0,
-                    'koderek50' => $request->koderek50 ?? '',
-                    'uraian50' => $request->uraian50 ?? '',
-                    'koderek108' => $request->koderek108 ?? '',
-                    'uraian108' => $request->uraian108 ?? '',
-                    'tglEntry' => $time ?? '',
-                    'userEntry' => $pegawai ?? '',
 
-                ]);
+                $totalNilaiSaatIni = (int) Perubahan_pak_rinci::where('notrans', $anggaran->notrans)
+                    ->when($request->filled('idpp'), function ($query) use ($idpp) {
+                        $query->where('idpp', '!=', $idpp);
+                    })
+                    ->sum('nilai');
+
+                $totalSetelahSimpan = $totalNilaiSaatIni + $nilai;
+                if ($totalSetelahSimpan > $paguHeader) {
+                    DB::rollBack();
+                    return new JsonResponse([
+                        'status' => 'error',
+                        'message' => 'Gagal disimpan! Jumlah melebihi Pagu.'
+                    ], 422);
+                }
+
+                $rinci = Perubahan_pak_rinci::updateOrCreate(
+                    [
+                        'notrans' => $anggaran->notrans ?? '',
+                        'idpp' => $idpp,
+                    ],
+                    [
+                        'kode' => $request->kode ?? '',
+                        'keterangan' => $request->keterangan ?? '',
+                        'volume' => $volume ?? 0,
+                        'harga' => $harga ?? 0,
+                        'nilai' => $nilai ?? 0,
+                        'satuan' => $request->satuan ?? '',
+                        'jenis' => $request->jenis ?? '',
+                        // 'kodebidangpengusul' => $request->kodebidangpengusul ?? '',
+                        // 'bidangPengusul' => $request->bidangPengusul ?? '',
+                        'paguterakhir' => $request->paguterakhir ?? 0,
+                        'realisasi' => $request->realisasi ?? 0,
+                        'sisaanggaran' => $request->sisaanggaran ?? 0,
+                        'npdbelumcair' => $request->npdbelumcair ?? 0,
+                        'pagualokasi' => $request->pagualokasi ?? 0,
+                        'koderek50' => $request->koderek50 ?? '',
+                        'uraian50' => $request->uraian50 ?? '',
+                        'koderek108' => $request->koderek108 ?? '',
+                        'uraian108' => $request->uraian108 ?? '',
+                        'tglEntry' => $time ?? '',
+                        'userEntry' => $pegawai ?? '',
+                    ]
+                );
 
                 if (!$rinci) {
                     DB::rollBack();
