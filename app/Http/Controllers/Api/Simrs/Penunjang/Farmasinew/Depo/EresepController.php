@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 use App\Events\NotifMessageEvent;
 use App\Helpers\FormatingHelper;
 use App\Helpers\HargaHelper;
+use App\Helpers\ResponseHelper;
 use App\Http\Controllers\Api\Simrs\Antrian\AntrianController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Http\Controllers\Controller;
@@ -1559,8 +1560,17 @@ class EresepController extends Controller
             ->orderBy('resep_keluar_h.tgl_permintaan', 'ASC')
             ->orderBy('antrian_ambil.nomor', 'ASC');
 
+        $req = [
+            'per_page' => (int)request('per_page', 15),
+            'page' => (int)request('page', 1)
+        ];
+
         // Get paginated results
-        $listresep = $query->paginate(request('per_page'));
+        $totalCount = DB::connection('farmasi')
+            ->table(DB::raw("({$query->toSql()}) as sub"))
+            ->mergeBindings($query->getQuery())
+            ->count();
+        $listresep = $query->simplePaginate($req['per_page']);
 
         $norms = $listresep->getCollection()->pluck('norm')->unique()->filter()->toArray();
         if (count($norms) > 0) {
@@ -1579,7 +1589,8 @@ class EresepController extends Controller
             });
         }
 
-        return new JsonResponse($listresep);
+        $resp = ResponseHelper::responseGetSimplePaginate($listresep, $req, $totalCount);
+        return new JsonResponse($resp);
         // $addThree = ((int)date('m') + 3) < 10 ? Carbon::now()->addMonth(3)->format('m') : (((int)date('m') + 3) > 12 ? ('0' . ((int)date('m') + 3) - 12) : ((int)date('m') + 3));
         $addThree = Carbon::now()->addMonth(3)->format('m');
         $year = ((int)date('m') + 3) <= 12 ? date('Y')  : Carbon::now()->addYears(1)->format('Y');
