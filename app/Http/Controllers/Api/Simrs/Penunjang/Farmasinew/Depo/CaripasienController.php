@@ -226,12 +226,60 @@ class CaripasienController extends Controller
             });
         }
 
-        $total = $this->query_table('total')->get()->count();
+        if (request('to') === '' || request('from') === null) {
+            $from = Carbon::now()->format('Y-m-d 00:00:00');
+            $to = Carbon::now()->format('Y-m-d 23:59:59');
+        } else {
+            $from = request('from') . ' 00:00:00';
+            $to = request('to') . ' 23:59:59';
+        }
+
+        $ruangan = request('poli');
+        $status = request('flag') ?? '';
+        $sistemBayarGroup = request('sistemBayar');
+
+        $totalQuery = DB::connection('mysql')->table('rs17')
+            ->whereBetween('rs17.rs3', [$from, $to])
+            ->where('rs17.rs8', '!=', 'POL014')
+            ->join('rs19', 'rs19.rs1', '=', 'rs17.rs8')
+            ->where('rs19.rs4', '=', 'Poliklinik');
+
+        if (filled($ruangan)) {
+            $totalQuery->whereIn('rs17.rs8', (array) $ruangan);
+        }
+
+        if ($status !== 'all') {
+            if ($status === '') {
+                $totalQuery->where('rs17.rs19', '!=', '1');
+            } else {
+                $totalQuery->where('rs17.rs19', '=', $status);
+            }
+        }
+
+        if ($sistemBayarGroup) {
+            $sitemBayar = SistemBayar::select('rs1')->where('groups', $sistemBayarGroup)->where('hidden', '1')->pluck('rs1');
+            $totalQuery->whereIn('rs17.rs14', $sitemBayar);
+        }
+
+        if (filled(request('q'))) {
+            $totalQuery->join('rs15', 'rs15.rs1', '=', 'rs17.rs2')
+                ->leftJoin('rs21', 'rs21.rs1', '=', 'rs17.rs9')
+                ->leftJoin('rs222', 'rs222.rs1', '=', 'rs17.rs1')
+                ->leftJoin('rs9', 'rs9.rs1', '=', 'rs17.rs14')
+                ->where(function ($query) {
+                    $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs17.rs1', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
+                });
+        }
+
+        $total = $totalQuery->count();
         $req = ['per_page' => request('per_page') ?? 10];
-        // $result = [
-        //     'table' => $data,
-        //     'total' => $total
-        // ];
         $result = ResponseHelper::responseGetSimplePaginate($data, $req, $total);
         return new JsonResponse($result);
     }
@@ -318,7 +366,50 @@ class CaripasienController extends Controller
         $query->orderby('rs23.rs3', 'DESC');
 
         $data = $query->simplePaginate(request('per_page') ?? 10);
-        $total = $query->count();
+
+        // Optimized count query for Ranap
+        $totalQuery = DB::connection('mysql')->table('rs23');
+
+        if ($status === 'aktif') {
+            $totalQuery->where('rs23.rs22', '=', '');
+        } elseif ($status === 'pulang') {
+            $totalQuery->where('rs23.rs22', '!=', '')
+                  ->whereBetween('rs23.rs4', [$from, $to]);
+        } else {
+            $totalQuery->where(function($q) use ($from, $to) {
+                $q->where('rs23.rs22', '=', '')
+                  ->orWhere(function($sub) use ($from, $to) {
+                      $sub->where('rs23.rs22', '!=', '')
+                          ->whereBetween('rs23.rs4', [$from, $to]);
+                  });
+            });
+        }
+
+        if (filled($ruangan)) {
+            $totalQuery->whereIn('rs23.rs5', (array) $ruangan);
+        }
+
+        if (request('sistemBayar')) {
+            $sitemBayar = SistemBayar::select('rs1')->where('groups', request('sistemBayar'))->where('hidden', '1')->pluck('rs1');
+            $totalQuery->whereIn('rs23.rs19', $sitemBayar);
+        }
+
+        if (request('q')) {
+            $totalQuery->join('rs15', 'rs15.rs1', '=', 'rs23.rs2')
+                ->leftJoin('rs21', 'rs21.rs1', '=', 'rs23.rs10')
+                ->leftJoin('rs24', 'rs24.rs1', '=', 'rs23.rs5')
+                ->leftJoin('rs9', 'rs9.rs1', '=', 'rs23.rs19')
+                ->where(function ($q) {
+                    $q->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs23.rs2', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs23.rs1', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs24.rs2', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
+                });
+        }
+
+        $total = $totalQuery->count();
 
         $req = ['per_page' => request('per_page') ?? 10];
         $result = ResponseHelper::responseGetSimplePaginate($data, $req, $total);
@@ -521,15 +612,17 @@ class CaripasienController extends Controller
                     }
                 }
             })
-            ->where(function ($query) {
-                $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs17.rs1', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
+            ->when(filled(request('q')), function ($query) {
+                $query->where(function ($q) {
+                    $q->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs17.rs1', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
+                });
             })
             ->orderby('rs17.rs3', 'Asc')
             ->groupby('rs17.rs1');
