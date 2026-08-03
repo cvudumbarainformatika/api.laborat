@@ -1527,15 +1527,22 @@ class EresepController extends Controller
                     }
                 } else {
                     if (request('flag') === 'semua') {
-                        $qu->where(function ($q) use ($tgl, $tglx) {
-                            $q->where(function ($m) use ($tgl, $tglx) {
-                                $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4'])
-                                    ->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
-                            })->orWhere(function ($q) use ($tgl, $tglx) {
-                                $q->whereIn('resep_keluar_h.flag', ['', '5'])
-                                    ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
-                            });
-                        });
+                        $q1 = DB::connection('farmasi')->table('resep_keluar_h')
+                            ->select('noresep')
+                            ->where('tiperesep', '!=', 'penjualan')
+                            ->where('depo', request('kddepo'))
+                            ->whereIn('flag', ['1', '2', '3', '4'])
+                            ->whereBetween('tgl_kirim', [$tgl, $tglx]);
+
+                        $q2 = DB::connection('farmasi')->table('resep_keluar_h')
+                            ->select('noresep')
+                            ->where('tiperesep', '!=', 'penjualan')
+                            ->where('depo', request('kddepo'))
+                            ->whereIn('flag', ['', '5'])
+                            ->whereBetween('tgl_permintaan', [$tgl, $tglx]);
+
+                        $noreseps = $q1->union($q2)->pluck('noresep')->toArray();
+                        $qu->whereIn('resep_keluar_h.noresep', $noreseps);
                     } else {
                         $qu->where('resep_keluar_h.flag', request('flag'))->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
                     }
