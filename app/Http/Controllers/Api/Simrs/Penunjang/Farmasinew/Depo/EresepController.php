@@ -2275,6 +2275,8 @@ class EresepController extends Controller
                 'user' => auth()->user()->pegawai_id
 
             ]);
+            DB::connection('farmasi')->commit();
+
             $kunjunganpoli = KunjunganPoli::where('rs1', $request->noreg)->where('rs17.rs8', '!=', 'POL014')->first();
             if ($kunjunganpoli) {
                 /**
@@ -2296,7 +2298,6 @@ class EresepController extends Controller
                  * update waktu end
                  */
             }
-            DB::connection('farmasi')->commit();
             return new JsonResponse([
                 'message' => 'Resep Sudah Diselesaikan',
                 'data' => $header,
