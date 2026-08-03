@@ -206,7 +206,7 @@ class CaripasienController extends Controller
 
     public function listPengunjungRajal()
     {
-        $query = $this->query_table('table');
+        $query = $this->query_table('table')->with('info');
         $data = $query->simplePaginate(request('per_page'));
 
         $norms = $data->pluck('norm')->unique()->filter()->toArray();
@@ -363,7 +363,7 @@ class CaripasienController extends Controller
             });
         }
 
-        $query->orderby('rs23.rs3', 'DESC');
+        $query->with('info')->orderby('rs23.rs3', 'DESC');
 
         $data = $query->simplePaginate(request('per_page') ?? 10);
 
@@ -486,7 +486,7 @@ class CaripasienController extends Controller
             });
         }
 
-        $query->orderby('rs17.rs3', 'DESC')
+        $query->with('info')->orderby('rs17.rs3', 'DESC')
             ->groupby('rs17.rs1');
 
         $data = $query->simplePaginate(request('per_page') ?? 10);

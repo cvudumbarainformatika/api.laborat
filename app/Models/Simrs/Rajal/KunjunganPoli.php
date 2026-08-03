@@ -164,6 +164,11 @@ class KunjunganPoli extends Model
         return $this->hasOne(Seprajal::class, 'rs1', 'rs1');
     }
 
+    public function info()
+    {
+        return $this->hasOne(\App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat::class, 'noreg', 'rs1');
+    }
+
     public function generalconsent()
     {
         return $this->hasOne(Mgeneralconsent::class, 'noreg', 'rs1');
