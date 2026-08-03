@@ -101,7 +101,13 @@ class Petugas extends Model
 
     public function alpha()
     {
-        return $this->hasMany(Alpha::class);
+        $payload = $this->hasMany(Alpha::class);
+        return $payload;
+    }
+
+    public function jadwal_poli_cache()
+    {
+        return $this->hasMany(\App\Models\Antrean\JadwalPoliCache::class, 'kddpjp', 'kode_dokter');
     }
 
 
