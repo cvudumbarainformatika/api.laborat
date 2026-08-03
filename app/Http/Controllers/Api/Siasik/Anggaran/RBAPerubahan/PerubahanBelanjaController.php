@@ -97,10 +97,16 @@ class PerubahanBelanjaController extends Controller
     public function index(){
         $perPage = request('per_page', 50);
         $tahun = request('tahun', date('Y'));
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->nip;
+        $sa = $pg->kdpegsimrs;
         $q = request('q');
         $query = Perubahan_pak_header::with('rincian')
         ->withSum('rincian as nilaipengusulan', 'nilai');
-
+        if ($sa !== 'sa' && $sa !== '1619' && $sa !== '38' && $sa !== '39' && $sa !== '81_X' && $sa !== '1215') {
+                $query->where('kodepptk', $pegawai);
+            }
         if ($tahun) {
             $query->whereBetween('tglTransaksi', [
                 $tahun . '-01-01',
