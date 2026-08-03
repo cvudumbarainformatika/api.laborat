@@ -104,7 +104,7 @@ class PerubahanBelanjaController extends Controller
         $q = request('q');
         $query = Perubahan_pak_header::with('rincian')
         ->withSum('rincian as nilaipengusulan', 'nilai');
-        if ($sa !== 'sa' && $sa !== '1619' && $sa !== '38' && $sa !== '39' && $sa !== '81_X' && $sa !== '1215') {
+        if ($sa !== 'sa' && $sa !== '1619' && $sa !== '38' && $sa !== '39' && $sa !== '81_X' && $sa !== '86_X' && $sa !== '1215') {
                 $query->where('kodepptk', $pegawai);
             }
         if ($tahun) {
