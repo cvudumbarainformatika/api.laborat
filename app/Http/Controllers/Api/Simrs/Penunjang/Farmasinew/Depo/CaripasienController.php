@@ -235,6 +235,179 @@ class CaripasienController extends Controller
         $result = ResponseHelper::responseGetSimplePaginate($data, $req, $total);
         return new JsonResponse($result);
     }
+    public function listPengunjungRanap()
+    {
+        $ruangan = request('ruangan');
+        $status = request('flag') ?? '';
+
+        if (request('to') === '' || request('from') === null) {
+            $from = Carbon::now()->format('Y-m-d 00:00:00');
+            $to = Carbon::now()->format('Y-m-d 23:59:59');
+        } else {
+            $from = request('from') . ' 00:00:00';
+            $to = request('to') . ' 23:59:59';
+        }
+
+        $query = Kunjunganranap::select(
+            'rs23.rs1 as noreg',
+            'rs23.rs2 as norm',
+            'rs23.rs3 as tglmasuk',
+            'rs23.rs4 as tglkeluar',
+            'rs23.rs5 as kdruangan',
+            'rs23.rs6 as ketruangan',
+            'rs23.rs7 as nomorbed',
+            'rs23.rs10 as kodedokter',
+            'rs23.rs19 as kdsistembayar',
+            'rs23.rs22 as status',
+            'rs15.rs2 as nama_panggil',
+            DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
+            DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
+            DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
+                        TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
+                        TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
+            'rs15.rs16 as tgllahir',
+            'rs15.rs17 as kelamin',
+            'rs15.rs46 as noka',
+            'rs9.rs2 as sistembayar',
+            'rs9.groups as groups',
+            'rs21.rs2 as dokter',
+            'rs227.rs8 as sep',
+            'rs24.rs2 as ruangan'
+        )
+            ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
+            ->leftjoin('rs9', 'rs9.rs1', 'rs23.rs19')
+            ->leftjoin('rs21', 'rs21.rs1', 'rs23.rs10')
+            ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
+            ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5');
+
+        if ($status === 'aktif') {
+            $query->where('rs23.rs22', '=', '');
+        } elseif ($status === 'pulang') {
+            $query->where('rs23.rs22', '!=', '')
+                  ->whereBetween('rs23.rs4', [$from, $to]);
+        } else {
+            $query->where(function($q) use ($from, $to) {
+                $q->where('rs23.rs22', '=', '')
+                  ->orWhere(function($sub) use ($from, $to) {
+                      $sub->where('rs23.rs22', '!=', '')
+                          ->whereBetween('rs23.rs4', [$from, $to]);
+                  });
+            });
+        }
+
+        if (filled($ruangan)) {
+            $query->whereIn('rs23.rs5', (array) $ruangan);
+        }
+
+        if (request('sistemBayar')) {
+            $sitemBayar = SistemBayar::select('rs1')->where('groups', request('sistemBayar'))->where('hidden', '1')->pluck('rs1');
+            $query->whereIn('rs23.rs19', $sitemBayar);
+        }
+
+        if (request('q')) {
+            $query->where(function ($q) {
+                $q->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs23.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs23.rs1', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs24.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
+            });
+        }
+
+        $query->orderby('rs23.rs3', 'DESC');
+
+        $data = $query->simplePaginate(request('per_page') ?? 10);
+        $total = $query->count();
+
+        $req = ['per_page' => request('per_page') ?? 10];
+        $result = ResponseHelper::responseGetSimplePaginate($data, $req, $total);
+        return new JsonResponse($result);
+    }
+    public function listPengunjungIgd()
+    {
+        $status = request('flag') ?? '';
+
+        if (request('to') === '' || request('from') === null) {
+            $from = Carbon::now()->format('Y-m-d 00:00:00');
+            $to = Carbon::now()->format('Y-m-d 23:59:59');
+        } else {
+            $from = request('from') . ' 00:00:00';
+            $to = request('to') . ' 23:59:59';
+        }
+
+        $query = KunjunganPoli::select(
+            'rs17.rs1',
+            'rs17.rs9',
+            'rs17.rs4',
+            'rs17.rs1 as noreg',
+            'rs17.rs2 as norm',
+            'rs17.rs3 as tgl_kunjungan',
+            'rs17.rs8 as kodepoli',
+            'rs19.rs2 as poli',
+            'rs19.rs6 as kodepolibpjs',
+            'rs19.panggil_antrian as panggil_antrian',
+            'rs17.rs9 as kodedokter',
+            'rs21.rs2 as dokter',
+            'rs17.rs14 as kodesistembayar',
+            'rs9.rs2 as sistembayar',
+            'rs9.groups as groups',
+            'rs15.rs2 as nama_panggil',
+            DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
+            DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
+            DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
+                        TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
+                        TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
+            'rs15.rs16 as tgllahir',
+            'rs15.rs17 as kelamin',
+            'rs15.rs46 as noka',
+            'rs222.rs8 as sep',
+            'rs17.rs19 as status'
+        )
+            ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2')
+            ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8')
+            ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9')
+            ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14')
+            ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1')
+            ->where('rs17.rs8', '=', 'POL014')
+            ->whereBetween('rs17.rs3', [$from, $to])
+            ->when(request('sistemBayar'), function ($q) {
+                $sitemBayar = SistemBayar::select('rs1')->where('groups', request('sistemBayar'))->where('hidden', '1')->pluck('rs1');
+                $q->whereIn('rs17.rs14', $sitemBayar);
+            })
+            ->where(function ($sts) use ($status) {
+                if ($status !== 'all') {
+                    if ($status === '') {
+                        $sts->where('rs17.rs19', '!=', '1');
+                    } else {
+                        $sts->where('rs17.rs19', '=', $status);
+                    }
+                }
+            });
+
+        if (request('q')) {
+            $query->where(function ($q) {
+                $q->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs17.rs1', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
+            });
+        }
+
+        $query->orderby('rs17.rs3', 'DESC')
+            ->groupby('rs17.rs1');
+
+        $data = $query->simplePaginate(request('per_page') ?? 10);
+        $total = DB::connection('mysql')->table('rs17')
+            ->where('rs8', 'POL014')
+            ->whereBetween('rs3', [$from, $to])
+            ->count();
+
+        $req = ['per_page' => request('per_page') ?? 10];
+        $result = ResponseHelper::responseGetSimplePaginate($data, $req, $total);
+        return new JsonResponse($result);
+    }
     public function query_table($val)
     {
         // $user = Pegawai::find(auth()->user()->pegawai_id);
@@ -328,7 +501,9 @@ class CaripasienController extends Controller
         $q = $select
             ->whereBetween('rs17.rs3', [$from, $to])
             ->where('rs19.rs4', '=', 'Poliklinik')
-            ->whereIn('rs17.rs8', $ruangan)
+            ->when(filled($ruangan), function ($q) use ($ruangan) {
+                $q->whereIn('rs17.rs8', (array) $ruangan);
+            })
             ->when(request('sistemBayar'), function ($q) {
                 // $sitemBayar = [];
                 // if (request('sistemBayar') == '1') {

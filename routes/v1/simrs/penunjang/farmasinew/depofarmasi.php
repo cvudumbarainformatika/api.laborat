@@ -105,6 +105,8 @@ Route::group([
 
     // list pengunjung rajal
     Route::get('/list-pengunjung-rajal', [CaripasienController::class, 'listPengunjungRajal']);
+    Route::get('/list-pengunjung-ranap', [CaripasienController::class, 'listPengunjungRanap']);
+    Route::get('/list-pengunjung-igd', [CaripasienController::class, 'listPengunjungIgd']);
     // list Eresep Pasien
     Route::post('/list-eresep-pasien', [CaripasienController::class, 'listEresepByNorm']);
     Route::get('/rincian-resep', [CaripasienController::class, 'getRincianResep']);
