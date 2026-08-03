@@ -576,7 +576,6 @@ class PlaningController extends Controller
     {
         $message = 'berhasil Dihapus';
         $cari = WaktupulangPoli::find($request->id);
-        return $cari;
         if (!$cari) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
