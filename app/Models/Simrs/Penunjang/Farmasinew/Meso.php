@@ -11,4 +11,7 @@ class Meso extends Model
     protected $connection = 'farmasi';
     protected $table = 'pelayanan_mesos';
     protected $guarded = ['id'];
+    protected $casts = [
+        'detail' => 'array',
+    ];
 }

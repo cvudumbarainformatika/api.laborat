@@ -4150,6 +4150,7 @@ class EresepController extends Controller
                     'tindakan_diambil' => $request->tindakan_diambil,
                     'outcome' => $request->outcome,
                     'petugas' => $request->petugas,
+                    'detail' => $request->detail,
                     'user_input' => auth()->user()->pegawai_id ?? $request->user_input,
                 ]
             );
