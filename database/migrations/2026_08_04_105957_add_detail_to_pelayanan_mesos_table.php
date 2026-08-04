@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::connection('farmasi')->table('pelayanan_mesos', function (Blueprint $table) {
-            $table->json('detail')->nullable()->after('outcome');
+            $table->text('detail')->nullable()->after('outcome');
         });
     }
 
