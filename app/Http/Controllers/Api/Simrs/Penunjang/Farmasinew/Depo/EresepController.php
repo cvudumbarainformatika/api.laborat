@@ -23,6 +23,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Obat\RestriksiObat;
 use App\Models\Simrs\Penunjang\Farmasinew\Obat\RestriksiObatKecualiRuangan;
 use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
+use App\Models\Simrs\Penunjang\Farmasinew\EdukasiFarmasi;
+use App\Models\Simrs\Penunjang\Farmasinew\Meso;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Penunjang\Farmasinew\TelaahResep;
@@ -4076,6 +4078,104 @@ class EresepController extends Controller
             return response()->json(['message' => 'ada kesalahan', 'error' => $e], 410);
         }
     }
+
+    public function simpanEdukasiFarmasi(Request $request)
+    {
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $data = EdukasiFarmasi::updateOrCreate(
+                [
+                    'norm' => $request->norm,
+                    'noreg' => $request->noreg,
+                ],
+                [
+                    'tanggal' => $request->tanggal ?? date('Y-m-d H:i:s'),
+                    'indikasi_chk' => $request->indikasi_chk ?? 0,
+                    'indikasi_keterangan' => $request->indikasi_keterangan,
+                    'aturan_chk' => $request->aturan_chk ?? 0,
+                    'aturan_keterangan' => $request->aturan_keterangan,
+                    'antibiotik_chk' => $request->antibiotik_chk ?? 0,
+                    'antibiotik_keterangan' => $request->antibiotik_keterangan,
+                    'penyimpanan_chk' => $request->penyimpanan_chk ?? 0,
+                    'penyimpanan_keterangan' => $request->penyimpanan_keterangan,
+                    'jangka_chk' => $request->jangka_chk ?? 0,
+                    'jangka_keterangan' => $request->jangka_keterangan,
+                    'interaksi_chk' => $request->interaksi_chk ?? 0,
+                    'interaksi_keterangan' => $request->interaksi_keterangan,
+                    'efek_samping_chk' => $request->efek_samping_chk ?? 0,
+                    'efek_samping_keterangan' => $request->efek_samping_keterangan,
+                    'pemahaman' => $request->pemahaman,
+                    'penerima' => $request->penerima,
+                    'tanda_tangan' => $request->tanda_tangan,
+                    'petugas' => $request->petugas,
+                    'user_input' => auth()->user()->pegawai_id ?? $request->user_input,
+                ]
+            );
+            if (!$data) {
+                return new JsonResponse(['message' => 'Edukasi Farmasi gagal disimpan'], 410);
+            }
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'message' => 'Edukasi Farmasi sudah disimpan',
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return response()->json(['message' => 'ada kesalahan', 'error' => $e->getMessage()], 410);
+        }
+    }
+
+    public function getEdukasiFarmasi(Request $request)
+    {
+        $data = EdukasiFarmasi::where('norm', $request->norm)
+            ->where('noreg', $request->noreg)
+            ->first();
+
+        return new JsonResponse($data);
+    }
+
+    public function simpanMeso(Request $request)
+    {
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $data = Meso::updateOrCreate(
+                [
+                    'norm' => $request->norm,
+                    'noreg' => $request->noreg,
+                ],
+                [
+                    'tanggal' => $request->tanggal ?? date('Y-m-d H:i:s'),
+                    'keluhan' => $request->keluhan,
+                    'obat_dicurigai' => $request->obat_dicurigai,
+                    'tindakan_diambil' => $request->tindakan_diambil,
+                    'outcome' => $request->outcome,
+                    'petugas' => $request->petugas,
+                    'user_input' => auth()->user()->pegawai_id ?? $request->user_input,
+                ]
+            );
+            if (!$data) {
+                return new JsonResponse(['message' => 'Meso gagal disimpan'], 410);
+            }
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'message' => 'Meso sudah disimpan',
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return response()->json(['message' => 'ada kesalahan', 'error' => $e->getMessage()], 410);
+        }
+    }
+
+    public function getMeso(Request $request)
+    {
+        $data = Meso::where('norm', $request->norm)
+            ->where('noreg', $request->noreg)
+            ->first();
+
+        return new JsonResponse($data);
+    }
+
     public static function kirimResepDanSelesaiLayanan($request)
     {
 
