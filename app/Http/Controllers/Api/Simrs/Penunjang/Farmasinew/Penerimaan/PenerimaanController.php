@@ -362,122 +362,159 @@ class PenerimaanController extends Controller
 
     public function bukaKunciPenerimaan(Request $request)
     {
-        $head = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)
-            ->where('kunci', '1')
-            ->first();
-        if (!$head) {
-            return new JsonResponse([
-                'message' => 'Penerimaan tidak ditemukan, apakah kunci sudah dibuka? atau penerimaan sudah dihapus?',
-                'data' => $head
-            ], 410);
-        }
-        $rawStok = Stokrel::lockForUpdate()
-            ->where('nopenerimaan', $request->nopenerimaan)
-            ->where('kdruang', $head->gudang)
-            ->get();
-        $rinci = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'no_batch', 'tgl_exp', 'jml_terima_k as jumlah')
-            ->with('masterobat:kd_obat,nama_obat')
-            ->where('nopenerimaan', $request->nopenerimaan)
-            ->get();
-        $stok = collect($rawStok);
-        $ada = [];
-        $str = 'Stok ';
-        foreach ($rinci as $key) {
-            $temp = $stok->where('kdobat', $key['kdobat'])
-                ->where('nobatch', $key['no_batch'])
-                ->where('tglexp', $key['tgl_exp'])
+        try {
+            DB::connection('farmasi')->beginTransaction();
+
+            $head = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)
+                ->where('kunci', '1')
                 ->first();
-            $namaOb = $key['masterobat']['nama_obat'] ?? '';
-            if (!$temp) {
+            if (!$head) {
+                DB::connection('farmasi')->rollBack();
                 return new JsonResponse([
-                    'message' => 'Data Stok ' . ($namaOb) . ' Tidak Ditemukan',
+                    'message' => 'Penerimaan tidak ditemukan, apakah kunci sudah dibuka? atau penerimaan sudah dihapus?',
+                    'data' => $head
                 ], 410);
             }
-            $trm = (float)$key['jumlah'];
-            $st = (float)$temp['jumlah'];
-            $selisih = (float)($trm - $st);
-            if ($selisih != 0) {
-                $tmpStr = $str . $namaOb . ' keluar sebanyak ' . ($selisih) . ', ';
-                $str = $tmpStr;
-                $ada[] = [
-                    'rinc' => $key,
-                    'stok' => $temp,
-                    'selisih' => $selisih,
-                    'cond' => $selisih == 0,
-                    'cond1' => $selisih != 0,
-                ];
+            $rawStok = Stokrel::lockForUpdate()
+                ->where('nopenerimaan', $request->nopenerimaan)
+                ->where('kdruang', $head->gudang)
+                ->get();
+            $rinci = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'no_batch', 'tgl_exp', 'jml_terima_k as jumlah')
+                ->with('masterobat:kd_obat,nama_obat')
+                ->where('nopenerimaan', $request->nopenerimaan)
+                ->get();
+            $stok = collect($rawStok);
+            $ada = [];
+            $str = 'Stok ';
+            foreach ($rinci as $key) {
+                $temp = $stok->where('kdobat', $key['kdobat'])
+                    ->where('nobatch', $key['no_batch'])
+                    ->where('tglexp', $key['tgl_exp'])
+                    ->first();
+                $namaOb = $key['masterobat']['nama_obat'] ?? '';
+                if (!$temp) {
+                    DB::connection('farmasi')->rollBack();
+                    return new JsonResponse([
+                        'message' => 'Data Stok ' . ($namaOb) . ' Tidak Ditemukan',
+                    ], 410);
+                }
+                $trm = (float)$key['jumlah'];
+                $st = (float)$temp['jumlah'];
+                $selisih = (float)($trm - $st);
+                if ($selisih != 0) {
+                    $tmpStr = $str . $namaOb . ' keluar sebanyak ' . ($selisih) . ', ';
+                    $str = $tmpStr;
+                    $ada[] = [
+                        'rinc' => $key,
+                        'stok' => $temp,
+                        'selisih' => $selisih,
+                        'cond' => $selisih == 0,
+                        'cond1' => $selisih != 0,
+                    ];
+                }
             }
-        }
-        if (sizeof($ada) > 0) {
+            if (sizeof($ada) > 0) {
+                DB::connection('farmasi')->rollBack();
+                return new JsonResponse([
+                    'message' => 'Kunci tidak dibuka, ' . $str,
+                    'data' => $ada
+                ], 410);
+            }
+            $data = [
+                'req' => $request->all(),
+                'head' => $head,
+                'stok' => $stok,
+                'rinci' => $rinci,
+            ];
+            foreach ($rawStok as $st) {
+                $st->update(['flag' => '1']);
+            }
+            $head->update(['kunci' => '']);
+
+            DB::connection('farmasi')->commit();
+
             return new JsonResponse([
-                'message' => 'Kunci tidak dibuka, ' . $str,
-                'data' => $ada
+                'message' => 'Kunci Penerimaan sudah dibuka',
+                'data' => $data
+            ]);
+        } catch (\Throwable $e) {
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'message' => 'Gagal membuka kunci: ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
             ], 410);
         }
-        $data = [
-            'req' => $request->all(),
-            'head' => $head,
-            'stok' => $stok,
-            'rinci' => $rinci,
-        ];
-        foreach ($rawStok as $st) {
-            $st->update(['flag' => '1']);
-        }
-        $head->update(['kunci' => '']);
-        // return new JsonResponse([
-        //     'message' => 'Kunci Penerimaan tidak dibuka',
-        //     'data' => $data
-        // ], 410);
-        return new JsonResponse([
-            'message' => 'Kunci Penerimaan sudah dibuka',
-            'data' => $data
-        ]);
     }
+
     public function kuncipenerimaan(Request $request)
     {
-        $cek = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first();
-        if (($cek->jenissurat === 'Faktur' && $cek->jenis_penerimaan === 'Pesanan') || ($cek->jenis_penerimaan !== 'Pesanan')) {
-            $masukstok = Stokrel::where('nopenerimaan', $request->nopenerimaan)
-                ->update(['flag' => '']);
-            if (!$masukstok) {
-                return new JsonResponse(['message' => 'Stok Tidak Terupdate,mohon segera cek Data Stok Anda...!!!'], 500);
+        try {
+            DB::connection('farmasi')->beginTransaction();
+
+            $cek = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first();
+            if (!$cek) {
+                DB::connection('farmasi')->rollBack();
+                return new JsonResponse(['message' => 'Penerimaan tidak ditemukan!'], 410);
             }
-        }
 
-        $kuncipenerimaan = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)
-            ->update(['kunci' => '1']);
-        if (!$kuncipenerimaan) {
-            return new JsonResponse(['message' => 'Gagal Mengunci Penerimaan,Cek Lagi Data Yang Anda Input...!!!'], 500);
-        }
-        if (($cek->jenissurat !== 'Faktur' && $cek->jenis_penerimaan === 'Pesanan')) {
-            return new JsonResponse(['message' => 'Penerimaan Sudah Terkunci. Dan Stok Tidak Bertambah. Silahkan Gunakan Menu Pemfakturan Untuk Menambah Stok'], 200);
-        }
-        $penerimaan = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first();
-        if ($penerimaan) {
-            if (($penerimaan->jenissurat === 'Faktur' && $penerimaan->jenis_penerimaan === 'Pesanan') || ($penerimaan->jenis_penerimaan !== 'Pesanan')) {
-                $rin = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'harga_netto_kecil')->where('nopenerimaan', $request->nopenerimaan)->get();
-                if (count($rin) > 0) {
-                    $harga = [];
-                    foreach ($rin as $key) {
-                        $tHarga['nopenerimaan'] = $key['nopenerimaan'];
-                        $tHarga['kd_obat'] = $key['kdobat'];
-                        $tHarga['harga'] = $key['harga_netto_kecil'];
-                        $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
-                        $tHarga['created_at'] = date('Y-m-d H:i:s');
-                        $tHarga['updated_at'] = date('Y-m-d H:i:s');
-                        // if ((int)$key['harga_netto_kecil'] > 0) $harga[] = $tHarga;
-                        $harga[] = $tHarga;
-                    }
+            if (($cek->jenissurat === 'Faktur' && $cek->jenis_penerimaan === 'Pesanan') || ($cek->jenis_penerimaan !== 'Pesanan')) {
+                $masukstok = Stokrel::where('nopenerimaan', $request->nopenerimaan)
+                    ->update(['flag' => '']);
+                if (!$masukstok) {
+                    DB::connection('farmasi')->rollBack();
+                    return new JsonResponse(['message' => 'Stok Tidak Terupdate,mohon segera cek Data Stok Anda...!!!'], 500);
+                }
+            }
 
-                    if (count($harga) > 0) {
-                        foreach (array_chunk($harga, 1000) as $t) {
-                            DaftarHarga::insert($t);
+            $kuncipenerimaan = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)
+                ->update(['kunci' => '1']);
+            if (!$kuncipenerimaan) {
+                DB::connection('farmasi')->rollBack();
+                return new JsonResponse(['message' => 'Gagal Mengunci Penerimaan,Cek Lagi Data Yang Anda Input...!!!'], 500);
+            }
+            if (($cek->jenissurat !== 'Faktur' && $cek->jenis_penerimaan === 'Pesanan')) {
+                DB::connection('farmasi')->commit();
+                return new JsonResponse(['message' => 'Penerimaan Sudah Terkunci. Dan Stok Tidak Bertambah. Silahkan Gunakan Menu Pemfakturan Untuk Menambah Stok'], 200);
+            }
+            $penerimaan = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first();
+            if ($penerimaan) {
+                if (($penerimaan->jenissurat === 'Faktur' && $penerimaan->jenis_penerimaan === 'Pesanan') || ($penerimaan->jenis_penerimaan !== 'Pesanan')) {
+                    $rin = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'harga_netto_kecil')->where('nopenerimaan', $request->nopenerimaan)->get();
+                    if (count($rin) > 0) {
+                        $harga = [];
+                        foreach ($rin as $key) {
+                            $tHarga['nopenerimaan'] = $key['nopenerimaan'];
+                            $tHarga['kd_obat'] = $key['kdobat'];
+                            $tHarga['harga'] = $key['harga_netto_kecil'];
+                            $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
+                            $tHarga['created_at'] = date('Y-m-d H:i:s');
+                            $tHarga['updated_at'] = date('Y-m-d H:i:s');
+                            $harga[] = $tHarga;
+                        }
+
+                        if (count($harga) > 0) {
+                            // Hapus harga lama untuk nopenerimaan ini jika ada, agar tidak duplikat saat kunci ulang
+                            DaftarHarga::where('nopenerimaan', $request->nopenerimaan)->delete();
+
+                            foreach (array_chunk($harga, 1000) as $t) {
+                                DaftarHarga::insert($t);
+                            }
                         }
                     }
                 }
             }
+
+            DB::connection('farmasi')->commit();
+            return new JsonResponse(['message' => 'Penerimaan Sudah Terkunci, Dan Stok Sudah Bertambah...!!!'], 200);
+        } catch (\Throwable $e) {
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'message' => 'Gagal mengunci penerimaan: ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
         }
-        return new JsonResponse(['message' => 'Penerimaan Sudah Terkunci, Dan Stok Sudah Bertambah...!!!'], 200);
     }
 
     public function simpanpenerimaanlangsung(Request $request)
