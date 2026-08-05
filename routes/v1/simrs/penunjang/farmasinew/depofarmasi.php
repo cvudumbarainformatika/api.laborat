@@ -80,6 +80,14 @@ Route::group([
     // pelayanan informasi Obat
     Route::post('/simpan-pelayanan-informasi-obat', [EresepController::class, 'simPelIOnfOb']);
 
+    // pelayanan edukasi farmasi
+    Route::post('/simpan-edukasi-farmasi', [EresepController::class, 'simpanEdukasiFarmasi']);
+    Route::get('/get-edukasi-farmasi', [EresepController::class, 'getEdukasiFarmasi']);
+
+    // pelayanan meso
+    Route::post('/simpan-meso', [EresepController::class, 'simpanMeso']);
+    Route::get('/get-meso', [EresepController::class, 'getMeso']);
+
     // list resep by dokter
     Route::get('/ambil-resep-dokter', [EresepController::class, 'getResepDokter']);
 
@@ -105,6 +113,8 @@ Route::group([
 
     // list pengunjung rajal
     Route::get('/list-pengunjung-rajal', [CaripasienController::class, 'listPengunjungRajal']);
+    Route::get('/list-pengunjung-ranap', [CaripasienController::class, 'listPengunjungRanap']);
+    Route::get('/list-pengunjung-igd', [CaripasienController::class, 'listPengunjungIgd']);
     // list Eresep Pasien
     Route::post('/list-eresep-pasien', [CaripasienController::class, 'listEresepByNorm']);
     Route::get('/rincian-resep', [CaripasienController::class, 'getRincianResep']);

@@ -29,7 +29,7 @@ class Kernel extends ConsoleKernel
 
         // Jalankan setiap menit
         // withoutOverlapping() memastikan kalau pengiriman lagi lambat, menit berikutnya tidak numpuk
-        $schedule->command('satset:send-ranap')->everyMinute()->withoutOverlapping();
+        $schedule->command('satset:send-ranap')->everyMinute()->withoutOverlapping()->between('01:00', '05:50');
 
 
         $schedule->command('send:rajal')
@@ -44,6 +44,11 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('cache:clear')
             ->dailyAt('00:30');
+
+        // Sync jadwal poli BPJS ke tabel jadwal_poli_cache setiap jam 02:00 dini hari
+        $schedule->command('antrean:sync-jadwal-poli')
+            ->dailyAt('02:00')
+            ->withoutOverlapping();
         // $schedule->call(function () {
         //     Artisan::call('cache:clear'); // you can move this part to Job
         // })

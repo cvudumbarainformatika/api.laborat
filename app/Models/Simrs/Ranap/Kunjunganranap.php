@@ -618,6 +618,11 @@ class Kunjunganranap extends Model
     {
         return $this->hasMany(DokumenUpload::class, 'noreg', 'rs1');
     }
+
+    public function info()
+    {
+        return $this->hasOne(\App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat::class, 'noreg', 'rs1');
+    }
     public function informconcern()
     {
         return $this->hasMany(InformConcern::class, 'noreg', 'rs1');

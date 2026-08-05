@@ -14,6 +14,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
+use App\Models\Simrs\Rajal\KunjunganPoli;
+use App\Http\Controllers\Api\Simrs\Antrian\AntrianController;
 
 class EresepController extends Controller
 {
@@ -556,8 +558,10 @@ class EresepController extends Controller
                 $first_record = $request->kirimResep[0];
                 $norm_first = is_array($first_record) ? ($first_record['norm'] ?? null) : (is_object($first_record) ? ($first_record->norm ?? null) : null);
             }
+            DB::connection('farmasi')->commit();
+
             if ($noreg_first && $norm_first) {
-                $updatekunjungan = \App\Models\Simrs\Rajal\KunjunganPoli::where('rs1', $noreg_first)->where('rs17.rs8', '!=', 'POL014')->first();
+                $updatekunjungan = KunjunganPoli::where('rs1', $noreg_first)->where('rs17.rs8', '!=', 'POL014')->first();
                 if ($updatekunjungan) {
                     $newData = new Request([
                         'norm' => $norm_first,
@@ -566,11 +570,10 @@ class EresepController extends Controller
                     $input = new Request([
                         'noreg' => $noreg_first
                     ]);
-                    \App\Http\Controllers\Api\Simrs\Antrian\AntrianController::ambilnoantrian($newData, $input);
+                    AntrianController::ambilnoantrian($newData, $input);
                 }
             }
 
-            DB::connection('farmasi')->commit();
             return new JsonResponse($response, 200);
         } catch (\Exception $e) {
 
@@ -1049,8 +1052,10 @@ class EresepController extends Controller
                     }
                 }
 
+                DB::connection('farmasi')->commit();
+
                 // cek apakah pasien rawat jalan, dan ambil antrian farmasi jika belum ada
-                $updatekunjungan = \App\Models\Simrs\Rajal\KunjunganPoli::where('rs1', $noreg)->where('rs17.rs8', '!=', 'POL014')->first();
+                $updatekunjungan = KunjunganPoli::where('rs1', $noreg)->where('rs17.rs8', '!=', 'POL014')->first();
                 if ($updatekunjungan) {
                     $newData = new Request([
                         'norm' => $norm,
@@ -1059,10 +1064,8 @@ class EresepController extends Controller
                     $input = new Request([
                         'noreg' => $noreg
                     ]);
-                    \App\Http\Controllers\Api\Simrs\Antrian\AntrianController::ambilnoantrian($newData, $input);
+                    AntrianController::ambilnoantrian($newData, $input);
                 }
-
-                DB::connection('farmasi')->commit();
 
                 // Ambil data resep apotek rajal hasil penyimpanan (Hanya SEKALI di luar loop!)
                 $endas = Resepkeluarheder::where('noreg', $noreg)->with(

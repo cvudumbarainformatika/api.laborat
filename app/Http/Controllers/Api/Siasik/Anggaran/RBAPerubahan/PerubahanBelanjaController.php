@@ -55,8 +55,13 @@ class PerubahanBelanjaController extends Controller
     {
         $q        = request('q');
         $perPage  = request('per_page', 50);
+        $idppTerpakai = DB::connection('siasik')
+        ->table('usulanHonor_r_pak')
+        ->pluck('idpp');
+
         $ambil = PergeseranPaguRinci::where('tgl', request('tahun'))
         ->where('kodekegiatanblud', request('kodeKegiatan'))
+        ->whereNotIn('idpp', $idppTerpakai)
         ->select('t_tampung.*', 
                 't_tampung.koders as kode', 
                 't_tampung.usulan as keterangan',
