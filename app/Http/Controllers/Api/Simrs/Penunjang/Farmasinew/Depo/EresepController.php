@@ -1673,40 +1673,56 @@ class EresepController extends Controller
     }
     public function kirimresep(Request $request)
     {
+        $kirimresep = Resepkeluarheder::where('noresep', $request->noresep)->first();
+        if (!$kirimresep) {
+            return new JsonResponse([
+                'message' => 'Resep tidak ditemukan',
+            ], 410);
+        }
+
+        $kodedepo = $request->kodedepo ?? $kirimresep->depo;
+        $groupsistembayarlain = $request->groupsistembayarlain;
+        if ($groupsistembayarlain === null) {
+            $sb = $kirimresep->sistembayar()->first();
+            $groupsistembayarlain = $sb ? (int)$sb->groups : 0;
+        }
+        $noreg = $request->noreg ?? $kirimresep->noreg;
+        $norm = $request->norm ?? $kirimresep->norm;
+
         /**
          * pembatasan start
          */
         $depoLimit = ['Gd-04010102', 'Gd-05010101'];
-        if (in_array($request->kodedepo, $depoLimit) && (int)$request->groupsistembayarlain === 1) {
+        if (in_array($kodedepo, $depoLimit) && (int)$groupsistembayarlain === 1) {
             // batasan obat yang sama
             $sekarang = date('Y-m-d');
             // normal, tidak ada retur
-            $normalHeadKel = Resepkeluarheder::when($request->kodedepo === 'Gd-04010102', function ($q) use ($request) {
-                $q->where('noreg', $request->noreg);
-            })->when($request->kodedepo === 'Gd-05010101', function ($q) use ($request) {
-                $q->where('norm', $request->norm);
+            $normalHeadKel = Resepkeluarheder::when($kodedepo === 'Gd-04010102', function ($q) use ($noreg) {
+                $q->where('noreg', $noreg);
+            })->when($kodedepo === 'Gd-05010101', function ($q) use ($norm) {
+                $q->where('norm', $norm);
             })
                 ->where('tgl_kirim', 'LIKE', '%' . $sekarang . '%')
                 ->whereIn('flag', ['3'])
-                ->where('depo', $request->kodedepo)
+                ->where('depo', $kodedepo)
                 ->pluck('noresep');
-            $normalHead = Resepkeluarheder::when($request->kodedepo === 'Gd-04010102', function ($q) use ($request) {
-                $q->where('noreg', $request->noreg);
-            })->when($request->kodedepo === 'Gd-05010101', function ($q) use ($request) {
-                $q->where('norm', $request->norm);
+            $normalHead = Resepkeluarheder::when($kodedepo === 'Gd-04010102', function ($q) use ($noreg) {
+                $q->where('noreg', $noreg);
+            })->when($kodedepo === 'Gd-05010101', function ($q) use ($norm) {
+                $q->where('norm', $norm);
             })
                 ->where('tgl_kirim', 'LIKE', '%' . $sekarang . '%')
                 ->whereIn('flag', ['1', '2'])
-                ->where('depo', $request->kodedepo)
+                ->where('depo', $kodedepo)
                 ->pluck('noresep');
-            $returHead = Resepkeluarheder::when($request->kodedepo === 'Gd-04010102', function ($q) use ($request) {
-                $q->where('noreg', $request->noreg);
-            })->when($request->kodedepo === 'Gd-05010101', function ($q) use ($request) {
-                $q->where('norm', $request->norm);
+            $returHead = Resepkeluarheder::when($kodedepo === 'Gd-04010102', function ($q) use ($noreg) {
+                $q->where('noreg', $noreg);
+            })->when($kodedepo === 'Gd-05010101', function ($q) use ($norm) {
+                $q->where('norm', $norm);
             })
                 ->where('tgl_kirim', 'LIKE', '%' . $sekarang . '%')
                 ->where('flag', '4')
-                ->where('depo', $request->kodedepo)
+                ->where('depo', $kodedepo)
                 ->pluck('noresep');
             // ambil detail obat yang akan dikirim
             $obatnya = Permintaanresep::where('noresep', $request->noresep)->whereNull('keterangan_bypass')->with('mobat:kd_obat,nama_obat')->get();
@@ -1735,15 +1751,17 @@ class EresepController extends Controller
             }
             // cek retur, jika ada sisa (tidak semua diretur), maka obat tidak boleh diberikan lagi
             $arrayAda = $obatAdaRetur->toArray();
-            $keys = array_column($arrayAda, 'kdobat');
             $masukIf = [];
-            foreach ($keys as $idx => $kdobat) {
+            $arrayAdaBaru = [];
+            foreach ($arrayAda as $item) {
+                $kdobat = $item['kdobat'];
                 $keluar = $totalKeluarPerObat[$kdobat] ?? 0;
                 $retur = $totalReturPerObat[$kdobat] ?? 0;
                 // yang ada retur, HANYA JIKA SEMUA diretur barulah dianggap tidak ada
                 // jika ada sisa (keluar > retur), berarti masih ada obat yang belum dikembalikan
                 if ((int)$keluar > (int)$retur) {
                     // Ada sisa obat yang belum diretur, tetap di array
+                    $arrayAdaBaru[] = $item;
                     $masukIf[] = [
                         'kdobat' => $kdobat,
                         'keluar' => $keluar,
@@ -1751,10 +1769,13 @@ class EresepController extends Controller
                         'sisa' => $keluar - $retur,
                     ];
                 } else if ((int)$keluar === (int)$retur && (int)$keluar > 0) {
-                    // Semua sudah diretur, hapus dari array
-                    array_splice($arrayAda, $idx, 1);
+                    // Semua sudah diretur, buang dari array
+                } else {
+                    // Jika kondisi lain (misal keluar=0, retur=0), tetap pertahankan
+                    $arrayAdaBaru[] = $item;
                 }
             }
+            $arrayAda = $arrayAdaBaru;
             // bandingkan
             $sudahAda = [];
             $cN = [];
@@ -1860,18 +1881,11 @@ class EresepController extends Controller
 
         $user = Pegawai::find(auth()->user()->pegawai_id);
 
-        $kirimresep = Resepkeluarheder::where('noresep', $request->noresep)->first();
-        if (!$kirimresep) {
-            return new JsonResponse([
-                'message' => 'Resep tidak ditemukan',
-            ], 410);
-        }
-
         /**
          * Validasi tambahan: Cek pembatasan jumlah obat untuk BPJS
          * Harus konsisten dengan pembuatanresep (7 untuk ranap, 5 untuk rajal)
          */
-        if (in_array($kirimresep->depo, $depoLimit) && (int)$kirimresep->sistembayar === '1') {
+        if (in_array($kodedepo, $depoLimit) && (int)$groupsistembayarlain === 1) {
             // Hitung jumlah racikan dan non-racikan
             $racikan = Permintaanresepracikan::where('noresep', $request->noresep)->groupBy('namaracikan')->count();
             $nonracikan = Permintaanresep::select('resep_permintaan_keluar.kdobat')
