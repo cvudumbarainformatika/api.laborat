@@ -17,14 +17,12 @@ class RuanganController extends Controller
 {
     public function listruanganranap()
     {
-        // $list = Mruangranap::select('groups', 'groups_nama')
-        //     ->groupby('groups')
-        //     ->where('hiddens', '')
-        //     ->get();
-        $list = Cache::remember('ruanganranap', now()->addDays(7), function () {
-            return Mruangranap::select('groups', 'groups_nama')
-                ->groupby('groups')
-                ->where('hiddens', '')
+        $list = Cache::remember('ruanganranap_all_v2', now()->addDays(7), function () {
+            return DB::table('rs24')
+                ->select('rs1 as kdruangan', 'rs2 as ruang', 'groups', 'groups_nama')
+                ->where('status', '<>', '1')
+                ->where('rs4', '<>', 'BR')
+                ->orderBy('rs2', 'asc')
                 ->get();
         });
         return new JsonResponse($list);
