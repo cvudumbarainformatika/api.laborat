@@ -11,6 +11,7 @@ use App\Models\Siasik\Anggaran\Perubahan_pak_header;
 use App\Models\Siasik\Anggaran\Perubahan_pak_rinci;
 use App\Models\Siasik\Anggaran\Tampung_Pagu_pak;
 use App\Models\Sigarang\Pegawai;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -647,6 +648,347 @@ class PerubahanBelanjaController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal Kunci Data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function PenetapanAnggaran(Request $request)
+    {
+        $notrans = $request->notrans;
+
+        if (!$notrans) {
+            return response()->json([
+                'message' => 'Nomor Usulan Wajib di isi!'
+            ], 422);
+        }
+        $db = DB::connection('siasik');
+        // Ambil data dari header + rincian
+        $data = $db->table('usulanHonor_r_pak as r')
+            ->join(
+                'usulanHonor_h_pak as h',
+                'h.notrans',
+                '=',
+                'r.notrans'
+            )
+            ->where('r.notrans', $notrans)
+            ->select([
+                'r.idpp',
+                // 'r.nousulan as notrans',
+                'h.notrans',
+                'r.keterangan as usulan',
+                'r.nilai as pagu',
+                'r.koderek50 as koderek50',
+                'r.koderek108 as koderek108',
+                'h.kodeKegiatan as kodekegiatanblud',
+                'h.tglTransaksi as tgltrans',
+                'r.volume',
+                'r.harga',
+                'r.satuan',
+                'r.uraian50',
+                'r.uraian108',
+                'h.kodebagian as bidang',
+                'r.kode as koders',
+                'h.paguanggaran as paguhedear'
+            ])
+            ->get();
+
+        if ($data->isEmpty()) {
+            return response()->json([
+                'message' => 'Data tidak ditemukan'
+            ], 404);
+        }
+
+        $header = $data->first();
+
+        $tahun = Carbon::parse($header->tgltrans)->format('Y');
+
+        $paguData = [
+            'kodekegiatanblud' => $header->kodekegiatanblud,
+            'tahun'            => $tahun,
+            'pagu'             => $header->paguhedear
+        ];
+        $insert = [];
+
+        foreach ($data as $row) {
+            $insert[] = [
+                'notrans'            => $row->notrans,
+                'idpp'               => $row->idpp,
+                'usulan'             => $row->usulan,
+                'pagu'               => $row->pagu,
+                'koderek108'         => $row->koderek108,
+                'koderek50'          => $row->koderek50,
+                'kodekegiatanblud'   => $row->kodekegiatanblud,
+                // ambil tahun saja
+                'tgl'                => Carbon::parse($row->tgltrans)->format('Y'),
+                'volume'             => $row->volume,
+                'harga'              => $row->harga,
+                'satuan'             => $row->satuan,
+                'uraian50'           => $row->uraian50,
+                'uraian108'          => $row->uraian108,
+                'bidang'             => $row->bidang,
+                'koders'             => $row->koders,
+                'flag'               => '1'
+            ];
+        }
+
+        // Optional: hapus dulu jika notrans sudah ada
+        $db->transaction(function () use ($db, $notrans, $insert, $paguData) {
+            // =========================
+            // DETAIL TAMPUNG
+            // =========================
+            foreach (['t_tampung'] as $table) {
+
+                $db->table($table)
+                    ->where('notrans', $notrans)
+                    ->delete();
+
+                if (!empty($insert)) {
+                    $db->table($table)->insert($insert);
+                }
+            }
+
+            // =========================
+            // PAGU HEADER (UPSERT)
+            // =========================
+            foreach (['t_tampung_pagu'] as $table) {
+
+                $db->table($table)->updateOrInsert(
+                    [
+                        'kodekegiatanblud' => trim($paguData['kodekegiatanblud']),
+                    ],
+                    [
+                        'tahun' => $paguData['tahun'], // tetap boleh disimpan
+                        'pagu'  => $paguData['pagu']
+                    ]
+                );
+            }
+        });
+        return response()->json([
+            'message' => 'Berhasil Penetapan Anggaran',
+            'total'   => count($insert)
+        ]);
+    }
+    public function PenetapanPAK(Request $request)
+    {
+        $kodeKegiatan = $request->kodekegiatanblud;
+
+        if (empty($kodeKegiatan)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode kegiatan BLUD tidak boleh kosong.'
+            ], 422);
+        }
+
+        // Semua proses menggunakan database SIASIK
+        $db = DB::connection('siasik');
+
+        $db->beginTransaction();
+
+        try {
+
+            /*
+            |--------------------------------------------------------------------------
+            | 1. AMBIL DATA T_TAMPUNG LAMA
+            |--------------------------------------------------------------------------
+            */
+
+            $dataLama = $db->table('t_tampung')
+                ->where('kodekegiatanblud', $kodeKegiatan)
+                ->get();
+
+            if ($dataLama->isEmpty()) {
+                throw new \Exception(
+                    'Data Anggaran untuk kode kegiatan ' . $kodeKegiatan . ' tidak ditemukan.'
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 2. BACKUP DATA LAMA KE T_TAMPUNG_PINDAHAN
+            |--------------------------------------------------------------------------
+            */
+
+            $dataPindahan = [];
+
+            foreach ($dataLama as $item) {
+
+                $data = (array) $item;
+
+                // ID t_tampung jangan ikut,
+                // karena t_tampung_pindahan mempunyai ID sendiri
+                unset($data['id']);
+
+                $dataPindahan[] = $data;
+            }
+
+            if (!empty($dataPindahan)) {
+                $db->table('t_tampung_pindahan')
+                    ->insert($dataPindahan);
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 3. AMBIL DATA USULAN HONOR
+            |    HEADER : usulanHonor_h_pak
+            |    RINCIAN: usulanHonor_r_pak
+            |--------------------------------------------------------------------------
+            */
+
+            $dataHonor = $db->table('usulanHonor_r_pak as r')
+                ->join(
+                    'usulanHonor_h_pak as h',
+                    'h.notrans',
+                    '=',
+                    'r.notrans'
+                )
+                ->where('h.kodeKegiatan', $kodeKegiatan)
+                ->select([
+                    'r.idpp',
+
+                    // Header
+                    'h.notrans',
+                    'h.kodeKegiatan as kodekegiatanblud',
+                    'h.tglTransaksi as tgltrans',
+                    'h.kodebagian as bidang',
+                    'h.paguanggaran as paguhedear',
+
+                    // Rincian
+                    'r.keterangan as usulan',
+                    'r.nilai as pagu',
+                    'r.koderek50',
+                    'r.koderek108',
+                    'r.volume',
+                    'r.harga',
+                    'r.satuan',
+                    'r.uraian50',
+                    'r.uraian108',
+                    'r.kode as koders',
+                ])
+                ->get();
+
+            if ($dataHonor->isEmpty()) {
+                throw new \Exception(
+                    'Data Pengusulan PAK untuk kode kegiatan ' .
+                    $kodeKegiatan .
+                    ' tidak ditemukan.'
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 4. HAPUS T_TAMPUNG LAMA
+            |--------------------------------------------------------------------------
+            |
+            | Backup SUDAH dilakukan di langkah sebelumnya.
+            | Jadi sekarang aman untuk menghapus data lama.
+            |
+            */
+
+            $jumlahDihapus = $db->table('t_tampung')
+                ->where('kodekegiatanblud', $kodeKegiatan)
+                ->delete();
+
+            if ($jumlahDihapus === 0) {
+                throw new \Exception(
+                    'Data t_tampung gagal dihapus.'
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 5. SIAPKAN DATA BARU DARI USULAN HONOR
+            |--------------------------------------------------------------------------
+            */
+
+            $dataBaru = [];
+
+            foreach ($dataHonor as $honor) {
+
+                $dataBaru[] = [
+                    'notrans'          => $honor->notrans,
+                    'idpp'             => $honor->idpp,
+                    'usulan'            => $honor->usulan,
+                    'pagu'             => $honor->pagu,
+
+                    'koderek108'       => $honor->koderek108,
+                    'koderek50'        => $honor->koderek50,
+
+                    'kodekegiatanblud' => $honor->kodekegiatanblud,
+
+                    // tgl di t_tampung hanya menyimpan tahun
+                    'tgl'              => !empty($honor->tgltrans)
+                        ? Carbon::parse($honor->tgltrans)->format('Y')
+                        : null,
+
+                    'volume'           => $honor->volume,
+                    'harga'            => $honor->harga,
+                    'satuan'           => $honor->satuan,
+
+                    'uraian50'         => $honor->uraian50,
+                    'uraian108'        => $honor->uraian108,
+
+                    'bidang'           => $honor->bidang,
+                    'koders'           => $honor->koders,
+
+                    'flag'             => '1',
+
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ];
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 6. INSERT DATA BARU KE T_TAMPUNG
+            |--------------------------------------------------------------------------
+            */
+
+            if (!empty($dataBaru)) {
+
+                $db->table('t_tampung')
+                    ->insert($dataBaru);
+            }
+  
+
+            /*
+            |--------------------------------------------------------------------------
+            | 7. COMMIT
+            |--------------------------------------------------------------------------
+            */
+
+            $db->commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Berhasil ditetapkan Perubahan PAK.',
+                'kodekegiatanblud' => $kodeKegiatan,
+                'jumlah_data_lama' => $dataLama->count(),
+                'jumlah_data_baru' => count($dataBaru),
+            ]);
+
+
+        } catch (\Throwable $e) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | ROLLBACK
+            |--------------------------------------------------------------------------
+            |
+            | Jika backup / delete / insert gagal,
+            | seluruh proses dibatalkan.
+            |
+            */
+
+            $db->rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
