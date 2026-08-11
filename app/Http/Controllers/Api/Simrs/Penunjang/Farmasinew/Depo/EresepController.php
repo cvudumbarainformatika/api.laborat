@@ -1887,7 +1887,7 @@ class EresepController extends Controller
          */
         if (in_array($kodedepo, $depoLimit) && (int)$groupsistembayarlain === 1) {
             // Hitung jumlah racikan dan non-racikan
-            $racikan = Permintaanresepracikan::where('noresep', $request->noresep)->groupBy('namaracikan')->count();
+            $racikan = Permintaanresepracikan::where('noresep', $request->noresep)->groupBy('namaracikan')->get()->count();
             $nonracikan = Permintaanresep::select('resep_permintaan_keluar.kdobat')
                 ->leftJoin('new_masterobat', 'new_masterobat.kd_obat', '=', 'resep_permintaan_keluar.kdobat')
                 ->where('resep_permintaan_keluar.noresep', $request->noresep)
