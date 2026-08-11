@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Rekom\Rekomdpjp;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -36,5 +37,8 @@ class KunjunganPoli extends Model
         return $this->hasOne(StatusPasienPoli::class, 'rs1', 'rs1');
     }
 
-
+    public function petugas()
+    {
+        return $this->hasOne(Petugas::class, 'kdpegsimrs', 'rs9');
+    }
 }
