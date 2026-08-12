@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Simrs\Igd\TtddokumenIgdController;
 use App\Http\Controllers\Api\Simrs\Kasir\BillingbynoregController;
 use App\Http\Controllers\Api\Simrs\Kasir\CariKarcisController;
 use App\Http\Controllers\Api\Simrs\Kasir\CariKwitansinonTunai;
@@ -57,4 +58,6 @@ Route::group([
 
 
     Route::get('/pasien-luar/getbillpasienluar', [PasienLuarController::class, 'getbill']);
+
+     Route::post('/rajal/simpanttddokumen', [TtddokumenIgdController::class, 'store']);
 });

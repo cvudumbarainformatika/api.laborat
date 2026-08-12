@@ -438,7 +438,8 @@ class IgdController extends Controller
                 'kamarjenazah' => function ($kamarjenazah) {
                     $kamarjenazah->with('pelayananjenazah')->where('rs14', 'POL014');
                 },
-                'manymemo'
+                'manymemo',
+                'ttdDokumenIgd'
             ])
             ->first();
 

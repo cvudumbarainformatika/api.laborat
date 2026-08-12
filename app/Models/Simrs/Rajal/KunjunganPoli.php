@@ -88,6 +88,7 @@ use App\Models\Simrs\Rajal\Igd\PemberianObatIgd;
 use App\Models\Simrs\Rajal\Igd\RencanaTerapiDokter;
 use App\Models\Simrs\Rajal\Igd\Tinjauan_ulang;
 use App\Models\Simrs\Rajal\Igd\TriageA;
+use App\Models\Simrs\Rajal\Igd\TtdDokumenIgd;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanUmum;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\Penilaian;
@@ -671,5 +672,9 @@ class KunjunganPoli extends Model
 
     public function prmrjhis(){
         return $this->hasMany(Prmrjhis::class, 'noreg', 'rs1');
+    }
+
+    public function ttdDokumenIgd(){
+        return $this->hasMany(TtdDokumenIgd::class, 'noreg', 'rs1');
     }
 }
