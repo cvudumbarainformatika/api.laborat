@@ -28,7 +28,7 @@ class RuanganController extends Controller
                     'groups_nama'
                 )
                 ->where('status', '<>', '1')
-                ->where('rs4', '<>', 'BR')
+                // ->where('rs4', '<>', 'BR')
                 ->groupBy(DB::raw('COALESCE(NULLIF(groups, ""), rs1)'), DB::raw('COALESCE(NULLIF(groups_nama, ""), rs2)'), 'groups', 'groups_nama')
                 ->orderBy('ruang', 'asc')
                 ->get();
