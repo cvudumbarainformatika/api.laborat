@@ -308,19 +308,37 @@ class TemplateController extends Controller
             // ambil obat yang diretur
             $obatRetur = Returpenjualan_r::whereIn('noresep', $returHead)->get();
             // cek retur, berapa jumlah nya, jika semua maka dianggap tidak diberikan
-            $arrayAda = $obatAdaRetur->toArray();
-            $keys = array_column($arrayAda, 'kdobat');
+            $totalKeluarPerObat = [];
+            $totalReturPerObat = [];
             foreach ($obatRetur as $ret) {
-                $index = array_search($ret['kdobat'], $keys);
-                if (!($index !== false)) {
-                    $keluar = $ret['jumlah_keluar'];
-                    $retur = $ret['jumlah_retur'];
-                    // yang ada retur, jika di retur semua obatnya berarti dianggap tidak ada
-                    if ($keluar == $retur) {
-                        array_splice($arrayAda, $index, 1);
-                    }
+                $kdobat = $ret['kdobat'];
+                if (!isset($totalKeluarPerObat[$kdobat])) {
+                    $totalKeluarPerObat[$kdobat] = 0;
+                    $totalReturPerObat[$kdobat] = 0;
+                }
+                $totalKeluarPerObat[$kdobat] += (int)$ret['jumlah_keluar'];
+                $totalReturPerObat[$kdobat] += (int)$ret['jumlah_retur'];
+            }
+
+            $arrayAda = $obatAdaRetur->toArray();
+            $arrayAdaBaru = [];
+            foreach ($arrayAda as $item) {
+                $kdobat = $item['kdobat'];
+                $keluar = $totalKeluarPerObat[$kdobat] ?? 0;
+                $retur = $totalReturPerObat[$kdobat] ?? 0;
+                
+                if ((int)$keluar > (int)$retur) {
+                    // Ada sisa obat yang belum diretur, tetap di array
+                    $arrayAdaBaru[] = $item;
+                } else if ((int)$keluar === (int)$retur && (int)$keluar > 0) {
+                    // Semua sudah diretur, buang dari array
+                } else {
+                    // Jika kondisi lain (misal keluar=0, retur=0), tetap pertahankan
+                    $arrayAdaBaru[] = $item;
                 }
             }
+            $arrayAda = $arrayAdaBaru;
+
             // bandingkan
             $sudahAda = [];
             $cN = [];
@@ -348,7 +366,7 @@ class TemplateController extends Controller
                     $findNRa = $indNRa !== false;
 
                     if ($fIndR && EresepController::pushToArray($fIndR, $sudahAda, 'kdobat', $obt['kdobat'])) {
-                        $obt['ada'] = $obatAdaRetur[$indR];
+                        $obt['ada'] = $arrayAda[$indR];
                         $sudahAda[] = $obt;
                         if (sizeof($sudahAda) == 1) $msg = $msg . $obt['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['ada']['jumlah'];
                         if (sizeof($sudahAda) > 1) $msg = $msg . ', ' . $obt['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['ada']['jumlah'];

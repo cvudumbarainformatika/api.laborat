@@ -39,6 +39,7 @@ class PemfakturanController extends Controller
                 ->where('kdobat', $request->kdobat)
                 ->first();
             if (!$simpanrinci) {
+                DB::connection('farmasi')->rollBack();
                 return new JsonResponse(['message' => 'Gagal Update,Data Tidak Ditemukan'], 410);
             }
             $simpanrinci->update([
@@ -107,12 +108,9 @@ class PemfakturanController extends Controller
                 ]
             );
 
-            $masukstok = Stokrel::where('nopenerimaan', $request->nopenerimaan)
+            Stokrel::where('nopenerimaan', $request->nopenerimaan)
                 ->update(['flag' => '']);
 
-            if (!$masukstok) {
-                return new JsonResponse(['message' => 'Stok Tidak Terupdate,mohon segera cek Data Stok Anda...!!!'], 410);
-            }
             $head = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first();
             if ($head) {
                 $head->batasbayar = $request->batasbayar;
@@ -130,6 +128,9 @@ class PemfakturanController extends Controller
                 $harga[] = $tHarga;
             }
             if (count($harga) > 0) {
+                // Hapus harga lama untuk nopenerimaan ini jika ada, agar tidak duplikat saat pemfakturan ulang
+                DaftarHarga::where('nopenerimaan', $request->nopenerimaan)->delete();
+
                 foreach (array_chunk($harga, 1000) as $t) {
                     DaftarHarga::insert($t);
                 }

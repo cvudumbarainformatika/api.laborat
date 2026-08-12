@@ -627,6 +627,17 @@ class PoliController extends Controller
                     $x->with([
                         'poliAsal:rs1,rs2',
                         'poliTujuan:rs1,rs2',
+                        'peminta_konsul'=> function ($peminta) {
+                            $peminta->select([
+                                    'rs1',
+                                    'rs9',
+                                    'rs18',
+                                ]);
+                            $peminta->with([
+                                    'petugas:kdpegsimrs,kdgroupnakes'
+                                ]);
+                            },
+                        'pemberi_konsul:rs1,rs9,rs18'
                     ])
                         ->orderBy('id', 'DESC');
                 },

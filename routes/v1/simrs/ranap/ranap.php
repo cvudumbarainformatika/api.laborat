@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Logistik\Sigarang\PegawaiController;
 use App\Http\Controllers\Api\Logistik\Sigarang\RuangController;
 use App\Http\Controllers\Api\Simrs\Master\Icd9Controller;
+use App\Http\Controllers\Api\Simrs\Ranap\DashboardRanapController;
 use App\Http\Controllers\Api\Simrs\Ranap\HistoryController;
 use App\Http\Controllers\Api\Simrs\Ranap\RanapController;
 use App\Http\Controllers\Api\Simrs\Ranap\RuanganController;
@@ -14,6 +15,7 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/ranap/ruangan'
 ], function () {
+    Route::get('/dashboard', [DashboardRanapController::class, 'index']);
     Route::get('/listruanganranap', [RuanganController::class, 'listruanganranap']);
     Route::get('/mastericd9', [Icd9Controller::class, 'mastericd9']);
     Route::get('/allNakes', [PegawaiController::class, 'allNakes']);

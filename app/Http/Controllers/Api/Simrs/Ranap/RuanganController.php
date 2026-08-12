@@ -17,18 +17,25 @@ class RuanganController extends Controller
 {
     public function listruanganranap()
     {
-        // $list = Mruangranap::select('groups', 'groups_nama')
-        //     ->groupby('groups')
-        //     ->where('hiddens', '')
-        //     ->get();
-        $list = Cache::remember('ruanganranap', now()->addDays(7), function () {
-            return Mruangranap::select('groups', 'groups_nama')
-                ->groupby('groups')
-                ->where('hiddens', '')
+        Cache::forget('ruanganranap_all_v2');
+
+        $list = Cache::remember('ruanganranap_all_v2', now()->addDays(7), function () {
+            return DB::table('rs24')
+                ->select(
+                    DB::raw('COALESCE(NULLIF(groups, ""), rs1) as kdruangan'),
+                    DB::raw('COALESCE(NULLIF(groups_nama, ""), rs2) as ruang'),
+                    'groups',
+                    'groups_nama'
+                )
+                ->where('status', '<>', '1')
+                // ->where('rs4', '<>', 'BR')
+                ->groupBy(DB::raw('COALESCE(NULLIF(groups, ""), rs1)'), DB::raw('COALESCE(NULLIF(groups_nama, ""), rs2)'), 'groups', 'groups_nama')
+                ->orderBy('ruang', 'asc')
                 ->get();
         });
         return new JsonResponse($list);
     }
+
     public function ruanganranap()
     {
         $ruangan = DB::table('v_15_23')->select('v_15_23.*', 'rs24.rs2 as titipan_ruang')

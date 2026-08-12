@@ -44,6 +44,7 @@ class RanapController extends Controller
         $penilaians = [];
         $resusitasi = [];
         $mppSkrinings = [];
+        $kesadarans = [];
         if (!empty($noregs)) {
             $penilaians = DB::table('penilaian')
                 ->select(
@@ -74,12 +75,20 @@ class RanapController extends Controller
                 ->orderBy('id', 'desc')
                 ->get()
                 ->groupBy('noreg');
+
+            $kesadarans = DB::table('rs253')
+                ->join('rs253_sambung', 'rs253_sambung.rs253_id', '=', 'rs253.id')
+                ->select('rs253.rs1 as noreg', 'rs253_sambung.tkKesadaran', 'rs253_sambung.tkKesadaranKet')
+                ->whereIn('rs253.rs1', $noregs)
+                ->orderBy('rs253.id', 'desc')
+                ->get()
+                ->groupBy('noreg');
         }
 
         $kdruangans = $data->pluck('kdruangan')->filter()->unique()->toArray();
         $namaSamaMap = self::getNamaSamaMap($kdruangans);
 
-        $data->getCollection()->transform(function ($item) use ($alergis, $penilaians, $resusitasi, $namaSamaMap, $mppSkrinings) {
+        $data->getCollection()->transform(function ($item) use ($alergis, $penilaians, $resusitasi, $namaSamaMap, $mppSkrinings, $kesadarans) {
             $item->pasien_mpp = false;
             if (isset($mppSkrinings[$item->noreg])) {
                 $mpp = $mppSkrinings[$item->noreg]->first();
@@ -170,6 +179,10 @@ class RanapController extends Controller
             }
 
             $item->nama_sama_mirip = isset($namaSamaMap[$item->noreg]) ? $namaSamaMap[$item->noreg] : [];
+
+            $kekerasanInfo = self::getBerisikoKekerasan($item, $mppSkrinings, $kesadarans);
+            $item->berisiko_kekerasan = $kekerasanInfo['status'];
+            $item->kriteria_kekerasan = $kekerasanInfo['kriteria'];
 
             return $item;
         });
@@ -455,6 +468,83 @@ class RanapController extends Controller
         return $namaSamaMap;
     }
 
+    public static function getBerisikoKekerasan($item, $mppSkrinings = [], $kesadarans = [])
+    {
+        $kriteria = [];
+
+        // 1. Pasien anak-anak <= 18 th (Bayi dan anak-anak)
+        // 3. Pasien usia lanjut >= 60 th
+        if (!empty($item->tgllahir)) {
+            try {
+                $umurTahun = Carbon::parse($item->tgllahir)->age;
+                if ($umurTahun <= 18) {
+                    $kriteria[] = 'Anak <= 18 Tahun';
+                } elseif ($umurTahun >= 60) {
+                    $kriteria[] = 'Usia Lanjut >= 60 Tahun';
+                }
+            } catch (\Throwable $e) {
+                // Abaikan jika format tanggal lahir invalid
+            }
+        }
+
+        // 2. Jenis kelamin wanita / perempuan
+        if (!empty($item->kelamin)) {
+            $kel = strtoupper(trim($item->kelamin));
+            if (in_array($kel, ['P', 'PEREMPUAN', 'WANITA', 'W'])) {
+                $kriteria[] = 'Wanita / Perempuan';
+            }
+        }
+
+        // 4. Pasien dg gangguan mental / disabilitas
+        $isMentalOrDisabilitas = false;
+        if (!empty($item->hambatan)) {
+            $hambatan = strtolower($item->hambatan);
+            if (
+                strpos($hambatan, 'mental') !== false ||
+                strpos($hambatan, 'disabilitas') !== false ||
+                strpos($hambatan, 'cacat') !== false ||
+                strpos($hambatan, 'jiwa') !== false ||
+                strpos($hambatan, 'grahita') !== false ||
+                strpos($hambatan, 'intelektual') !== false
+            ) {
+                $isMentalOrDisabilitas = true;
+            }
+        }
+
+        if (!$isMentalOrDisabilitas && isset($mppSkrinings[$item->noreg])) {
+            $mpp = $mppSkrinings[$item->noreg]->first();
+            if ($mpp && $mpp->skrining) {
+                $skrining = is_array($mpp->skrining) ? $mpp->skrining : json_decode($mpp->skrining, true);
+                if (is_array($skrining)) {
+                    if (!empty($skrining['kognitif_rendah']) || !empty($skrining['riwayat_psikologis'])) {
+                        $isMentalOrDisabilitas = true;
+                    }
+                }
+            }
+        }
+
+        if ($isMentalOrDisabilitas) {
+            $kriteria[] = 'Gangguan Mental / Disabilitas';
+        }
+
+        // 5. Pasien koma
+        if (isset($kesadarans[$item->noreg])) {
+            $kes = $kesadarans[$item->noreg]->first();
+            if ($kes) {
+                $tkKesadaran = strtolower($kes->tkKesadaran ?? '');
+                $tkKesadaranKet = strtolower($kes->tkKesadaranKet ?? '');
+                if (strpos($tkKesadaran, 'koma') !== false || strpos($tkKesadaranKet, 'koma') !== false) {
+                    $kriteria[] = 'Koma';
+                }
+            }
+        }
+
+        return [
+            'status' => !empty($kriteria),
+            'kriteria' => $kriteria,
+        ];
+    }
+
     public function kunjunganpasien()
     {
         // coba lagi
@@ -671,6 +761,8 @@ class RanapController extends Controller
         $noregs = $data->pluck('noreg')->filter()->unique()->toArray();
         $penilaians = [];
         $resusitasi = [];
+        $mppSkrinings = [];
+        $kesadarans = [];
         if (!empty($noregs)) {
             $penilaians = DB::table('penilaian')
                 ->select(
@@ -694,12 +786,27 @@ class RanapController extends Controller
                 ->orderBy('id', 'desc')
                 ->get()
                 ->groupBy('noreg');
+
+            $mppSkrinings = DB::table('mpp_skrinings')
+                ->select('id', 'noreg', 'skrining')
+                ->whereIn('noreg', $noregs)
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy('noreg');
+
+            $kesadarans = DB::table('rs253')
+                ->join('rs253_sambung', 'rs253_sambung.rs253_id', '=', 'rs253.id')
+                ->select('rs253.rs1 as noreg', 'rs253_sambung.tkKesadaran', 'rs253_sambung.tkKesadaranKet')
+                ->whereIn('rs253.rs1', $noregs)
+                ->orderBy('rs253.id', 'desc')
+                ->get()
+                ->groupBy('noreg');
         }
 
         $kdruangans = $data->pluck('kdruangan')->filter()->unique()->toArray();
         $namaSamaMap = self::getNamaSamaMap($kdruangans);
 
-        $data->getCollection()->transform(function ($item) use ($alergis, $penilaians, $resusitasi, $namaSamaMap) {
+        $data->getCollection()->transform(function ($item) use ($alergis, $penilaians, $resusitasi, $namaSamaMap, $mppSkrinings, $kesadarans) {
             $item->alergis = isset($alergis[$item->norm])
                 ? $alergis[$item->norm]->take(5)->map(function ($al) {
                     return [
@@ -748,6 +855,10 @@ class RanapController extends Controller
             }
 
             $item->nama_sama_mirip = isset($namaSamaMap[$item->noreg]) ? $namaSamaMap[$item->noreg] : [];
+
+            $kekerasanInfo = self::getBerisikoKekerasan($item, $mppSkrinings, $kesadarans);
+            $item->berisiko_kekerasan = $kekerasanInfo['status'];
+            $item->kriteria_kekerasan = $kekerasanInfo['kriteria'];
 
             return $item;
         });
