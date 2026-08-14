@@ -13,6 +13,7 @@ Route::group([
   Route::get('/getmasterprognosis', [DischargePlanningController::class, 'getmasterprognosis']);
   Route::get('/getmastercarakeluar', [PulangController::class, 'getmastercarakeluar']);
   Route::post('/simpandata', [PulangController::class, 'simpandata']);
+  Route::get('/list-update-pulang-bpjs', [PulangController::class, 'list_update_pulang_bpjs']);
 
 
   
