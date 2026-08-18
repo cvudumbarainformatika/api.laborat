@@ -17,4 +17,6 @@ Route::group([
     Route::post('/deleterinci', [PerubahanBelanjaController::class, 'deleterinci']);
     Route::post('/kunci', [PerubahanBelanjaController::class, 'kunci']);
 
+    Route::post('/penetapanpak', [PerubahanBelanjaController::class, 'PenetapanAnggaran']);
+
 });

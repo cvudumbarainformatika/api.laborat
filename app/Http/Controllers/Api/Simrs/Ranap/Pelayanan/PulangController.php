@@ -51,18 +51,28 @@ class PulangController extends Controller
     $kunjungan = count($sql_cek_kunjungan);
 
 
-    // jika pasien sduah dipulangkan
+    // Tanggal Pulang / Tanggal Keluar
+    $tglKeluarVal = date('Y-m-d H:i:s');
+    if (!empty($request->tglKeluar)) {
+      $tglKeluarVal = strlen($request->tglKeluar) === 10 ? $request->tglKeluar . ' ' . date('H:i:s') : $request->tglKeluar;
+    } elseif (!empty($request->tglPulang)) {
+      $tglKeluarVal = strlen($request->tglPulang) === 10 ? $request->tglPulang . ' ' . date('H:i:s') : $request->tglPulang;
+    }
+
+    // jika pasien sudah dipulangkan
     if ($kunjungan > 0) {
       $kunjunganRanapx = Kunjunganranap::where('rs1', $request->noreg)->first();
-      $updateKunjunganRanap = $kunjunganRanapx->update([
-        // 'rs22' => '3',
-        // 'rs4' => date('Y-m-d H:i:s'),
+      $updateData = [
         'rs23' => $request->caraKeluar ?? '',
         'rs24' => $request->prognosis ?? '',
         'rs26' => $request->diagnosaAkhir ?? '',
         'rs25' => $request->diagnosaPenyebabMeninggal ?? '',
         'rs27' => $request->tindakLanjut ?? ''
-      ]);
+      ];
+      if (!empty($request->tglKeluar) || !empty($request->tglPulang)) {
+        $updateData['rs4'] = $tglKeluarVal;
+      }
+      $updateKunjunganRanap = $kunjunganRanapx->update($updateData);
 
       Rs23Sambung::updateOrCreate(
         ['noreg' => $request->noreg],
@@ -82,31 +92,43 @@ class PulangController extends Controller
           'identitas_penanggungjawab' => $request->identitas_penanggungjawab
         ]
       );
-      $ttd = self::saveImage(
-          $request,
-          $request->ttdYgMenyatakan,
-          $paksa->id . '_ygMenyatakan'
-       );
-
-      $paksa->ttdYgMenyatakan = $ttd;
-      $paksa->save();
-
+      if ($request->ttdYgMenyatakan) {
+        $ttd = self::saveImage(
+            $request,
+            $request->ttdYgMenyatakan,
+            $paksa->id . '_ygMenyatakan'
+        );
+        $paksa->ttdYgMenyatakan = $ttd;
+        $paksa->save();
+      }
 
       if ($request->noLp !== null) {
         SuratPasien::updateOrCreate(
           ['noreg' => $request->noreg],
           [
-            // 'nosuratmeninggal' => $request->noSuratMeninggal,
             'nokll' => $request->noLp,
             'kddrygmenyatakan' => $request->kddrygmenyatakan
           ]
         );
       }
 
+      $bpjsUpdate = null;
+      if (!empty($request->noSep)) {
+        $bpjsUpdate = self::update_pulang_bpjs_ranap($request, $user, $request->noSuratMeninggal);
+      }
+
+      $surat = DB::table('rs23_nosurat')->select('*')->where('noreg', $request->noreg)->get();
+      $sambungan = DB::table('rs23_sambung')->select('*')->where('noreg', $request->noreg)->get();
+      $pulangpaksa = DB::table('rs23_paksa')->select('*')->where('noreg', $request->noreg)->get();
+
       return new JsonResponse([
         'success' => true,
-        'message' => 'success',
-        'result' => $sql_cek_kunjungan
+        'message' => 'success (update)',
+        'result' => DB::table('rs23')->select('*')->where('rs1', $request->noreg)->get(),
+        'surat' => $surat,
+        'sambungan' => $sambungan,
+        'pulangpaksa' => $pulangpaksa,
+        'bpjs' => $bpjsUpdate
       ]);
     }
 
@@ -162,7 +184,7 @@ class PulangController extends Controller
       $kunjunganRanap = Kunjunganranap::where('rs1', $request->noreg)->first();
       $updateKunjunganRanap = $kunjunganRanap->update([
         'rs22' => '3',
-        'rs4' => date('Y-m-d H:i:s'),
+        'rs4' => $tglKeluarVal,
         'rs23' => $request->caraKeluar ?? '',
         'rs24' => $request->prognosis ?? '',
         'rs26' => $request->diagnosaAkhir ?? '',
@@ -236,8 +258,9 @@ class PulangController extends Controller
     $surat = DB::table('rs23_nosurat')->select('*')->where('noreg', $request->noreg)->get();
     $sambungan = DB::table('rs23_sambung')->select('*')->where('noreg', $request->noreg)->get();
     $pulangpaksa = DB::table('rs23_paksa')->select('*')->where('noreg', $request->noreg)->get();
-    if ($request->noSep !== null || $request->noSep !== '') {
-      self::update_pulang_bpjs_ranap($request, $user, $noSuratMeninggal);
+    $bpjsResponFirst = null;
+    if (!empty($request->noSep)) {
+      $bpjsResponFirst = self::update_pulang_bpjs_ranap($request, $user, $noSuratMeninggal);
     }
 
 
@@ -248,6 +271,7 @@ class PulangController extends Controller
       'surat' => $surat,
       'sambungan' => $sambungan,
       'pulangpaksa' => $pulangpaksa,
+      'bpjs' => $bpjsResponFirst
     ]);
   }
 
@@ -322,6 +346,13 @@ class PulangController extends Controller
         break;
     }
 
+    $tglPulangBpjs = date('Y-m-d');
+    if (!empty($request->tglPulang)) {
+      $tglPulangBpjs = date('Y-m-d', strtotime($request->tglPulang));
+    } elseif (!empty($request->tglKeluar)) {
+      $tglPulangBpjs = date('Y-m-d', strtotime($request->tglKeluar));
+    }
+
     // $noSuratMeninggal = $request->noSuratMeninggal;
 
     $data = [
@@ -330,8 +361,8 @@ class PulangController extends Controller
           "noSep" => $request->noSep,
           "statusPulang" => $status,
           "noSuratMeninggal" => $status == 4 ? $noSuratMeninggal ?? "" : "",
-          "tglMeninggal" => $status == 4 ? date('Y-m-d') : "",
-          "tglPulang" => date('Y-m-d'),
+          "tglMeninggal" => $status == 4 ? $tglPulangBpjs : "",
+          "tglPulang" => $tglPulangBpjs,
           "noLPManual" => $request->noLp ?? "",
           "user" => $user->nama ?? "-"
         ],
@@ -368,6 +399,28 @@ class PulangController extends Controller
       );
     }
     return $updateSep;
+  }
+
+  public function list_update_pulang_bpjs(Request $request)
+  {
+    $bulanRaw = $request->input('bulan', date('m'));
+    $tahun = $request->input('tahun', date('Y'));
+    $filter = trim($request->input('filter', ''));
+
+    $bulan = sprintf('%02d', (int)$bulanRaw);
+
+    $param = "Sep/updtglplg/list/bulan/{$bulan}/tahun/{$tahun}/";
+    if ($filter !== '') {
+      $param .= "{$filter}";
+    }
+
+    $resBpjs = BridgingbpjsHelper::get_url('vclaim', $param);
+
+    if ($resBpjs instanceof \Illuminate\Http\JsonResponse) {
+      return $resBpjs;
+    }
+
+    return response()->json($resBpjs);
   }
 
 
