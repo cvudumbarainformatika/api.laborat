@@ -64,7 +64,7 @@ class TtddokumenIgdController extends Controller
             $data = TtdDokumenIgd::updateOrCreate(
                 [
                     'noreg' => $request->noreg,
-                    'kodedokumen' => 'DK-RE',
+                    'kodedokumen' => $request->kodedokumen,
                 ],
                 [
                     'norm' => $request->norm,

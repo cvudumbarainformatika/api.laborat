@@ -16,7 +16,9 @@ class ImplementasiEdukasiController extends Controller
 {
     public function list()
     {
-        $data = ImplementasiEdukasi::select(
+        $kdruang = request('kdruang');
+        if($kdruang == 'POL014'){
+            $data = ImplementasiEdukasi::select(
             'id',
             'noreg',
             'norm',
@@ -36,9 +38,34 @@ class ImplementasiEdukasiController extends Controller
         )
             ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes'])
             ->where('noreg', request('noreg'))
-            ->where('kdruang', '!=', 'POL014')
+            ->where('kdruang', 'POL014')
             ->orderBy('tgl', 'desc')
             ->get();
+        }else{
+            $data = ImplementasiEdukasi::select(
+                'id',
+                'noreg',
+                'norm',
+                'tgl',
+                'metode',
+                'materi',
+                'materiLain',
+                'media',
+                'evaluasi',
+                'penerima',
+                'namaPenerima',
+                'ttdPenerima',
+                'nakes',
+                'estimasi',
+                'user',
+                'kdruang'
+            )
+                ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes'])
+                ->where('noreg', request('noreg'))
+                ->where('kdruang', '!=', 'POL014')
+                ->orderBy('tgl', 'desc')
+                ->get();
+        }
 
         return new JsonResponse($data);
     }
