@@ -33,11 +33,20 @@ class ListDataArsipController extends Controller
             'master_kode.kode as kodeklasifikasi',
             'master_kode.nama as namakelasifikasi',
             // 'master_lokasi.nama_lokasi',
-            'master_media.nama_media'
+            'master_media.nama_media',
+            'data_arsip.id as id'
         )
             ->join('master_kode', 'data_arsip.kode', 'master_kode.kode')
-            ->leftjoin('kelompokMap_R', 'kelompokMap_R.noarsip', 'data_arsip.noarsip')
-            ->leftjoin('kelompokMap_H', 'kelompokMap_H.id', 'kelompokMap_R.id_heder')
+            ->leftJoinSub(
+                DB::table('kelompokMap_R')
+                    ->select('noarsip', DB::raw('MAX(id_heder) as id_heder'))
+                    ->groupBy('noarsip'),
+                'map_r',
+                'map_r.noarsip',
+                '=',
+                'data_arsip.noarsip'
+            )
+            ->leftjoin('kelompokMap_H', 'kelompokMap_H.id', 'map_r.id_heder')
             ->leftjoin('master_fillingcabinet', 'kelompokMap_H.kodefelingkabinet', 'master_fillingcabinet.id')
             // ->join('master_lokasi', 'data_arsip.lokasi', 'master_lokasi.id')
             ->join('master_media', 'data_arsip.media', 'master_media.id')
@@ -83,22 +92,36 @@ class ListDataArsipController extends Controller
         if ($request->filled('noarsip')) {
             try {
                 DB::beginTransaction();
-                $update = Dataarsip::where('noarsip', $request->noarsip)->first();
-                $update->update([
+
+                $archive = null;
+                if ($request->filled('id')) {
+                    $archive = Dataarsip::find($request->id);
+                } else {
+                    $archive = Dataarsip::where('noarsip', $request->noarsip)
+                        ->orderByDesc('id')
+                        ->first();
+                }
+
+                if (!$archive) {
+                    DB::rollBack();
+                    return new JsonResponse(['message' => 'Data arsip tidak ditemukan'], 404);
+                }
+
+                $archive->update([
                     'tanggal' => $request->tgl,
                     'uraian' => $request->uraian,
                     'ket' => $request->keaslian,
                     'kode' => $request->kodekelasifikasi,
                     'jumlah' => $request->jumlah,
                     'nobox' => $request->nobox,
-                    // 'lokasi' => $request->lokasi,
                     'media' => $request->media,
                     'keterangan' => $request->keterangan,
                 ]);
+
                 $kirim = self::getlistdataarsipbynoarsip($request->noarsip);
                 DB::commit();
                 return new JsonResponse(['message' => 'success', 'result' => $kirim, 'update' => 'true'], 200);
-            }catch(\Exception $th) {
+            } catch (\Exception $th) {
                 DB::rollback();
                 return new JsonResponse(['message' => 'invalid dokumen', 'error' => $th->getMessage()], 500);
             }
@@ -177,10 +200,8 @@ class ListDataArsipController extends Controller
 
     public function simpanarsipdokumen(Request $request)
     {
-
         try {
             DB::beginTransaction();
-
 
             if (!$request->hasFile('dokumen') || !$request->file('dokumen')->isValid()) {
                 return response()->json(['message' => 'File tidak valid atau tidak ada'], 422);
@@ -189,51 +210,60 @@ class ListDataArsipController extends Controller
             $file = $request->file('dokumen');
             $noarsip = $request->noarsip;
             $originalname = $file->getClientOriginalName();
-            $extension = $file->getClientOriginalExtension();
+            $extension = strtolower($file->getClientOriginalExtension());
 
-            $panggilan = explode('-', $noarsip);
-            $panggilan = end($panggilan); // Contoh: ambil "IT" dari 0000007-2025-IT
-            $folder = 'dokumen_arsip/' . $panggilan;
-            $penamaan = time() . '-' . $noarsip . '.' . $extension;
-
-             // Buat folder di disk jika belum ada
-            if (!Storage::disk('remote')->exists('public/'.$folder)) {
-                Storage::disk('remote')->makeDirectory('public/'.$folder);
+            if (!$noarsip) {
+                return response()->json(['message' => 'Nomor arsip wajib diisi'], 422);
             }
 
-            // if (!Storage::exists($folder)) {
-            //     Storage::makeDirectory($folder);
-            // }
+            $archive = null;
+            if ($request->filled('id')) {
+                $archive = Dataarsip::find($request->id);
+            } else {
+                $archive = Dataarsip::where('noarsip', $noarsip)
+                    ->orderByDesc('id')
+                    ->first();
+            }
+
+            if (!$archive) {
+                DB::rollBack();
+                return response()->json(['message' => 'Data arsip tidak ditemukan'], 404);
+            }
+
+            $segments = explode('-', trim($noarsip));
+            $tahun = $segments[count($segments) - 2] ?? date('Y');
+            $panggilan = $segments[count($segments) - 1] ?? 'arsip';
+            $folder = 'dokumen_arsip/' . $tahun . '/' . $panggilan;
+            $penamaan = time() . '-' . str_replace(['/', '\\', ' '], '-', $noarsip) . '.' . $extension;
+
+            if (!Storage::disk('remote')->exists('public/' . $folder)) {
+                Storage::disk('remote')->makeDirectory('public/' . $folder, 0775, true);
+            }
 
             $storagePath = $file->storeAs('public/' . $folder, $penamaan, 'remote');
-            // $storagePath = $file->storeAs('public/' . $folder, $penamaan);
-
             if (!$storagePath) {
                 return response()->json([
                     'message' => 'Gagal menyimpan file ke storage',
                 ], 500);
             }
 
-            $fullPath = "$folder/$penamaan";
+            $fullPath = $folder . '/' . $penamaan;
 
-             $update = Dataarsip::where('noarsip', $noarsip)->first();
-                if ($update) {
-                    $update->update([
-                        'file'  => $originalname,
-                        'path' => $storagePath,
-                        'url'  => $fullPath
-                    ]);
-                }
+            $archive->update([
+                'file' => $originalname,
+                'path' => $storagePath,
+                'url' => $fullPath,
+            ]);
 
             $kirim = self::getlistdataarsipbynoarsip($noarsip);
-        DB::commit();
+            DB::commit();
 
             return new JsonResponse(['message' => 'success', 'result' => $kirim], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return new JsonResponse([
                 'message' => 'Upload gagal',
-                'error'   => $e->getMessage()
+                'error' => $e->getMessage()
             ], 500);
         }
     }
