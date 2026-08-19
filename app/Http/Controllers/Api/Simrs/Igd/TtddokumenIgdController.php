@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Rajal\Igd\TtdDokumenIgd;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 
@@ -70,9 +71,15 @@ class TtddokumenIgdController extends Controller
                     'norm' => $request->norm,
                     'nama' => $request->saksiPasien,
                     'statusdenganpasien' => $request->hubunganPasien,
-                    'ttd' => $request->resumekeluargapasien,
                 ]
             );
+
+            // Simpan file gambar ke remote storage; DB hanya menyimpan path-nya.
+            $ttd = self::saveImage($request, $request->resumekeluargapasien, $data->id);
+            if ($ttd !== null) {
+                $data->ttd = $ttd;
+                $data->save();
+            }
 
             DB::commit();
 
@@ -90,5 +97,33 @@ class TtddokumenIgdController extends Controller
                 'error' => $th->getMessage(),
             ], 500);
         }
+    }
+
+    private static function saveImage(Request $request, ?string $image, $id): ?string
+    {
+        if (!$image || !$id || strpos($image, ';base64,') === false) {
+            return $image ?: null;
+        }
+
+        $parts = explode(';base64,', $image, 2);
+        $type = explode('image/', $parts[0])[1] ?? 'png';
+        $decoded = base64_decode($parts[1], true);
+        if($request->kodedokumen == 'DK-RE'){
+            $polder = 'Resume';
+        }else if($request->kodedokumen == 'DK-PAM'){
+             $polder = 'Awal_Medis';
+        }else if($request->kodedokumen == 'DK-PAK'){
+             $polder = 'Awal_Keperawatan';
+        }
+        if ($decoded === false) {
+            return null;
+        }
+
+        $noreg = str_replace('/', '-', $request->noreg);
+        $filename = $id . '-' .$request->noreg. '.' . $type;
+        $path = 'dokumen_igd/' . $polder . '/' . $filename;
+        Storage::disk('remote')->put('public/' . $path, $decoded);
+
+        return $path;
     }
 }
