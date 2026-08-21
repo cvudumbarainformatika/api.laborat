@@ -30,4 +30,15 @@ class NakesController extends Controller
         });
         return new JsonResponse($dokter);
     }
+
+    public function perawat()
+    {
+        $perawat = Cache::remember('perawat_all', now()->addDays(7), function () {
+            return Pegawai::select('nama', 'kdpegsimrs', 'kdgroupnakes')
+                ->whereIn('kdgroupnakes', ['2', '3'])
+                ->where('aktif', 'AKTIF')
+                ->get();
+        });
+        return new JsonResponse($perawat);
+    }
 }

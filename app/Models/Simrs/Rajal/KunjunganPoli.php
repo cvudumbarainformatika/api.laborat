@@ -34,6 +34,7 @@ use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakebidanan;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\DokumenUpload;
 use App\Models\Simrs\Pelayanan\Kandungan;
+use App\Models\Simrs\Pelayanan\LaporanEswl;
 use App\Models\Simrs\Pelayanan\LaporanTindakan;
 use App\Models\Simrs\Pelayanan\NeonatusKeperawatan;
 use App\Models\Simrs\Pelayanan\NeonatusMedis;
@@ -395,6 +396,10 @@ class KunjunganPoli extends Model
     public function laporantindakan()
     {
         return $this->hasMany(LaporanTindakan::class, 'noreg', 'rs1');
+    }
+    public function laporaneswl()
+    {
+        return $this->hasMany(LaporanEswl::class, 'noreg', 'rs1');
     }
     public function psikiatri()
     {
