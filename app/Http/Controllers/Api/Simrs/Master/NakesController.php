@@ -23,8 +23,8 @@ class NakesController extends Controller
     //    $dokter = Pegawai::select('nama','kdpegsimrs', 'kdgroupnakes','kddpjp')
     //         ->where('kdgroupnakes', '1')->where('aktif', 'AKTIF')
     //         ->get();
-        $dokter = Cache::remember('dokter', now()->addDays(7), function () {
-            return Pegawai::select('nama','kdpegsimrs', 'kdgroupnakes','kddpjp')
+        $dokter = Cache::remember('dokter_eswl_v3', now()->addDays(7), function () {
+            return Pegawai::select('nama','kdpegsimrs', 'kdgroupnakes','kddpjp', 'nip', 'nik')
             ->where('kdgroupnakes', '1')->where('aktif', 'AKTIF')
             ->get();
         });
@@ -33,8 +33,8 @@ class NakesController extends Controller
 
     public function perawat()
     {
-        $perawat = Cache::remember('perawat_all', now()->addDays(7), function () {
-            return Pegawai::select('nama', 'kdpegsimrs', 'kdgroupnakes')
+        $perawat = Cache::remember('perawat_all_eswl_v3', now()->addDays(7), function () {
+            return Pegawai::select('nama', 'kdpegsimrs', 'kdgroupnakes', 'nip', 'nik')
                 ->whereIn('kdgroupnakes', ['2', '3'])
                 ->where('aktif', 'AKTIF')
                 ->get();
