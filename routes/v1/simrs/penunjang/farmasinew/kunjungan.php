@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::group([
     'middleware' => 'auth:api',
-    'prefix' => 'simrs/farmasinew/depo'
+    'prefix' => 'simrs/farmasinew/kunjungan'
 ], function () {
     // pelayanan informasi Obat (PIO)
     Route::post('/simpan-pelayanan-informasi-obat', [KunjunganController::class, 'simPelIOnfOb']);
