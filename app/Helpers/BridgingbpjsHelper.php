@@ -10,8 +10,8 @@ class BridgingbpjsHelper
 
     public static function ws_url(string $name, $param)
     {
-        //$base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
-        $base_url = 'https://apijkn.bpjs-kesehatan.go.id/';
+        // Pindahan ke .env: BPJS_BASE_URL
+        $base_url = config('services.bpjs.base_url');
         $service_name = 'vclaim-rest';
         if ($name === 'antrean') {
             $service_name = 'antreanrs';
@@ -32,8 +32,8 @@ class BridgingbpjsHelper
     }
     public static function ws_url_dev(string $name, $param)
     {
-        $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
-        // $base_url = 'https://apijkn.bpjs-kesehatan.go.id/';
+        // Pindahan ke .env: BPJS_BASE_URL_DEV
+        $base_url = config('services.bpjs.base_url_dev');
         $service_name = 'vclaim-rest';
         if ($name === 'antrean') {
             $service_name = 'antreanrs_dev';
@@ -229,35 +229,27 @@ class BridgingbpjsHelper
 
     public static function getSignature(string $name)
     {
-        // BPJS_ANTREAN_CONS_ID=31014
-        // BPJS_ANTREAN_SECRET=3sY5CB0658
-        // $BPJS_ANTREAN_USER_KEY = '140dbebe0248aa4ce64557a8ffbdb0e9';
-        // BPJS_ANTREAN_USER_KEY_DEV=f5abd04a8fadc1061e8853715662c3e8
+        // Pindahan ke .env: BPJS_CONS_ID, BPJS_SECRET_KEY, BPJS_VCLAIM_USER_KEY, BPJS_ANTREAN_USER_KEY
+        $cons = config('services.bpjs.cons_id');
+        $secretKey = config('services.bpjs.secret_key');
+        
+        $vclaim_user_key = config('services.bpjs.vclaim_user_key');
+        $antrean_user_key = config('services.bpjs.antrean_user_key');
 
-        // $BPJS_ANTREAN_SECRET = '3sY5CB0658';
-        $BPJS_ANTREAN_USER_KEY = 'f5abd04a8fadc1061e8853715662c3e8';
-
-
-        $VCLAIM_DEV_USER_KEY_DEV = "fbad382d69383c78969f889077053ebb";
-        $VCLAIM_DEV_USER_KEY = 'belum_ada';
-
-        $cons = "31014";
-        $secretKey = "3sY5CB0658";
-
-        $USERKEY = $VCLAIM_DEV_USER_KEY_DEV;
+        $USERKEY = $vclaim_user_key;
         if ($name === 'vclaim') {
-            $USERKEY = $VCLAIM_DEV_USER_KEY_DEV;
+            $USERKEY = $vclaim_user_key;
         } else if ($name === 'icare') {
-            $USERKEY = $VCLAIM_DEV_USER_KEY_DEV;
+            $USERKEY = $vclaim_user_key;
         } else {
-            $USERKEY = $BPJS_ANTREAN_USER_KEY;
+            $USERKEY = $antrean_user_key;
         }
 
         date_default_timezone_set('UTC');
         $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
         $signature = hash_hmac('sha256', $cons . "&" . $tStamp, $secretKey, true);
 
-        // base64 encode�
+        // base64 encode
         $encodedSignature = base64_encode($signature);
 
         $data = array(
@@ -265,7 +257,6 @@ class BridgingbpjsHelper
             'xtimestamp' => $tStamp,
             'xsignature' => $encodedSignature,
             'user_key' => $USERKEY, // ini untuk vclaim
-            // 'user_key' => $BPJS_ANTREAN_USER_KEY, // ini untuk antrean
             'secret_key' => $secretKey
         );
 

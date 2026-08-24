@@ -34,4 +34,13 @@ return [
         'api_key' => env('ORTHANC_API_KEY', 'BismillahRadiologi2026'),
     ],
 
+    'bpjs' => [
+        'cons_id' => env('BPJS_CONS_ID', '31014'),
+        'secret_key' => env('BPJS_SECRET_KEY', '3sY5CB0658'),
+        'vclaim_user_key' => env('BPJS_VCLAIM_USER_KEY', 'fbad382d69383c78969f889077053ebb'),
+        'antrean_user_key' => env('BPJS_ANTREAN_USER_KEY', 'f5abd04a8fadc1061e8853715662c3e8'),
+        'base_url' => env('BPJS_BASE_URL', 'https://apijkn.bpjs-kesehatan.go.id/'),
+        'base_url_dev' => env('BPJS_BASE_URL_DEV', 'https://apijkn-dev.bpjs-kesehatan.go.id/'),
+    ],
+
 ];
