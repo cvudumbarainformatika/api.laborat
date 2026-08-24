@@ -92,7 +92,8 @@ class HistorypasienfullController extends Controller
                     'kamaroperasi' => function ($kamaroperasi) {
                         $kamaroperasi->with(['mastertindakanoperasi']);
                     },
-                    'praanastesi'
+                    'praanastesi',
+                    'laporaneswl'
                 ]
             )
             ->orderby('tanggal', 'DESC')
@@ -225,6 +226,7 @@ class HistorypasienfullController extends Controller
                             $kamaroperasi->with(['mastertindakanoperasi']);
                         },
                         'praanastesi',
+                        'laporaneswl',
                         'newapotekrajal' => function ($apt) {
                             $apt->with(
                                 [
@@ -327,6 +329,7 @@ class HistorypasienfullController extends Controller
                             $kamaroperasi->with(['mastertindakanoperasi']);
                         },
                         'praanastesi',
+                        'laporaneswl',
                         'planning' => function ($p) {
                             $p->with([
                                 'masterpoli',

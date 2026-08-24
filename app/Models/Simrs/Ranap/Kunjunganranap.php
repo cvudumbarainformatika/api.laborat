@@ -36,6 +36,7 @@ use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosagizi;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakebidanan;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\DokumenUpload;
+use App\Models\Simrs\Pelayanan\LaporanEswl;
 use App\Models\Simrs\Pelayanan\PraAnastesi;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
@@ -732,5 +733,9 @@ class Kunjunganranap extends Model
     public function nursenote()
     {
         return $this->hasMany(NurseNote::class, 'noreg', 'rs1');
+    }
+    public function laporaneswl()
+    {
+        return $this->hasMany(LaporanEswl::class, 'noreg', 'rs1');
     }
 }
