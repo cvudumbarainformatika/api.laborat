@@ -12,4 +12,6 @@ Route::group([
     Route::post('/hapus-jatuh', [AsesmenUlangController::class, 'hapusJatuh']);
     Route::post('/simpan-nyeri', [AsesmenUlangController::class, 'simpanNyeri']);
     Route::post('/hapus-nyeri', [AsesmenUlangController::class, 'hapusNyeri']);
+    Route::post('/simpan-pasca-jatuh', [AsesmenUlangController::class, 'simpanPascaJatuh']);
+    Route::post('/hapus-pasca-jatuh', [AsesmenUlangController::class, 'hapusPascaJatuh']);
 });

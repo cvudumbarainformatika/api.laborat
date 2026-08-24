@@ -29,9 +29,15 @@ class AsesmenUlangController extends Controller
             ->orderBy('created_at', 'DESC')
             ->get();
 
+        $pascaJatuh = \App\Models\Simrs\Ranap\Pelayanan\AsesmenPascaJatuh::where('noreg', $noreg)
+            ->with('pegawai:kdpegsimrs,nik,nama,kdgroupnakes')
+            ->orderBy('created_at', 'DESC')
+            ->get();
+
         return new JsonResponse([
             'jatuh' => $jatuh,
-            'nyeri' => $nyeri
+            'nyeri' => $nyeri,
+            'pasca_jatuh' => $pascaJatuh
         ], 200);
     }
 
@@ -336,6 +342,72 @@ class AsesmenUlangController extends Controller
             ], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Gagal menghapus data',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function simpanPascaJatuh(Request $request)
+    {
+        $kdpegsimrs = auth()->user()->pegawai->kdpegsimrs ?? null;
+
+        DB::beginTransaction();
+        try {
+            if ($request->id) {
+                $pasca = \App\Models\Simrs\Ranap\Pelayanan\AsesmenPascaJatuh::find($request->id);
+                if (!$pasca) {
+                    return new JsonResponse([
+                        'success' => false,
+                        'message' => 'Data tidak ditemukan'
+                    ], 404);
+                }
+                $pasca->fill($request->all());
+                $pasca->save();
+            } else {
+                $pasca = new \App\Models\Simrs\Ranap\Pelayanan\AsesmenPascaJatuh();
+                $pasca->fill($request->all());
+                $pasca->kdpegsimrs = $kdpegsimrs;
+                $pasca->save();
+            }
+
+            DB::commit();
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Data monitoring pasca jatuh berhasil disimpan',
+                'result' => $pasca
+            ], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Gagal menyimpan data',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function hapusPascaJatuh(Request $request)
+    {
+        $id = $request->id;
+        $pasca = \App\Models\Simrs\Ranap\Pelayanan\AsesmenPascaJatuh::find($id);
+        if (!$pasca) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Data tidak ditemukan'
+            ], 404);
+        }
+
+        try {
+            $pasca->delete();
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Data berhasil dihapus'
+            ], 200);
+        } catch (\Throwable $th) {
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Gagal menghapus data',
