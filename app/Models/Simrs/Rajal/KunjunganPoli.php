@@ -41,6 +41,7 @@ use App\Models\Simrs\Pelayanan\NeonatusMedis;
 use App\Models\Simrs\Pelayanan\Pediatri;
 use App\Models\Simrs\Pelayanan\PraAnastesi;
 use App\Models\Simrs\Pelayanan\PsikiatriPoli;
+use App\Models\Simrs\Pelayanan\RiwayatObsetri;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
 use App\Models\Simrs\PemeriksaanRMkhusus\Polimata;
@@ -430,6 +431,11 @@ class KunjunganPoli extends Model
     public function kandungan()
     {
         return $this->hasMany(Kandungan::class, 'noreg', 'rs1');
+    }
+
+    public function riwayatobsetri()
+    {
+        return $this->hasMany(RiwayatObsetri::class, 'noreg', 'rs1');
     }
     public function dokumenluar()
     {

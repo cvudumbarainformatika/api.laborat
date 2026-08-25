@@ -15,6 +15,8 @@ class RmeRajalController extends Controller
         $data = KunjunganPoli::with(
             [
                 'anamnesis',
+                'kandungan',
+                'riwayatobsetri',
                 'manymemo',
                 'planningdokter',
                 'newapotekrajal' => function ($q) {
