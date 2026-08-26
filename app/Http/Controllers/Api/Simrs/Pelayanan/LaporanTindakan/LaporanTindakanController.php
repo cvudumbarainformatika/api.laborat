@@ -13,7 +13,7 @@ class LaporanTindakanController extends Controller
 {
   public function caridokter()
   {
-    $dokter = Mpegawaisimpeg::select('kdpegsimrs', 'nama')
+    $dokter = Mpegawaisimpeg::select('kdpegsimrs', 'nama', 'nip', 'nik')
       ->where('aktif', 'AKTIF')->where('kdgroupnakes', '1')
       ->when(request('q'), function($q){
         $q->where('nama', 'LIKE', '%'.request('q').'%');
@@ -26,7 +26,7 @@ class LaporanTindakanController extends Controller
   public function listdokter()
   {
     $thumb = collect();
-    Mpegawaisimpeg::select('id','kdpegsimrs', 'nama')
+    Mpegawaisimpeg::select('id','kdpegsimrs', 'nama', 'nip', 'nik')
     ->where('aktif', 'AKTIF')->where('kdgroupnakes', '1')
     ->orderBy('id')
     ->chunk(50, function($dokters) use ($thumb){

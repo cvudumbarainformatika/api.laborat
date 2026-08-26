@@ -445,16 +445,19 @@ class PulangController extends Controller
             $noreg = str_replace('/', '-', $request->noreg);
             $folderPath = "pulang_paksa/" . $noreg . '/';
 
-            $image_parts = explode(";base64,", $image);
-            $image_type_aux = explode("image/", $image_parts[0]);
-            $image_type = $image_type_aux[1];
-            $image_base64 = base64_decode($image_parts[1], true);
-            $file = $folderPath . $name . '.' . $image_type;
+            if (str_contains($image, ';base64,')) {
+                $image_parts = explode(";base64,", $image);
+                $image_type_aux = explode("image/", $image_parts[0]);
+                $image_type = isset($image_type_aux[1]) ? $image_type_aux[1] : 'png';
+                $image_base64 = base64_decode(isset($image_parts[1]) ? $image_parts[1] : '');
+            } else {
+                $image_type = 'png';
+                $image_base64 = base64_decode($image);
+            }
 
+            $file = $folderPath . $name . '.' . $image_type;
             $imageName = $name . '.' . $image_type;
-            // Storage::delete('public/' . $folderPath . $imageName);
-            //   Storage::disk('remote')->delete('public/' . $folderPath . $imageName);
-            // Storage::disk('public')->put($folderPath . $imageName, $image_base64);
+
             Storage::disk('remote')->put('public/' . $folderPath . $imageName, $image_base64);
         }
 

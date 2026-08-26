@@ -35,12 +35,14 @@ use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakebidanan;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\DokumenUpload;
 use App\Models\Simrs\Pelayanan\Kandungan;
+use App\Models\Simrs\Pelayanan\LaporanEswl;
 use App\Models\Simrs\Pelayanan\LaporanTindakan;
 use App\Models\Simrs\Pelayanan\NeonatusKeperawatan;
 use App\Models\Simrs\Pelayanan\NeonatusMedis;
 use App\Models\Simrs\Pelayanan\Pediatri;
 use App\Models\Simrs\Pelayanan\PraAnastesi;
 use App\Models\Simrs\Pelayanan\PsikiatriPoli;
+use App\Models\Simrs\Pelayanan\RiwayatObsetri;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
 use App\Models\Simrs\PemeriksaanRMkhusus\Polimata;
@@ -402,6 +404,10 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(LaporanTindakan::class, 'noreg', 'rs1');
     }
+    public function laporaneswl()
+    {
+        return $this->hasMany(LaporanEswl::class, 'noreg', 'rs1');
+    }
     public function psikiatri()
     {
         return $this->hasMany(PsikiatriPoli::class, 'noreg', 'rs1');
@@ -431,6 +437,11 @@ class KunjunganPoli extends Model
     public function kandungan()
     {
         return $this->hasMany(Kandungan::class, 'noreg', 'rs1');
+    }
+
+    public function riwayatobsetri()
+    {
+        return $this->hasMany(RiwayatObsetri::class, 'noreg', 'rs1');
     }
     public function dokumenluar()
     {

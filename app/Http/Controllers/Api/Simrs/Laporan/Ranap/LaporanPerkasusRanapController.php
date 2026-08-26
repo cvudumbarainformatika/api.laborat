@@ -65,10 +65,9 @@ class LaporanPerkasusRanapController extends Controller
             $limitSql = "LIMIT {$limitVal}";
         }
 
-        // 3. STRAIGHT_JOIN ULTRA FAST SQL:
-        // Memaksa MySQL menggunakan Index Tanggal Masuk (rs23.rs3) secara langsung
+        // 3. ULTRA FAST SQL DENGAN SUBQUERY TERKONTROL (Mencegah Perkalian Kartesian Data / Duplicate Rows)
         $sql = "
-            SELECT STRAIGHT_JOIN
+            SELECT 
                 ranap.rs1 as noreg,
                 ranap.rs2 as norm,
                 ranap.rs3 as mrs,
@@ -87,21 +86,22 @@ class LaporanPerkasusRanapController extends Controller
                 dokter.rs2 as dpjp,
                 sistembayar.rs2 as sistem_bayar,
                 carakeluar.rs2 as cara_keluar,
-                diag.rs3 as kode_diagnosa,
-                diag_master.rs4 as nama_diagnosa,
-                anamnesis.rs4 as keluhan_utama,
-                anamnesis.riwayatpenyakitsekarang as rps,
-                memo.diagnosa as memodiagnosa
+                diag.kode_diagnosa,
+                diag.kode_diagnosa,
+                diag_master.rs4 as nama_diagnosa
             FROM rs23 as ranap
-            JOIN rs101 as diag ON diag.rs1 = ranap.rs1 AND diag.rs3 IN ({$icdCodesSql})
-            LEFT JOIN rs99x as diag_master ON diag_master.rs1 = diag.rs3
+            JOIN (
+                SELECT rs1, MIN(rs3) as kode_diagnosa 
+                FROM rs101 
+                WHERE rs3 IN ({$icdCodesSql})
+                GROUP BY rs1
+            ) as diag ON diag.rs1 = ranap.rs1
+            LEFT JOIN rs99x as diag_master ON diag_master.rs1 = diag.kode_diagnosa
             LEFT JOIN rs15 as pasien ON pasien.rs1 = ranap.rs2
             LEFT JOIN rs24 as ruang ON ruang.rs1 = ranap.rs5
             LEFT JOIN rs21 as dokter ON dokter.rs1 = ranap.rs10
             LEFT JOIN rs9 as sistembayar ON sistembayar.rs1 = ranap.rs19
             LEFT JOIN rs26 as carakeluar ON carakeluar.rs1 = ranap.rs23
-            LEFT JOIN rs209 as anamnesis ON anamnesis.rs1 = ranap.rs1
-            LEFT JOIN memodiagnosadokter as memo ON memo.noreg = ranap.rs1
             WHERE ranap.rs3 >= '{$startDate}' AND ranap.rs3 <= '{$endDate}'
             ORDER BY ranap.rs3 DESC
             {$limitSql}
@@ -113,8 +113,10 @@ class LaporanPerkasusRanapController extends Controller
             return new JsonResponse(['total' => 0, 'data' => []]);
         }
 
-        // 4. Batch Query Tgl Masuk IGD (Khusus untuk norm hasil filter pasien ranap)
+        $noregs = $results->pluck('noreg')->unique()->filter()->toArray();
         $norms = $results->pluck('norm')->unique()->filter()->toArray();
+
+        // 4. Batch Query Tgl Masuk IGD
         $igdMap = [];
         if (!empty($norms)) {
             $igdVisits = DB::table('rs17')
@@ -129,10 +131,39 @@ class LaporanPerkasusRanapController extends Controller
             }
         }
 
-        // 5. Batch Query Diagnosa Sekunder Pasien
-        $noregs = $results->pluck('noreg')->unique()->filter()->toArray();
-        $diagnosaSekunderMap = [];
+        // 5. Batch Query Anamnesis Awal (rs209)
+        $anamnesisMap = [];
+        if (!empty($noregs)) {
+            $anamnesisRows = DB::table('rs209')
+                ->select('rs1 as noreg', 'rs4 as keluhan_utama', 'riwayatpenyakitsekarang as rps')
+                ->whereIn('rs1', $noregs)
+                ->orderBy('id', 'asc')
+                ->get();
 
+            foreach ($anamnesisRows as $a) {
+                $anamnesisMap[$a->noreg] = [
+                    'keluhan_utama' => $a->keluhan_utama,
+                    'rps' => $a->rps
+                ];
+            }
+        }
+
+        // 6. Batch Query Memo Diagnosa Dokter (memodiagnosadokter)
+        $memoMap = [];
+        if (!empty($noregs)) {
+            $memoRows = DB::table('memodiagnosadokter')
+                ->select('noreg', 'diagnosa')
+                ->whereIn('noreg', $noregs)
+                ->orderBy('id', 'asc')
+                ->get();
+
+            foreach ($memoRows as $m) {
+                $memoMap[$m->noreg] = $m->diagnosa;
+            }
+        }
+
+        // 7. Batch Query Diagnosa Sekunder Pasien
+        $diagnosaSekunderMap = [];
         if (!empty($noregs)) {
             $sekunders = DB::table('rs101 as diag')
                 ->select([
@@ -150,8 +181,8 @@ class LaporanPerkasusRanapController extends Controller
             }
         }
 
-        // 6. Format Response JSON Kilat
-        $data = $results->map(function ($row) use ($igdMap, $diagnosaSekunderMap) {
+        // 8. Format Response JSON Kilat
+        $data = $results->map(function ($row) use ($igdMap, $anamnesisMap, $memoMap, $diagnosaSekunderMap) {
             $noreg = $row->noreg;
             $norm = $row->norm;
 
@@ -167,6 +198,7 @@ class LaporanPerkasusRanapController extends Controller
             }
 
             $diagSekunderList = $diagnosaSekunderMap[$noreg] ?? [];
+            $anamnesisData = $anamnesisMap[$noreg] ?? [];
 
             return [
                 'noreg' => $row->noreg,
@@ -186,10 +218,10 @@ class LaporanPerkasusRanapController extends Controller
                 'cara_keluar' => $row->cara_keluar ?: '-',
                 'kode_diagnosa' => $row->kode_diagnosa ?: '-',
                 'diagnosa' => $row->nama_diagnosa ?: ($row->diagakhir ?: '-'),
-                'anamnese_awal' => $row->keluhan_utama ?: '-',
-                'riwayat_penyakit_sekarang' => $row->rps ?: '-',
+                'anamnese_awal' => $anamnesisData['keluhan_utama'] ?? '-',
+                'riwayat_penyakit_sekarang' => $anamnesisData['rps'] ?? '-',
                 'diagnosa_tambahan' => !empty($diagSekunderList) ? implode('; ', $diagSekunderList) : '-',
-                'memodiagnosa' => $row->memodiagnosa ?: '-'
+                'memodiagnosa' => $memoMap[$noreg] ?? '-'
             ];
         });
 

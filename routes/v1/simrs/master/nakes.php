@@ -11,4 +11,5 @@ Route::group([
 ], function () {
     Route::get('/nakes/selaindokter',[NakesController::class, 'selaindokter']);
     Route::get('/nakes/dokter',[NakesController::class, 'dokter']);
+    Route::get('/nakes/perawat',[NakesController::class, 'perawat']);
 });

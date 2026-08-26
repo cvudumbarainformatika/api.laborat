@@ -187,7 +187,8 @@ class PoliController extends Controller
                     ])
                         ->orderBy('id', 'DESC');
                 },
-                'laporantindakan'
+                'laporantindakan',
+                'laporaneswl'
             ])
             ->orderby('antrian_ambil.nomor', 'Asc')
             ->groupby('rs17.rs1')
@@ -524,6 +525,7 @@ class PoliController extends Controller
                 'gambars',
                 'fisio',
                 'laporantindakan',
+                'laporaneswl',
                 'psikiatri',
                 'planningdokter',
                 'datacasmix',
