@@ -38,7 +38,7 @@ class ListDataArsipController extends Controller
         )
             ->join('master_kode', 'data_arsip.kode', 'master_kode.kode')
             ->leftJoinSub(
-                DB::table('kelompokMap_R')
+                DB::connection('arsip')->table('kelompokMap_R')
                     ->select('noarsip', DB::raw('MAX(id_heder) as id_heder'))
                     ->groupBy('noarsip'),
                 'map_r',
