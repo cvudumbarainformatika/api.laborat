@@ -249,6 +249,10 @@ class IgdController extends Controller
                 //     ->where('ruangan','POL014');
                 // },
                 'msistembayar',
+                'informconcern' => function ($informconcern) {
+                    $informconcern->where('kdRuang', 'POL014')
+                        ->orderBy('id', 'DESC');
+                },
                 'planheder' => function ($planheder) {
                     $planheder->with([
                         'planranap' => function ($planranap) {

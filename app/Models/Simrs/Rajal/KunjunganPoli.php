@@ -18,6 +18,7 @@ use App\Models\Simrs\Edukasi\ImplementasiEdukasi;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Ews\ProcedureM;
 use App\Models\Simrs\Generalconsent\Generalconsent;
+use App\Models\Simrs\InformConcern\InformConcern;
 use App\Models\Simrs\jenazah\billjenazah;
 use App\Models\Simrs\Kasir\Karcis;
 use App\Models\Simrs\Kasir\Kwitansilog;
@@ -173,6 +174,11 @@ class KunjunganPoli extends Model
     public function generalconsent()
     {
         return $this->hasOne(Mgeneralconsent::class, 'noreg', 'rs1');
+    }
+
+    public function informconcern()
+    {
+        return $this->hasMany(InformConcern::class, 'noreg', 'rs1');
     }
 
     public function taskid()
