@@ -70,6 +70,16 @@ class JasaVisiteKonsulController extends Controller
       ->where('rs6', $tarif['flag_biaya'])
       ->get();
 
+    $kodesistembayar = $request->kodesistembayar;
+    if (!$kodesistembayar) {
+      $kunjungan = DB::table('rs23')->select('rs19')->where('rs1', $request->noreg)->first();
+      $kodesistembayar = $kunjungan->rs19 ?? null;
+      if (!$kodesistembayar) {
+        $kunjunganRajal = DB::table('rs17')->select('rs14')->where('rs1', $request->noreg)->first();
+        $kodesistembayar = $kunjunganRajal->rs14 ?? null;
+      }
+    }
+
     $hari_ini = date('Y-m-d H:i:s');
     if (count($cekTarif) === 0) {
 
@@ -81,7 +91,7 @@ class JasaVisiteKonsulController extends Controller
         'rs5' => $tarif['pelayanan'],
         'rs6' => $tarif['flag_biaya'],
         'rs8' => $request->kdgroup_ruangan,
-        'rs9' => $request->kodesistembayar
+        'rs9' => $kodesistembayar
       ]);
     }
 
