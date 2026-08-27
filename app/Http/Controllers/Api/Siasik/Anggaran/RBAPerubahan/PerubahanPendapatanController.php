@@ -103,8 +103,7 @@ class PerubahanPendapatanController extends Controller
                     ->where('tahun', $item->tahun)
                     ->update([
                         'notrans' => $item->notrans,
-                        'pagu'    => $item->pagu,
-                        'flag'    => $item->flag,
+                        'pagu'    => $item->nilai,
                     ]);
             }
             DB::commit();
