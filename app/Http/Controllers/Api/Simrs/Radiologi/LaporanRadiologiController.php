@@ -384,6 +384,7 @@ class LaporanRadiologiController extends Controller
         $to           = $request->get('to');
         $dokter       = $request->get('dokter', 'ALL');
         $jenis_pasien = $request->get('jenis_pasien', 'ALL');
+        $status       = $request->get('status', 'Selesai');
         $group_by     = $request->get('group_by', 'pemeriksaan');
         $search       = trim($request->get('q', ''));
 
@@ -405,6 +406,17 @@ class LaporanRadiologiController extends Controller
         // Filter dokter peminta
         if ($dokter !== 'ALL' && $dokter !== '') {
             $base->where('rs106.rs8', $dokter);
+        }
+
+        // Filter status pelayanan pemeriksaan (rs106.rs9)
+        if ($status !== 'ALL' && $status !== '') {
+            if ($status === 'Selesai' || $status === 'Terlayani') {
+                $base->where('rs106.rs9', '1');
+            } elseif ($status === 'Belum') {
+                $base->where(function ($q) {
+                    $q->whereNull('rs106.rs9')->orWhere('rs106.rs9', '!=', '1');
+                });
+            }
         }
 
         // Filter jenis pasien
@@ -436,7 +448,7 @@ class LaporanRadiologiController extends Controller
 
         // Jika jenis_pasien adalah 'Luar', panggil handler khusus untuk tabel rs270 & rs271
         if ($jenis_pasien === 'Luar') {
-            return $this->laporanRadiologiLuarSummary($tglAwal, $tglAkhir, $group_by, $search, $from, $to);
+            return $this->laporanRadiologiLuarSummary($tglAwal, $tglAkhir, $group_by, $search, $from, $to, $status);
         }
 
         // Hitung total nota unik keseluruhan (untuk prosentase)
@@ -689,10 +701,20 @@ class LaporanRadiologiController extends Controller
         ]);
     }
 
-    private function laporanRadiologiLuarSummary($tglAwal, $tglAkhir, $groupBy, $search, $from, $to): JsonResponse
+    private function laporanRadiologiLuarSummary($tglAwal, $tglAkhir, $groupBy, $search, $from, $to, $status = 'ALL'): JsonResponse
     {
         $base = DB::table('rs270')
             ->whereBetween('rs270.rs8', [$tglAwal, $tglAkhir]);
+
+        if ($status !== 'ALL' && $status !== '') {
+            if ($status === 'Selesai' || $status === 'Terlayani') {
+                $base->where('rs270.rs10', '1');
+            } elseif ($status === 'Belum') {
+                $base->where(function ($q) {
+                    $q->whereNull('rs270.rs10')->orWhere('rs270.rs10', '!=', '1');
+                });
+            }
+        }
 
         if ($search !== '') {
             $base->where(function ($w) use ($search) {

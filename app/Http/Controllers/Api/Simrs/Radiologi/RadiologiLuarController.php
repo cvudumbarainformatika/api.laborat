@@ -99,9 +99,12 @@ class RadiologiLuarController extends Controller
     }
 
     if (request('q') !== '' && request('q') !== null) {
-        $select->where('rs270.rs2', 'like', '%' . request('q') . '%')
-                ->orWhere('rs270.rs3', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('perusahaan.perusahaan', 'LIKE', '%' . request('q') . '%');
+        $select->where(function ($query) {
+            $query->where('rs270.rs1', 'LIKE', '%' . request('q') . '%')
+                  ->orWhere('rs270.rs2', 'LIKE', '%' . request('q') . '%')
+                  ->orWhere('rs270.rs3', 'LIKE', '%' . request('q') . '%')
+                  ->orWhere('perusahaan.perusahaan', 'LIKE', '%' . request('q') . '%');
+        });
     }
 
 
