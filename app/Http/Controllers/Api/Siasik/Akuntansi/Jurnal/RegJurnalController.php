@@ -118,7 +118,15 @@ class RegJurnalController extends Controller
                                     // ->where('kodekegiatanblud', request('kodekegiatanblud'))
                                     ->where('pagu', '!=', '0')
                                     ->select('t_tampung.*')
-                                    ->with(['kegiatanblud','jurnal' => function($jurnal){
+                                    ->with(['kegiatanblud', 'jurnal' => function($jurnal){
+                                        $jurnal->select('akun_mapjurnal.kodeall',
+                                        'akun_mapjurnal.kode50',
+                                        'akun_mapjurnal.kode_bast',
+                                        'akun_mapjurnal.kode_bastx',
+                                        'akun_mapjurnal.uraian50',
+                                        'akun_mapjurnal.uraian_bast',
+                                        'akun_mapjurnal.uraian_bastx');
+                                    }, 'jurnalkode50' => function($jurnal){
                                         $jurnal->select('akun_mapjurnal.kodeall',
                                         'akun_mapjurnal.kode50',
                                         'akun_mapjurnal.kode_bast',
