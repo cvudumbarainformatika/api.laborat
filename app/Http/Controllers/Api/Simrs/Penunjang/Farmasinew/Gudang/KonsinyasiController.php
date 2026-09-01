@@ -434,12 +434,27 @@ class KonsinyasiController extends Controller
             return response()->json(['message' => 'ada kesalahan', 'error' => ' ' . $e, 'rinci' => $rinci], 410);
         }
     }
+    public function rinciKonsinyasi()
+    {
+        $notranskonsi = request('notranskonsi');
+        if (!$notranskonsi) {
+            return new JsonResponse(['message' => 'No Transaksi Konsinyasi diperlukan'], 422);
+        }
+
+        $rinci = DetailBastKonsinyasi::with([
+            'obat:kd_obat,nama_obat,satuan_k',
+            'iddokter:kdpegsimrs,nama',
+            'pasien:rs1,rs2',
+        ])
+            ->where('notranskonsi', $notranskonsi)
+            ->get();
+
+        return new JsonResponse($rinci);
+    }
+
     public function listKonsinyasi()
     {
         $data = BastKonsinyasi::with([
-            'rinci.obat:kd_obat,nama_obat,satuan_k',
-            'rinci.iddokter:kdpegsimrs,nama',
-            'rinci.pasien:rs1,rs2',
             'penyedia:kode,nama',
             'konsi:kdpegsimrs,nama',
             'bast:kdpegsimrs,nama',
@@ -459,18 +474,6 @@ class KonsinyasiController extends Controller
                             ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
                     });
                 }
-                // $q->when(
-                //     count($pihak) > 0,
-                //     function ($x) use ($pihak) {
-                //         $x->whereIn('kdpbf', $pihak)
-                //             ->orWhere('nobast', 'LIKE', '%' . request('q') . '%')
-                //             ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
-                //     },
-                //     function ($r) {
-                //         $r->where('nobast', 'LIKE', '%' . request('q') . '%')
-                //             ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
-                //     }
-                // );
             })
             ->when(request('from') && request('to'), function ($q) {
                 $q->whereBetween('tgl_trans', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
@@ -487,7 +490,7 @@ class KonsinyasiController extends Controller
             })
 
             ->orderBy('notranskonsi', 'DESC')
-            ->paginate(request('per_page'));
+            ->paginate(request('per_page', 50));
 
         $meta = collect($data)->except('data');
         $datanya = collect($data)['data'];
@@ -496,12 +499,10 @@ class KonsinyasiController extends Controller
             'meta' => $meta,
         ]);
     }
+
     public function bastKonsinyasi()
     {
         $data = BastKonsinyasi::with([
-            'rinci.obat:kd_obat,nama_obat,satuan_k',
-            'rinci.iddokter:kdpegsimrs,nama',
-            'rinci.pasien:rs1,rs2',
             'penyedia:kode,nama',
             'konsi:kdpegsimrs,nama',
             'bast:kdpegsimrs,nama',
@@ -521,7 +522,7 @@ class KonsinyasiController extends Controller
                 );
             })
             ->whereNotNull('tgl_bast')
-            ->paginate(request('per_page'));
+            ->paginate(request('per_page', 50));
 
         return new JsonResponse($data);
     }
