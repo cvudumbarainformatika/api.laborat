@@ -156,35 +156,42 @@ class KonsulDokterController extends Controller
 
     public function hapusdata(Request $request)
     {
-       $dokter = Mpegawaisimpeg::where('kdpegsimrs', $request->kddokterkonsul)->first();
-    //    return $dokter;
-       if($dokter['profesi'] === 'J00113' || $dokter['profesi'] === 'J00111'){
-            $cek = Konsultasi::find($request->id);
-            if (!$cek) {
-            return new JsonResponse(['message' => 'data tidak ditemukan'], 500);
-            }
+        try {
+            $konsultasiPengganti = DB::transaction(function () use ($request) {
+                $konsultasi = Konsultasi::lockForUpdate()->find($request->id);
+                if (!$konsultasi) {
+                    throw new \RuntimeException('data tidak ditemukan');
+                }
 
-            $hapus = $cek->delete();
-            if (!$hapus) {
-            return new JsonResponse(['message' => 'gagal dihapus'], 500);
-            }
-            return new JsonResponse(['message' => 'berhasil dihapus'], 200);
-       }else{
-            $cek = Konsultasi::find($request->id);
-            $idtindakan =  $cek['rs140_id'];
-            if (!$cek) {
-            return new JsonResponse(['message' => 'data tidak ditemukan'], 500);
-            }
+                $billingId = $konsultasi->rs140_id;
+                $pengganti = null;
+                if ($billingId) {
+                    $pengganti = Konsultasi::where('noreg', $konsultasi->noreg)
+                        ->where('kddokterkonsul', $konsultasi->kddokterkonsul)
+                        ->whereDate('tgl_permintaan', substr((string) $konsultasi->tgl_permintaan, 0, 10))
+                        ->where('id', '!=', $konsultasi->id)
+                        ->lockForUpdate()
+                        ->orderBy('id')
+                        ->first();
 
-            $hapus = $cek->delete();
-            $cektindakan = Tindakan::find($idtindakan);
-            $hapustindakan = $cektindakan->delete();
+                    if ($pengganti) {
+                        $pengganti->update(['rs140_id' => $billingId]);
+                    } else {
+                        Tindakan::whereKey($billingId)->delete();
+                    }
+                }
 
-            if (!$hapus) {
-            return new JsonResponse(['message' => 'gagal dihapus'], 500);
-            }
+                if (!$konsultasi->delete()) {
+                    throw new \RuntimeException('gagal dihapus');
+                }
+                return $pengganti
+                    ? $pengganti->fresh(['tindakan.mastertindakan', 'nakesminta'])
+                    : null;
+            });
+        } catch (\Throwable $th) {
+            return new JsonResponse(['message' => $th->getMessage()], 500);
+        }
 
-            return new JsonResponse(['message' => 'berhasil dihapus'], 200);
-       }
+        return new JsonResponse(['message' => 'berhasil dihapus', 'result' => $konsultasiPengganti], 200);
     }
 }
