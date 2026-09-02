@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Gudang;
 
 use App\Helpers\FormatingHelper;
+use App\Helpers\ResponseHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpihakketiga;
@@ -454,24 +455,31 @@ class KonsinyasiController extends Controller
 
     public function listKonsinyasi()
     {
-        $data = BastKonsinyasi::with([
-            'penyedia:kode,nama',
-            'konsi:kdpegsimrs,nama',
-            'bast:kdpegsimrs,nama',
-            'bayar:kdpegsimrs,nama',
-        ])
+        $req = request()->all();
+        $perPage = (int)request('per_page', 50);
+        $req['per_page'] = $perPage;
+
+        $raw = BastKonsinyasi::query()
             ->when(request('q'), function ($q) {
-                $pihak = Mpihakketiga::select('kode')->where('nama', 'LIKE', '%' . request('q') . '%')->pluck('kode');
-                if (count($pihak) > 0) {
-                    $q->where(function ($x) use ($pihak) {
-                        $x->whereIn('kdpbf', $pihak)
-                            ->orWhere('nobast', 'LIKE', '%' . request('q') . '%')
-                            ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
-                    });
+                $search = request('q');
+                if (strlen($search) >= 3) {
+                    $pihak = Mpihakketiga::select('kode')->where('nama', 'LIKE', '%' . $search . '%')->pluck('kode');
+                    if (count($pihak) > 0) {
+                        $q->where(function ($x) use ($pihak, $search) {
+                            $x->whereIn('kdpbf', $pihak)
+                                ->orWhere('nobast', 'LIKE', '%' . $search . '%')
+                                ->orWhere('notranskonsi', 'LIKE', '%' . $search . '%');
+                        });
+                    } else {
+                        $q->where(function ($x) use ($search) {
+                            $x->where('nobast', 'LIKE', '%' . $search . '%')
+                                ->orWhere('notranskonsi', 'LIKE', '%' . $search . '%');
+                        });
+                    }
                 } else {
-                    $q->where(function ($x) {
-                        $x->where('nobast', 'LIKE', '%' . request('q') . '%')
-                            ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
+                    $q->where(function ($x) use ($search) {
+                        $x->where('nobast', 'LIKE', '%' . $search . '%')
+                            ->orWhere('notranskonsi', 'LIKE', '%' . $search . '%');
                     });
                 }
             })
@@ -487,44 +495,67 @@ class KonsinyasiController extends Controller
                 $q->whereNotNull('tgl_pembayaran');
             }, function ($q) {
                 $q->whereNull('tgl_pembayaran');
-            })
+            });
 
-            ->orderBy('notranskonsi', 'DESC')
-            ->paginate(request('per_page', 50));
+        $totalCount = (clone $raw)->count();
 
-        $meta = collect($data)->except('data');
-        $datanya = collect($data)['data'];
-        return new JsonResponse([
-            'data' => $datanya,
-            'meta' => $meta,
-        ]);
-    }
-
-    public function bastKonsinyasi()
-    {
-        $data = BastKonsinyasi::with([
+        $data = $raw->with([
             'penyedia:kode,nama',
             'konsi:kdpegsimrs,nama',
             'bast:kdpegsimrs,nama',
             'bayar:kdpegsimrs,nama',
         ])
-            ->when(request('q'), function ($q) {
-                $pihak = Mpihakketiga::select('kode')->where('nama', 'LIKE', '%' . request('q') . '%')->pluck('kode');
-                $q->when(
-                    count($pihak) > 0,
-                    function ($x) use ($pihak) {
-                        $x->whereIn('kdpbf', $pihak)
-                            ->orWhere('nobast', 'LIKE', '%' . request('q') . '%');
-                    },
-                    function ($r) {
-                        $r->where('nobast', 'LIKE', '%' . request('q') . '%');
-                    }
-                );
-            })
-            ->whereNotNull('tgl_bast')
-            ->paginate(request('per_page', 50));
+            ->orderBy('notranskonsi', 'DESC')
+            ->simplePaginate($perPage);
 
-        return new JsonResponse($data);
+        $resp = ResponseHelper::responseGetSimplePaginate($data, $req, $totalCount);
+
+        return new JsonResponse($resp);
+    }
+
+    public function bastKonsinyasi()
+    {
+        $req = request()->all();
+        $perPage = (int)request('per_page', 50);
+        $req['per_page'] = $perPage;
+
+        $raw = BastKonsinyasi::query()
+            ->when(request('q'), function ($q) {
+                $search = request('q');
+                if (strlen($search) >= 3) {
+                    $pihak = Mpihakketiga::select('kode')->where('nama', 'LIKE', '%' . $search . '%')->pluck('kode');
+                    if (count($pihak) > 0) {
+                        $q->where(function ($x) use ($pihak, $search) {
+                            $x->whereIn('kdpbf', $pihak)
+                                ->orWhere('nobast', 'LIKE', '%' . $search . '%');
+                        });
+                    } else {
+                        $q->where(function ($x) use ($search) {
+                            $x->where('nobast', 'LIKE', '%' . $search . '%');
+                        });
+                    }
+                } else {
+                    $q->where(function ($x) use ($search) {
+                        $x->where('nobast', 'LIKE', '%' . $search . '%');
+                    });
+                }
+            })
+            ->whereNotNull('tgl_bast');
+
+        $totalCount = (clone $raw)->count();
+
+        $data = $raw->with([
+            'penyedia:kode,nama',
+            'konsi:kdpegsimrs,nama',
+            'bast:kdpegsimrs,nama',
+            'bayar:kdpegsimrs,nama',
+        ])
+            ->orderBy('notranskonsi', 'DESC')
+            ->simplePaginate($perPage);
+
+        $resp = ResponseHelper::responseGetSimplePaginate($data, $req, $totalCount);
+
+        return new JsonResponse($resp);
     }
 
     public function belumKonsinyasi()
