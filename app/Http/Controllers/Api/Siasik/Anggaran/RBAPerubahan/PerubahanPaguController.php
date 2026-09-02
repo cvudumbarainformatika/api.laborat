@@ -308,4 +308,30 @@ class PerubahanPaguController extends Controller
             ], 500);
         }
     }
+
+    public function penetapan(Request $request) {
+
+        $rekening = $request['rekening'];
+        $tahun = request('tahun', date('Y'));
+        try {
+            DB::beginTransaction();
+            $dataPak = Penetapan_Pagu_pak::where('tahun', $tahun)->get();
+
+            foreach ($dataPak as $item) {
+
+                Tampung_Pagu::where('koderekeningblud', $item->kodekegiatan)
+                    ->where('tahun', $item->tahun)
+                    ->update([
+                        'notrans' => $item->notrans,
+                        'pagu'    => $item->total,
+                        // 'flag'    => $item->flag,
+                    ]);
+            }
+            DB::commit();
+            return new JsonResponse(['status' => 'success', 'message' => 'Berhasil Penetapan Pagu Anggaran']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse(['status' => 'error', 'message' => 'Data gagal penetapan: ' . $e->getMessage()], 500);
+        }
+    }
 }

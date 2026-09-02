@@ -47,6 +47,20 @@ class PergeseranPaguRinci extends Model
     {
         return $this->hasOne(Akun_mapjurnal::class, 'kodeall', 'koderek50');
     }
+
+    public function jurnalkode50()
+    {
+        return $this->hasOne(Akun_mapjurnal::class, 'kode50', 'koderek50');
+    }
+    protected $appends = ['jenis', 'datajurnal'];
+    public function getDataJurnalAttribute()
+    {
+        return $this->jurnal ?? $this->jurnalkode50;
+    }
+
+    protected $hidden = [
+        'jurnalkode50',
+    ];
     public function lvl1(){
         return $this->belongsTo(Akun50_2024::class,'kode1', 'kodeall3');
     }
@@ -67,7 +81,7 @@ class PergeseranPaguRinci extends Model
         return $this->hasOne(Mapping_Bidang_Ptk_Kegiatan::class, 'kodekegiatan', 'kodekegiatanblud');
     }
 
-    protected $appends = ['jenis'];
+    
 
     public function getJenisAttribute()
     {
