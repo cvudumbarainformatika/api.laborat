@@ -2,8 +2,15 @@
 
 namespace App\Helpers\Satsets;
 
+use App\Helpers\AuthSatsetHelper;
 use App\Helpers\BridgingSatsetHelper;
+use App\Models\Pasien;
+use App\Models\Satset\SatsetErrorRespon;
+use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Master\Msnomed;
+use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class PostKunjunganIgdHelper
@@ -13,2525 +20,723 @@ class PostKunjunganIgdHelper
         return (string) Str::orderedUuid();
     }
 
-    public static function form($request, $pasien_uuid)
+    public static function cekKunjungan()
+    {
+        $tgl = Carbon::now()->subDays(1)->toDateString();
+
+        $data = KunjunganPoli::select(
+            'rs17.rs1',
+            'rs17.rs9',
+            'rs17.rs4',
+            'rs17.rs8',
+            'rs17.rs1 as noreg',
+            'rs17.rs2 as norm',
+            'rs17.rs3 as tgl_kunjungan',
+            'rs17.rs8 as kodepoli',
+            'rs19.rs2 as poli',
+            'rs17.rs9 as kodedokter',
+            'rs21.rs2 as dokter',
+            'rs17.rs14 as kodesistembayar',
+            'rs9.rs2 as sistembayar',
+            'rs9.groups as groups',
+            'rs15.rs2 as nama',
+            'rs15.rs49 as nik',
+            'rs17.rs19 as status',
+            'rs15.satset_uuid as pasien_uuid',
+            DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())) AS usiatahun')
+        )
+            ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2')
+            ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8')
+            ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9')
+            ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14')
+            ->where('rs17.rs8', '=', 'POL014')
+            ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
+            ->where('rs17.rs19', '=', '1')
+            ->doesntHave('satset')
+            ->doesntHave('satset_error')
+            ->with([
+                'satset:uuid',
+                'satset_error:uuid',
+                'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
+                'relmpoli' => function ($q) {
+                    $q->select('rs1', 'kode_ruang', 'rs7 as nama')->with('ruang:kode,uraian,groupper,satset_uuid,departement_uuid,gedung,lantai,ruang');
+                },
+                'taskid' => function ($q) {
+                    $q->select('noreg', 'taskid', 'waktu', 'created_at')
+                        ->orderBy('taskid', 'ASC');
+                },
+                'anamnesis',
+                'pemeriksaanfisik' => function ($a) {
+                    $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                        ->orderBy('id', 'DESC');
+                },
+                'tindakan' => function ($t) {
+                    $t->select('rs73.rs1', 'rs73.rs2', 'rs73.rs3', 'rs73.rs4', 'rs73.rs8', 'rs73.rs9', 'rs30.rs2 as keterangan', 'rs30.rs1 as kode');
+                    $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
+                        ->with([
+                            'maapingprocedure' => function ($mp) {
+                                $mp->select('prosedur_mapping.kdMaster', 'prosedur_mapping.icd9', 'prosedur_master.prosedur')
+                                    ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
+                            },
+                            'maapingsnowmed:kdMaster,kdSnowmed,display',
+                            'petugas:nama,kdpegsimrs,satset_uuid'
+                        ])
+                        ->groupBy('rs73.rs4')
+                        ->orderBy('id', 'DESC');
+                },
+                'diagnosa' => function ($d) {
+                    $d->select('rs1', 'rs3', 'rs4', 'rs7', 'rs8');
+                    $d->with('masterdiagnosa');
+                },
+                'planning' => function ($p) {
+                    $p->select('rs1', 'rs2', 'rs3', 'rs4', 'rs5', 'tgl', 'user', 'flag');
+                    $p->with([
+                        'masterpoli:rs1,rs7,rs6,panggil_antrian,displaykode,kode_ruang',
+                        'rekomdpjp',
+                        'transrujukan',
+                        'listkonsul' => function ($lk) {
+                            $lk->select('noreg_lama', 'norm', 'tgl_kunjungan', 'tgl_rencana_konsul', 'kdpoli_asal', 'kdpoli_tujuan', 'kddokter_asal', 'flag', 'rs17.rs9 as kdDokterKonsul', 'rs19.kode_ruang')
+                                ->leftJoin('rs17', 'rs17.rs4', '=', 'listkonsulanpoli.noreg_lama')
+                                ->leftJoin('rs19', 'rs19.rs1', '=', 'listkonsulanpoli.kdpoli_tujuan')
+                                ->with('dokterkonsul:kdpegsimrs,nama,satset_uuid', 'lokasikonsul:kode,uraian,satset_uuid');
+                        },
+                        'spri:noreg,norm,kodeDokter,tglRencanaKontrol,noSuratKontrol,nama,kelamin,user_id',
+                        'spri.petugas:nama,kdpegsimrs,satset_uuid',
+                        'ranap:rs1,rs2,rs3,rs4,rs5,rs6,rs7,groups,status,hiddens,groups_nama,jenis',
+                        'kontrol' => function ($k) {
+                            $k->select('noreg', 'norm', 'kodeDokter as kdDokterKontrol', 'poliKontrol', 'tglRencanaKontrol', 'created_at', 'rs19.kode_ruang')
+                                ->leftJoin('rs19', 'rs19.rs6', '=', 'bpjs_surat_kontrol.poliKontrol')
+                                ->with('dokterkontrol:kddpjp,nama,satset_uuid', 'lokasikontrol:kode,uraian,satset_uuid');
+                        },
+                        'operasi',
+                    ])->orderBy('id', 'DESC');
+                },
+                'apotek' => function ($apot) {
+                    $apot->whereIn('flag', ['3', '4'])->with([
+                        'rincian' => function ($ri) {
+                            $ri->select(
+                                'resep_keluar_r.id',
+                                'resep_keluar_r.kdobat',
+                                'resep_keluar_r.noresep',
+                                'resep_keluar_r.jumlah',
+                                'resep_keluar_r.aturan',
+                                'resep_keluar_r.konsumsi',
+                                'resep_keluar_r.keterangan',
+                                'retur_penjualan_r.jumlah_retur',
+                                'signa.jumlah as konsumsi_perhari',
+                                DB::raw('
+                            CASE
+                            WHEN retur_penjualan_r.jumlah_retur IS NOT NULL THEN resep_keluar_r.jumlah - retur_penjualan_r.jumlah_retur
+                            ELSE resep_keluar_r.jumlah
+                            END as qty
+                            ')
+                            )
+                                ->leftJoin('retur_penjualan_r', function ($jo) {
+                                    $jo->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat')
+                                        ->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep');
+                                })
+                                ->leftJoin('signa', 'signa.signa', '=', 'resep_keluar_r.aturan')
+                                ->with([
+                                    'mobat.kfa'
+                                ]);
+                        },
+                        'rincianracik' => function ($ri) {
+                            $ri->select(
+                                'resep_keluar_racikan_r.kdobat',
+                                'resep_keluar_racikan_r.noresep',
+                                'resep_keluar_racikan_r.jumlah',
+                                'resep_keluar_racikan_r.jumlahdibutuhkan as qty',
+                                'resep_keluar_racikan_r.tiperacikan',
+                                'resep_permintaan_keluar_racikan.dosismaksimum',
+                                'resep_permintaan_keluar_racikan.aturan',
+                            )
+                                ->leftJoin('resep_permintaan_keluar_racikan', function ($jo) {
+                                    $jo->on('resep_permintaan_keluar_racikan.kdobat', '=', 'resep_keluar_racikan_r.kdobat')
+                                        ->on('resep_permintaan_keluar_racikan.noresep', '=', 'resep_keluar_racikan_r.noresep');
+                                })
+                                ->with([
+                                    'mobat.kfa'
+                                ]);
+                        },
+                        'petugas:id,nik,nama,satset_uuid',
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
+                'diet',
+                'telaahresep' => function ($t) {
+                    $t->with('petugas:id,nama,satset_uuid');
+                },
+                'laborats' => function ($t) {
+                    $t->with([
+                        'details' => function ($d) {
+                            $d->with([
+                                'pemeriksaanlab' => function ($p) {
+                                    $p->select(
+                                        'rs49.*',
+                                        'rs49_spesimen.jenis_spesimen',
+                                        'rs49_spesimen.jumlah_spesimen',
+                                        'rs49_spesimen.volume_spesimen_klinis',
+                                        'rs49_spesimen.cara_pengambilan_spesimen',
+                                        'rs49_spesimen.cairan_fiksasi',
+                                        'rs49_spesimen.volume_cairan_fiksasi',
+                                    )->with('loinclab')
+                                        ->leftJoin('rs49_spesimen', 'rs49.rs1', '=', 'rs49_spesimen.rs1')
+                                        ->orderBy('id', 'ASC');
+                                }
+                            ])->orderBy('rs4', 'ASC');
+                        }
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
+                'radiologi' => function ($t) {
+                    $t->with([
+                        'rincians' => function ($r) {
+                            $r->leftJoin('rs151', function ($join) {
+                                $join->on('rs48.rs2', '=', 'rs151.rs5')
+                                    ->on('rs48.rs1', '=', 'rs151.rs1')
+                                    ->on('rs48.rs4', '=', 'rs151.kode');
+                            })->leftJoin('rs48_pacs', 'rs48.rs2', '=', 'rs48_pacs.nota')
+                                ->select('rs48.*', 'rs48_pacs.*', 'rs151.hasil', 'rs151.rs3 as kesimpulan', 'rs151.hasilhtml', 'rs151.kesimpulanhtml', 'rs151.rs4 as pelaksana');
+                        },
+                        'rincians.relmasterpemeriksaan',
+                        'dokter:nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
+                    ])->orderBy('id', 'DESC');
+                },
+            ])
+            ->orderBy('rs17.rs3', 'ASC')
+            ->first();
+
+        if (!$data) {
+            return ['message' => 'failed', 'data' => 'Tidak ada antrean IGD yang belum terkirim'];
+        }
+
+        return self::kirimKunjunganIgd($data);
+    }
+
+    public static function cobaIgd($noreg)
+    {
+        $data = KunjunganPoli::select(
+            'rs17.rs1',
+            'rs17.rs9',
+            'rs17.rs4',
+            'rs17.rs8',
+            'rs17.rs1 as noreg',
+            'rs17.rs2 as norm',
+            'rs17.rs3 as tgl_kunjungan',
+            'rs17.rs8 as kodepoli',
+            'rs19.rs2 as poli',
+            'rs17.rs9 as kodedokter',
+            'rs21.rs2 as dokter',
+            'rs17.rs14 as kodesistembayar',
+            'rs9.rs2 as sistembayar',
+            'rs9.groups as groups',
+            'rs15.rs2 as nama',
+            'rs15.rs49 as nik',
+            'rs17.rs19 as status',
+            'rs15.satset_uuid as pasien_uuid',
+            DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())) AS usiatahun')
+        )
+            ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2')
+            ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8')
+            ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9')
+            ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14')
+            ->where('rs17.rs1', '=', $noreg)
+            ->with([
+                'satset:uuid',
+                'satset_error:uuid',
+                'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
+                'relmpoli' => function ($q) {
+                    $q->select('rs1', 'kode_ruang', 'rs7 as nama')->with('ruang:kode,uraian,groupper,satset_uuid,departement_uuid,gedung,lantai,ruang');
+                },
+                'taskid' => function ($q) {
+                    $q->select('noreg', 'taskid', 'waktu', 'created_at')
+                        ->orderBy('taskid', 'ASC');
+                },
+                'anamnesis',
+                'pemeriksaanfisik' => function ($a) {
+                    $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                        ->orderBy('id', 'DESC');
+                },
+                'tindakan' => function ($t) {
+                    $t->select('rs73.rs1', 'rs73.rs2', 'rs73.rs3', 'rs73.rs4', 'rs73.rs8', 'rs73.rs9', 'rs30.rs2 as keterangan', 'rs30.rs1 as kode');
+                    $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
+                        ->with([
+                            'maapingprocedure' => function ($mp) {
+                                $mp->select('prosedur_mapping.kdMaster', 'prosedur_mapping.icd9', 'prosedur_master.prosedur')
+                                    ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
+                            },
+                            'maapingsnowmed:kdMaster,kdSnowmed,display',
+                            'petugas:nama,kdpegsimrs,satset_uuid'
+                        ])
+                        ->groupBy('rs73.rs4')
+                        ->orderBy('id', 'DESC');
+                },
+                'diagnosa' => function ($d) {
+                    $d->select('rs1', 'rs3', 'rs4', 'rs7', 'rs8');
+                    $d->with('masterdiagnosa');
+                },
+                'planning' => function ($p) {
+                    $p->select('rs1', 'rs2', 'rs3', 'rs4', 'rs5', 'tgl', 'user', 'flag');
+                    $p->with([
+                        'masterpoli:rs1,rs7,rs6,panggil_antrian,displaykode,kode_ruang',
+                        'rekomdpjp',
+                        'transrujukan',
+                        'listkonsul' => function ($lk) {
+                            $lk->select('noreg_lama', 'norm', 'tgl_kunjungan', 'tgl_rencana_konsul', 'kdpoli_asal', 'kdpoli_tujuan', 'kddokter_asal', 'flag', 'rs17.rs9 as kdDokterKonsul', 'rs19.kode_ruang')
+                                ->leftJoin('rs17', 'rs17.rs4', '=', 'listkonsulanpoli.noreg_lama')
+                                ->leftJoin('rs19', 'rs19.rs1', '=', 'listkonsulanpoli.kdpoli_tujuan')
+                                ->with('dokterkonsul:kdpegsimrs,nama,satset_uuid', 'lokasikonsul:kode,uraian,satset_uuid');
+                        },
+                        'spri:noreg,norm,kodeDokter,tglRencanaKontrol,noSuratKontrol,nama,kelamin,user_id',
+                        'spri.petugas:nama,kdpegsimrs,satset_uuid',
+                        'ranap:rs1,rs2,rs3,rs4,rs5,rs6,rs7,groups,status,hiddens,groups_nama,jenis',
+                        'kontrol' => function ($k) {
+                            $k->select('noreg', 'norm', 'kodeDokter as kdDokterKontrol', 'poliKontrol', 'tglRencanaKontrol', 'created_at', 'rs19.kode_ruang')
+                                ->leftJoin('rs19', 'rs19.rs6', '=', 'bpjs_surat_kontrol.poliKontrol')
+                                ->with('dokterkontrol:kddpjp,nama,satset_uuid', 'lokasikontrol:kode,uraian,satset_uuid');
+                        },
+                        'operasi',
+                    ])->orderBy('id', 'DESC');
+                },
+                'apotek' => function ($apot) {
+                    $apot->whereIn('flag', ['3', '4'])->with([
+                        'rincian' => function ($ri) {
+                            $ri->select(
+                                'resep_keluar_r.id',
+                                'resep_keluar_r.kdobat',
+                                'resep_keluar_r.noresep',
+                                'resep_keluar_r.jumlah',
+                                'resep_keluar_r.aturan',
+                                'resep_keluar_r.konsumsi',
+                                'resep_keluar_r.keterangan',
+                                'retur_penjualan_r.jumlah_retur',
+                                'signa.jumlah as konsumsi_perhari',
+                                DB::raw('
+                            CASE
+                            WHEN retur_penjualan_r.jumlah_retur IS NOT NULL THEN resep_keluar_r.jumlah - retur_penjualan_r.jumlah_retur
+                            ELSE resep_keluar_r.jumlah
+                            END as qty
+                            ')
+                            )
+                                ->leftJoin('retur_penjualan_r', function ($jo) {
+                                    $jo->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat')
+                                        ->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep');
+                                })
+                                ->leftJoin('signa', 'signa.signa', '=', 'resep_keluar_r.aturan')
+                                ->with([
+                                    'mobat.kfa'
+                                ]);
+                        },
+                        'rincianracik' => function ($ri) {
+                            $ri->select(
+                                'resep_keluar_racikan_r.kdobat',
+                                'resep_keluar_racikan_r.noresep',
+                                'resep_keluar_racikan_r.jumlah',
+                                'resep_keluar_racikan_r.jumlahdibutuhkan as qty',
+                                'resep_keluar_racikan_r.tiperacikan',
+                                'resep_permintaan_keluar_racikan.dosismaksimum',
+                                'resep_permintaan_keluar_racikan.aturan',
+                            )
+                                ->leftJoin('resep_permintaan_keluar_racikan', function ($jo) {
+                                    $jo->on('resep_permintaan_keluar_racikan.kdobat', '=', 'resep_keluar_racikan_r.kdobat')
+                                        ->on('resep_permintaan_keluar_racikan.noresep', '=', 'resep_keluar_racikan_r.noresep');
+                                })
+                                ->with([
+                                    'mobat.kfa'
+                                ]);
+                        },
+                        'petugas:id,nik,nama,satset_uuid',
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
+                'diet',
+                'telaahresep' => function ($t) {
+                    $t->with('petugas:id,nama,satset_uuid');
+                },
+                'laborats' => function ($t) {
+                    $t->with([
+                        'details' => function ($d) {
+                            $d->with([
+                                'pemeriksaanlab' => function ($p) {
+                                    $p->select(
+                                        'rs49.*',
+                                        'rs49_spesimen.jenis_spesimen',
+                                        'rs49_spesimen.jumlah_spesimen',
+                                        'rs49_spesimen.volume_spesimen_klinis',
+                                        'rs49_spesimen.cara_pengambilan_spesimen',
+                                        'rs49_spesimen.cairan_fiksasi',
+                                        'rs49_spesimen.volume_cairan_fiksasi',
+                                    )->with('loinclab')
+                                        ->leftJoin('rs49_spesimen', 'rs49.rs1', '=', 'rs49_spesimen.rs1')
+                                        ->orderBy('id', 'ASC');
+                                }
+                            ])->orderBy('rs4', 'ASC');
+                        }
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
+                'radiologi' => function ($t) {
+                    $t->with([
+                        'rincians' => function ($r) {
+                            $r->leftJoin('rs151', function ($join) {
+                                $join->on('rs48.rs2', '=', 'rs151.rs5')
+                                    ->on('rs48.rs1', '=', 'rs151.rs1')
+                                    ->on('rs48.rs4', '=', 'rs151.kode');
+                            })->leftJoin('rs48_pacs', 'rs48.rs2', '=', 'rs48_pacs.nota')
+                                ->select('rs48.*', 'rs48_pacs.*', 'rs151.hasil', 'rs151.rs3 as kesimpulan', 'rs151.hasilhtml', 'rs151.kesimpulanhtml', 'rs151.rs4 as pelaksana');
+                        },
+                        'rincians.relmasterpemeriksaan',
+                        'dokter:nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
+                    ])->orderBy('id', 'DESC');
+                },
+            ])
+            ->first();
+
+        if (!$data) {
+            return ['message' => 'failed', 'data' => "Kunjungan IGD noreg $noreg tidak ditemukan"];
+        }
+
+        return self::kirimKunjunganIgd($data);
+    }
+
+    public static function getPasienByNikSatset($pasien)
+    {
+        $nik = $pasien->nik;
+        $norm = $pasien->norm;
+
+        $token = AuthSatsetHelper::accessToken();
+        $params = '/Patient?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
+
+        $send = BridgingSatsetHelper::get_data($token, $params);
+
+        $data = Pasien::where([
+            ['rs49', $nik],
+            ['rs1', $norm],
+        ])->first();
+
+        if ($send['message'] === 'success') {
+            if ($data) {
+                $data->satset_uuid = $send['data']['uuid'];
+                $data->save();
+            }
+        }
+        return $send;
+    }
+
+    public static function getPractitionerFromSatset($pasien)
+    {
+        $nik = $pasien->datasimpeg ? $pasien->datasimpeg['nik'] : null;
+        if (!$nik) {
+            return ['message' => 'failed', 'data' => 'NIK Dokter Kosong'];
+        }
+        $token = AuthSatsetHelper::accessToken();
+        $params = '/Practitioner?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
+
+        $send = BridgingSatsetHelper::get_data($token, $params);
+
+        $data = Pegawai::where('nik', $nik)->where('aktif', 'AKTIF')->first();
+
+        if ($send['message'] === 'success') {
+            if ($data) {
+                $data->satset_uuid = $send['data']['uuid'];
+                $data->save();
+            }
+        }
+        return $send;
+    }
+
+    public static function kirimKunjunganIgd($data)
+    {
+        $pasien_uuid = $data->pasien_uuid;
+        if (!$pasien_uuid) {
+            $getPasienFromSatset = self::getPasienByNikSatset($data);
+            $pasien_uuid = $getPasienFromSatset['data']['uuid'] ?? null;
+        }
+
+        if (!$pasien_uuid) {
+            return ['message' => 'failed', 'data' => 'Pasien Belum Terkoneksi Ke Satu Sehat'];
+        }
+
+        $practitioner = $data->datasimpeg ? ($data->datasimpeg['satset_uuid'] ?? null) : null;
+        if (!$practitioner) {
+            $getPrac = self::getPractitionerFromSatset($data);
+            $practitioner = $getPrac['data']['uuid'] ?? null;
+        }
+
+        if (!$practitioner) {
+            return ['message' => 'failed', 'data' => 'Dokter IGD Belum Terkoneksi Ke Satu Sehat'];
+        }
+
+        $send = self::form($data, $pasien_uuid, $practitioner);
+        if ($send['message'] === 'success') {
+            $token = AuthSatsetHelper::accessToken();
+            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+        }
+        return $send;
+    }
+
+    public static function form($request, $pasien_uuid, $practitioner)
     {
         $send = [
-            'message' =>  'failed',
+            'message' => 'failed',
             'data' => null
         ];
 
         $organization_id = BridgingSatsetHelper::organization_id();
+        $encounter = self::generateUuid();
+        $tgl_kunjungan = $request->tgl_kunjungan;
+        $specimenSnomeds = Msnomed::whereNotNull('spesimen')->get();
 
+        // 1. Waktu IGD
+        $waktu = $request->taskid;
+        $antri = count($waktu) > 0 ? Carbon::parse($waktu[0]->waktu)->toIso8601String() : Carbon::parse($tgl_kunjungan)->toIso8601String();
+        $start = count($waktu) > 1 ? Carbon::parse($waktu[1]->waktu)->toIso8601String() : Carbon::parse($tgl_kunjungan)->addMinutes(5)->toIso8601String();
+        $end = count($waktu) > 4 ? Carbon::parse($waktu[4]->waktu)->toIso8601String() : Carbon::parse($tgl_kunjungan)->addHours(2)->toIso8601String();
 
-        $entrys= self::encounter($request, $pasien_uuid, $organization_id);
+        // 2. Ruangan IGD
+        $relmasterRuang = $request->relmpoli ? $request->relmpoli['ruang'] : null;
+        $ruangId = !$relmasterRuang ? '00000000-0000-0000-0000-000000000000' : ($relmasterRuang['satset_uuid'] ?? '00000000-0000-0000-0000-000000000000');
+        $ruang = !$relmasterRuang ? 'IGD' : ($relmasterRuang['ruang'] ?? 'IGD');
+        $lantai = !$relmasterRuang ? '1' : ($relmasterRuang['lantai'] ?? '1');
+        $gedung = !$relmasterRuang ? 'Utama' : ($relmasterRuang['gedung'] ?? 'Utama');
 
-        $form = [
-          "resourceType" => "Bundle",
-          "type" => "transaction",
-          "entry" => [
+        // 3. Diagnosis & Condition
+        $diagnosa_entries = [];
+        $condition_entries = [];
+        $conds = $request->diagnosa ?? [];
+        foreach ($conds as $key => $d) {
+            $cond_uuid = self::generateUuid();
+            $diagnosa_entries[] = [
+                "condition" => [
+                    "reference" => "urn:uuid:$cond_uuid",
+                    "display" => $d['masterdiagnosa'] ? ($d['masterdiagnosa']['rs4'] ?? $d['masterdiagnosa']['rs3'] ?? 'Diagnosis') : 'Diagnosis',
+                ],
+                "use" => [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
+                            "code" => $d['rs4'] === 'Primer' ? 'AD' : 'DD',
+                            "display" => $d['rs4'] === 'Primer' ? 'Admission diagnosis' : 'Discharge diagnosis',
+                        ]
+                    ]
+                ],
+                "rank" => $key + 1
+            ];
 
-            // 1. Encounter, Condition
-            $entrys['encounter'],
-            // 2. CarePlan dll belm dikerjakan
+            $condition_entries[] = [
+                "fullUrl" => "urn:uuid:$cond_uuid",
+                "resource" => [
+                    "resourceType" => "Condition",
+                    "clinicalStatus" => [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/condition-clinical",
+                                "code" => "active",
+                                "display" => "Active",
+                            ]
+                        ]
+                    ],
+                    "category" => [
+                        [
+                            "coding" => [
+                                [
+                                    "system" => "http://terminology.hl7.org/CodeSystem/condition-category",
+                                    "code" => "encounter-diagnosis",
+                                    "display" => "Encounter Diagnosis",
+                                ]
+                            ]
+                        ]
+                    ],
+                    "code" => [
+                        "coding" => [
+                            [
+                                "system" => "http://hl7.org/fhir/sid/icd-10",
+                                "code" => $d['rs3'],
+                                "display" => $d['masterdiagnosa'] ? ($d['masterdiagnosa']['rs4'] ?? $d['masterdiagnosa']['rs3'] ?? 'Diagnosis') : 'Diagnosis',
+                            ]
+                        ]
+                    ],
+                    "subject" => ["reference" => "Patient/$pasien_uuid", "display" => $request->nama],
+                    "encounter" => ["reference" => "urn:uuid:$encounter"],
+                    "recorder" => ["reference" => "Practitioner/$practitioner"],
+                ],
+                "request" => ["method" => "POST", "url" => "Condition"],
+            ];
+        }
+
+        if (empty($diagnosa_entries)) {
+            return ['message' => 'failed', 'data' => 'Diagnosa Pasien IGD Belum Terisi'];
+        }
+
+        // Sub-resources
+        $refference = [];
+        $anamnesis = PostKunjunganRajalHelper::anamnesis($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $observation = PostKunjunganRajalHelper::observation($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $carePlan = PostKunjunganRajalHelper::carePlan($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $procedure = PostKunjunganRajalHelper::procedure($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $plann = PostKunjunganRajalHelper::planning($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $refference);
+        $alergyIntoleran = PostKunjunganRajalHelper::allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $apotek = PostKunjunganRajalHelper::apotek($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $laborats = PostKunjunganRajalHelper::laborats($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $specimenSnomeds);
+        $radiologis = PostKunjunganRajalHelper::radiologi($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+
+        $body = [
+            "resourceType" => "Bundle",
+            "type" => "transaction",
+            "entry" => [
+                // 1. Encounter (EMER)
+                [
+                    "fullUrl" => "urn:uuid:$encounter",
+                    "resource" => [
+                        "resourceType" => "Encounter",
+                        "identifier" => [
+                            [
+                                "system" => "http://sys-ids.kemkes.go.id/encounter/" . $organization_id,
+                                "value" => $request->noreg ?? $request->rs1
+                            ]
+                        ],
+                        "status" => "finished",
+                        "class" => [
+                            "system" => "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                            "code" => "EMER",
+                            "display" => "emergency"
+                        ],
+                        "subject" => [
+                            "reference" => "Patient/$pasien_uuid",
+                            "display" => $request->nama
+                        ],
+                        "participant" => [
+                            [
+                                "type" => [
+                                    [
+                                        "coding" => [
+                                            [
+                                                "system" => "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                                                "code" => "ATND",
+                                                "display" => "attender"
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                "individual" => [
+                                    "reference" => "Practitioner/$practitioner",
+                                    "display" => $request->datasimpeg['nama'] ?? '-'
+                                ]
+                            ]
+                        ],
+                        "period" => [
+                            "start" => $antri,
+                            "end" => $end
+                        ],
+                        "location" => [
+                            [
+                                "location" => [
+                                    "reference" => "Location/" . $ruangId,
+                                    "display" => "Ruang IGD, RSUD Mohamad Saleh, Lantai " . $lantai . ", Gedung " . $gedung
+                                ]
+                            ]
+                        ],
+                        "diagnosis" => $diagnosa_entries,
+                        "statusHistory" => [
+                            [
+                                "status" => "arrived",
+                                "period" => ["start" => $antri, "end" => $start]
+                            ],
+                            [
+                                "status" => "in-progress",
+                                "period" => ["start" => $start, "end" => $end]
+                            ],
+                            [
+                                "status" => "finished",
+                                "period" => ["start" => $end, "end" => $end]
+                            ]
+                        ],
+                        "serviceProvider" => ["reference" => "Organization/$organization_id"],
+                    ],
+                    "request" => ["method" => "POST", "url" => "Encounter"]
+                ]
             ]
         ];
 
-        // push condition
-        for ($i=0; $i < count($entrys['condition']) ; $i++) { 
-            array_push($form['entry'], $entrys['condition'][$i]);
+        // Push Condition
+        foreach ($condition_entries as $cond) {
+            $body['entry'][] = $cond;
+        }
+
+        // Push Anamnesis
+        if (!empty($anamnesis['keluhanUtama'])) {
+            $body['entry'][] = $anamnesis['keluhanUtama'];
+        }
+
+        // Push Observation (TTV, Kesadaran, Fisik)
+        if (!empty($observation)) {
+            $observations = collect($observation)->unique('fullUrl')->all();
+            foreach ($observations as $obs) {
+                if ($obs !== null) $body['entry'][] = $obs;
+            }
+        }
+
+        // Push CarePlan
+        if (!empty($carePlan)) {
+            $carePlanUnique = collect($carePlan)->unique('fullUrl')->all();
+            foreach ($carePlanUnique as $cp) {
+                if ($cp !== null) $body['entry'][] = $cp;
+            }
+        }
+
+        // Push Procedure (Tindakan)
+        if (!empty($procedure)) {
+            foreach ($procedure as $proc) {
+                if ($proc !== null) $body['entry'][] = $proc;
+            }
+        }
+
+        // Push Planning (SPRI, Konsul, Kontrol)
+        if (!empty($plann['spri'])) $body['entry'][] = $plann['spri'];
+        if (!empty($plann['konsul'])) $body['entry'][] = $plann['konsul'];
+        if (!empty($plann['kontrol'])) $body['entry'][] = $plann['kontrol'];
+
+        // Push Allergy Intolerance
+        if (!empty($alergyIntoleran)) $body['entry'][] = $alergyIntoleran;
+
+        // Push Farmasi (Medication, Request, Dispense)
+        if (!empty($apotek['nonracikan'])) {
+            foreach ($apotek['nonracikan'] as $item_obat) {
+                if (!empty($item_obat['medication'])) $body['entry'][] = $item_obat['medication'];
+                if (!empty($item_obat['medication_request'])) $body['entry'][] = $item_obat['medication_request'];
+                if (!empty($item_obat['medicationD'])) $body['entry'][] = $item_obat['medicationD'];
+                if (!empty($item_obat['medication_dispense'])) $body['entry'][] = $item_obat['medication_dispense'];
+            }
+        }
+        if (!empty($apotek['racikan'])) {
+            foreach ($apotek['racikan'] as $item_racik) {
+                if (!empty($item_racik['medication'])) $body['entry'][] = $item_racik['medication'];
+                if (!empty($item_racik['medication_request'])) $body['entry'][] = $item_racik['medication_request'];
+                if (!empty($item_racik['medicationD'])) $body['entry'][] = $item_racik['medicationD'];
+                if (!empty($item_racik['medication_dispense'])) $body['entry'][] = $item_racik['medication_dispense'];
+            }
+        }
+
+        // Push Laborat
+        if (!empty($laborats)) {
+            foreach ($laborats as $lab) {
+                if (!empty($lab['serviceRequests'])) $body['entry'][] = $lab['serviceRequests'];
+                if (!empty($lab['hasil'])) $body['entry'][] = $lab['hasil'];
+                if (!empty($lab['spesimen'])) $body['entry'][] = $lab['spesimen'];
+                if (!empty($lab['diagnosticReport'])) $body['entry'][] = $lab['diagnosticReport'];
+            }
+        }
+
+        // Push Radiologi
+        if (!empty($radiologis)) {
+            foreach ($radiologis as $rad) {
+                if ($rad !== null) $body['entry'][] = $rad;
+            }
         }
 
         $send['message'] = 'success';
-        $send['data'] = $form;
+        $send['data'] = $body;
 
         return $send;
-
-        
-    }
-    public static function encounter($request, $pasien_uuid, $organization_id)
-    {
-       $formEncounter =  
-       [
-        "fullUrl" => "urn:uuid:{{Encounter_id}}",
-        "resource" => [
-            "resourceType" => "Encounter",
-            "identifier" => [
-                [
-                    "system" => "http://sys-ids.kemkes.go.id/encounter/{{Org_ID}}",
-                    "value" => "KSP20240001",
-                ],
-            ],
-            "status" => "finished",
-            "class" => [
-                "system" => "http://terminology.hl7.org/CodeSystem/v3-ActCode",
-                "code" => "EMER",
-                "display" => "emergency",
-            ],
-            "subject" => [
-                "reference" => "Patient/{{Patient_ID}}",
-                "display" => "{{Patient_Name}}",
-            ],
-            "participant" => [
-                [
-                    "type" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" => "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
-                                    "code" => "ATND",
-                                    "display" => "attender",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "individual" => [
-                        "reference" => "Practitioner/{{Practitioner_ID}}",
-                        "display" => "{{Practitioner_Name}}",
-                    ],
-                ],
-            ],
-            "period" => [
-                "start" => "2023-07-04T08:30:00+00:00",
-                "end" => "2023-07-04T14:00:00+00:00",
-            ],
-            "location" => [
-                [
-                    "location" => [
-                        "reference" => "Location/{{Location_RT}}",
-                        "display" => "Ruangan Triase, Instalasi Gawat Darurat, Gedung Utama, Lantai 1",
-                    ],
-                    "period" => [
-                        "start" => "2023-07-04T08:30:00+00:00",
-                        "end" => "2023-07-04T08:40:00+00:00",
-                    ],
-                    "extension" => [
-                        [
-                            "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/ServiceClass",
-                            "extension" => [
-                                [
-                                    "url" => "value",
-                                    "valueCodeableConcept" => [
-                                        "coding" => [
-                                            [
-                                                "system" => "http://terminology.kemkes.go.id/CodeSystem/locationServiceClass-Outpatient",
-                                                "code" => "reguler",
-                                                "display" =>
-                                                    "Kelas Reguler",
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                                [
-                                    "url" => "upgradeClassIndicator",
-                                    "valueCodeableConcept" => [
-                                        "coding" => [
-                                            [
-                                                "system" => "http://terminology.kemkes.go.id/CodeSystem/locationUpgradeClass",
-                                                "code" => "kelas-tetap",
-                                                "display" =>
-                                                    "Kelas Tetap Perawatan",
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                [
-                    "location" => [
-                        "reference" => "Location/{{Location_RTK}}",
-                        "display" => "Ruangan Tindakan Kebidanan, Instalasi Gawat Darurat, Gedung Utama, Lantai 1",
-                    ],
-                    "period" => [
-                        "start" => "2023-07-04T08:40:00+00:00",
-                        "end" => "2023-07-04T14:00:00+00:00",
-                    ],
-                    "extension" => [
-                        [
-                            "url" =>
-                                "https://fhir.kemkes.go.id/r4/StructureDefinition/ServiceClass",
-                            "extension" => [
-                                [
-                                    "url" => "value",
-                                    "valueCodeableConcept" => [
-                                        "coding" => [
-                                            [
-                                                "system" =>
-                                                    "http://terminology.kemkes.go.id/CodeSystem/locationServiceClass-Outpatient",
-                                                "code" => "reguler",
-                                                "display" =>
-                                                    "Kelas Reguler",
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                                [
-                                    "url" => "upgradeClassIndicator",
-                                    "valueCodeableConcept" => [
-                                        "coding" => [
-                                            [
-                                                "system" => "http://terminology.kemkes.go.id/CodeSystem/locationUpgradeClass",
-                                                "code" => "kelas-tetap",
-                                                "display" =>
-                                                    "Kelas Tetap Perawatan",
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            "diagnosis" => [
-                [
-                    "condition" => [
-                        "reference" => "urn:uuid:{{Condition_DiagnosisAwal}}",
-                        "display" => "Abnormal uterine and vaginal bleeding, unspecified",
-                    ],
-                    "use" => [
-                        "coding" => [
-                            [
-                                "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
-                                "code" => "AD",
-                                "display" => "Admission diagnosis ",
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            "statusHistory" => [
-                [
-                    "status" => "arrived",
-                    "period" => [
-                        "start" => "2023-07-04T08:30:00+00:00",
-                        "end" => "2023-07-04T08:31:00+00:00",
-                    ],
-                ],
-                [
-                    "status" => "triaged",
-                    "period" => [
-                        "start" => "2023-07-04T08:31:00+00:00",
-                        "end" => "2023-07-04T08:40:00+00:00",
-                    ],
-                ],
-                [
-                    "status" => "in-progress",
-                    "period" => [
-                        "start" => "2023-07-04T08:40:00+00:00",
-                        "end" => "2023-07-04T14:00:00+00:00",
-                    ],
-                ],
-                [
-                    "status" => "finished",
-                    "period" => [
-                        "start" => "2023-07-04T14:00:00+00:00",
-                        "end" => "2023-07-04T14:00:00+00:00",
-                    ],
-                ],
-            ],
-            "hospitalization" => [
-                "dischargeDisposition" => [
-                    "coding" => [
-                        [
-                            "system" => "http://terminology.hl7.org/CodeSystem/discharge-disposition",
-                            "code" => "oth",
-                            "display" => "Other",
-                        ],
-                    ],
-                    "text" => "Pasien dipindahkan dari IGD ke rawat inap.",
-                ],
-            ],
-            "serviceProvider" => ["reference" => "Organization/{{Org_ID}}"],
-        ],
-        "request" => ["method" => "POST", "url" => "Encounter"],
-      ];
-
-
-      $entrys['encounter'] = $formEncounter;
-      
-
-      return $entrys;
-    }
-
-   
-
-
-
-    public function ygHarusDikerjakan()
-    {
-      $arrayVar = [
-        "resourceType" => "Bundle",
-        "type" => "transaction",
-        "entry" => [
-
-          // `1. Encounter dikerjakan
-            [
-                "fullUrl" => "urn:uuid:{{Encounter_id}}",
-                "resource" => [
-                    "resourceType" => "Encounter",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/encounter/{{Org_ID}}",
-                            "value" => "KSP20240001",
-                        ],
-                    ],
-                    "status" => "finished",
-                    "class" => [
-                        "system" =>
-                            "http://terminology.hl7.org/CodeSystem/v3-ActCode",
-                        "code" => "EMER",
-                        "display" => "emergency",
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "participant" => [
-                        [
-                            "type" => [
-                                [
-                                    "coding" => [
-                                        [
-                                            "system" =>
-                                                "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
-                                            "code" => "ATND",
-                                            "display" => "attender",
-                                        ],
-                                    ],
-                                ],
-                            ],
-                            "individual" => [
-                                "reference" => "Practitioner/{{Practitioner_ID}}",
-                                "display" => "{{Practitioner_Name}}",
-                            ],
-                        ],
-                    ],
-                    "period" => [
-                        "start" => "2023-07-04T08:30:00+00:00",
-                        "end" => "2023-07-04T14:00:00+00:00",
-                    ],
-                    "location" => [
-                        [
-                            "location" => [
-                                "reference" => "Location/{{Location_RT}}",
-                                "display" =>
-                                    "Ruangan Triase, Instalasi Gawat Darurat, Gedung Utama, Lantai 1",
-                            ],
-                            "period" => [
-                                "start" => "2023-07-04T08:30:00+00:00",
-                                "end" => "2023-07-04T08:40:00+00:00",
-                            ],
-                            "extension" => [
-                                [
-                                    "url" =>
-                                        "https://fhir.kemkes.go.id/r4/StructureDefinition/ServiceClass",
-                                    "extension" => [
-                                        [
-                                            "url" => "value",
-                                            "valueCodeableConcept" => [
-                                                "coding" => [
-                                                    [
-                                                        "system" =>
-                                                            "http://terminology.kemkes.go.id/CodeSystem/locationServiceClass-Outpatient",
-                                                        "code" => "reguler",
-                                                        "display" =>
-                                                            "Kelas Reguler",
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                        [
-                                            "url" => "upgradeClassIndicator",
-                                            "valueCodeableConcept" => [
-                                                "coding" => [
-                                                    [
-                                                        "system" =>
-                                                            "http://terminology.kemkes.go.id/CodeSystem/locationUpgradeClass",
-                                                        "code" => "kelas-tetap",
-                                                        "display" =>
-                                                            "Kelas Tetap Perawatan",
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                        [
-                            "location" => [
-                                "reference" => "Location/{{Location_RTK}}",
-                                "display" =>
-                                    "Ruangan Tindakan Kebidanan, Instalasi Gawat Darurat, Gedung Utama, Lantai 1",
-                            ],
-                            "period" => [
-                                "start" => "2023-07-04T08:40:00+00:00",
-                                "end" => "2023-07-04T14:00:00+00:00",
-                            ],
-                            "extension" => [
-                                [
-                                    "url" =>
-                                        "https://fhir.kemkes.go.id/r4/StructureDefinition/ServiceClass",
-                                    "extension" => [
-                                        [
-                                            "url" => "value",
-                                            "valueCodeableConcept" => [
-                                                "coding" => [
-                                                    [
-                                                        "system" =>
-                                                            "http://terminology.kemkes.go.id/CodeSystem/locationServiceClass-Outpatient",
-                                                        "code" => "reguler",
-                                                        "display" =>
-                                                            "Kelas Reguler",
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                        [
-                                            "url" => "upgradeClassIndicator",
-                                            "valueCodeableConcept" => [
-                                                "coding" => [
-                                                    [
-                                                        "system" =>
-                                                            "http://terminology.kemkes.go.id/CodeSystem/locationUpgradeClass",
-                                                        "code" => "kelas-tetap",
-                                                        "display" =>
-                                                            "Kelas Tetap Perawatan",
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                    "diagnosis" => [
-                        [
-                            "condition" => [
-                                "reference" =>
-                                    "urn:uuid:{{Condition_DiagnosisAwal}}",
-                                "display" =>
-                                    "Abnormal uterine and vaginal bleeding, unspecified",
-                            ],
-                            "use" => [
-                                "coding" => [
-                                    [
-                                        "system" =>
-                                            "http://terminology.hl7.org/CodeSystem/diagnosis-role",
-                                        "code" => "AD",
-                                        "display" => "Admission diagnosis ",
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                    "statusHistory" => [
-                        [
-                            "status" => "arrived",
-                            "period" => [
-                                "start" => "2023-07-04T08:30:00+00:00",
-                                "end" => "2023-07-04T08:31:00+00:00",
-                            ],
-                        ],
-                        [
-                            "status" => "triaged",
-                            "period" => [
-                                "start" => "2023-07-04T08:31:00+00:00",
-                                "end" => "2023-07-04T08:40:00+00:00",
-                            ],
-                        ],
-                        [
-                            "status" => "in-progress",
-                            "period" => [
-                                "start" => "2023-07-04T08:40:00+00:00",
-                                "end" => "2023-07-04T14:00:00+00:00",
-                            ],
-                        ],
-                        [
-                            "status" => "finished",
-                            "period" => [
-                                "start" => "2023-07-04T14:00:00+00:00",
-                                "end" => "2023-07-04T14:00:00+00:00",
-                            ],
-                        ],
-                    ],
-                    "hospitalization" => [
-                        "dischargeDisposition" => [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/discharge-disposition",
-                                    "code" => "oth",
-                                    "display" => "Other",
-                                ],
-                            ],
-                            "text" => "Pasien dipindahkan dari IGD ke rawat inap.",
-                        ],
-                    ],
-                    "serviceProvider" => ["reference" => "Organization/{{Org_ID}}"],
-                ],
-                "request" => ["method" => "POST", "url" => "Encounter"],
-            ],
-
-        // 2. Condition DiagnosisAwal
-            [
-                "fullUrl" => "urn:uuid:{{Condition_DiagnosisAwal}}",
-                "resource" => [
-                    "resourceType" => "Condition",
-                    "clinicalStatus" => [
-                        "coding" => [
-                            [
-                                "system" =>
-                                    "http://terminology.hl7.org/CodeSystem/condition-clinical",
-                                "code" => "active",
-                                "display" => "Active",
-                            ],
-                        ],
-                    ],
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/condition-category",
-                                    "code" => "encounter-diagnosis",
-                                    "display" => "Encounter Diagnosis",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://hl7.org/fhir/sid/icd-10",
-                                "code" => "N93.9",
-                                "display" =>
-                                    "Abnormal uterine and vaginal bleeding, unspecified",
-                            ],
-                        ],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "onsetDateTime" => "2023-07-04T09:40:00+00:00",
-                    "recordedDate" => "2023-07-04T09:40:00+00:00",
-                    "note" => [
-                        [
-                            "text" =>
-                                "Pasien {{Patient_Name}} mengalami abnormal uterus dan perdarahan pervagina",
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Condition"],
-            ],
-
-        // 3. Condition DiagnosisKerja
-            [
-                "fullUrl" => "urn:uuid:{{Condition_DiagnosisKerja}}",
-                "resource" => [
-                    "resourceType" => "Condition",
-                    "clinicalStatus" => [
-                        "coding" => [
-                            [
-                                "system" =>
-                                    "http://terminology.hl7.org/CodeSystem/condition-clinical",
-                                "code" => "active",
-                                "display" => "Active",
-                            ],
-                        ],
-                    ],
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/condition-category",
-                                    "code" => "encounter-diagnosis",
-                                    "display" => "Encounter Diagnosis",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "verificationStatus" => [
-                        "coding" => [
-                            [
-                                "system" =>
-                                    "http://terminology.hl7.org/CodeSystem/condition-ver-status",
-                                "code" => "provisional",
-                                "display" => "Provisional",
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://hl7.org/fhir/sid/icd-10",
-                                "code" => "O71.0",
-                                "display" =>
-                                    "Rupture of uterus before onset of labour",
-                            ],
-                        ],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "onsetDateTime" => "2023-07-04T09:40:00+00:00",
-                    "recordedDate" => "2023-07-04T09:40:00+00:00",
-                    "note" => [
-                        [
-                            "text" =>
-                                "Diagnosis kerja dari Pasien {{Patient_Name}} berupa ruptur uteri sebelum proses persalinan dimulai",
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Condition"],
-            ],
-
-        // 4. Condition DoiagnosisiBanding
-            [
-                "fullUrl" => "urn:uuid:{{Condition_DiagnosisBanding}}",
-                "resource" => [
-                    "resourceType" => "Condition",
-                    "clinicalStatus" => [
-                        "coding" => [
-                            [
-                                "system" =>
-                                    "http://terminology.hl7.org/CodeSystem/condition-clinical",
-                                "code" => "active",
-                                "display" => "Active",
-                            ],
-                        ],
-                    ],
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/condition-category",
-                                    "code" => "encounter-diagnosis",
-                                    "display" => "Encounter Diagnosis",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "verificationStatus" => [
-                        "coding" => [
-                            [
-                                "system" =>
-                                    "http://terminology.hl7.org/CodeSystem/condition-ver-status",
-                                "code" => "differential",
-                                "display" => "Differential",
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://hl7.org/fhir/sid/icd-10",
-                                "code" => "O03.9",
-                                "display" =>
-                                    "Spontaneous abortion: complete or unspecified, without complication",
-                            ],
-                        ],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "onsetDateTime" => "2023-07-04T09:40:00+00:00",
-                    "recordedDate" => "2023-07-04T09:40:00+00:00",
-                    "note" => [
-                        [
-                            "text" =>
-                                "Diagnosis banding dari Pasien {{Patient_Name}} berupa aborsi spontan tanpa komplikasi",
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Condition"],
-            ],
-
-        // 5. Procedure Emergency
-            [
-                "fullUrl" => "urn:uuid:{{Procedure_Emergency}}",
-                "resource" => [
-                    "resourceType" => "Procedure",
-                    "status" => "completed",
-                    "category" => [
-                        "coding" => [
-                            [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "373110003",
-                                "display" => "Emergency procedure",
-                            ],
-                        ],
-                        "text" => "Prosedur emergensi",
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://hl7.org/fhir/sid/icd-9-cm",
-                                "code" => "74.0",
-                                "display" => "Classical cesarean section",
-                            ],
-                        ],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "performedPeriod" => [
-                        "start" => "2023-07-04T09:45:00+00:00",
-                        "end" => "2023-07-04T13:00:00+00:00",
-                    ],
-                    "performer" => [
-                        [
-                            "actor" => [
-                                "reference" => "Practitioner/{{Practitioner_ID}}",
-                                "display" => "{{Practitioner_Name}}",
-                            ],
-                        ],
-                    ],
-                    "reasonCode" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" => "http://hl7.org/fhir/sid/icd-10",
-                                    "code" => "O71.0",
-                                    "display" =>
-                                        "Rupture of uterus before onset of labour",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "bodySite" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" => "http://snomed.info/sct",
-                                    "code" => "35039007",
-                                    "display" => "Uterine structure",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "note" => [
-                        [
-                            "text" =>
-                                "Emergensi sectio caesarian telah dilakukan kepada Pasien {{Patient_Name}}",
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Procedure"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{Observation_Kesadaran}}",
-                "resource" => [
-                    "resourceType" => "Observation",
-                    "status" => "final",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/observation/{{Org_ID}}",
-                            "value" => "A20240199",
-                        ],
-                    ],
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/observation-category",
-                                    "code" => "exam",
-                                    "display" => "Exam",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://loinc.org",
-                                "code" => "67775-7",
-                                "display" => "Level of responsiveness",
-                            ],
-                        ],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "effectiveDateTime" => "2023-07-04T08:45:00+00:00",
-                    "issued" => "2023-07-04T08:45:00+00:00",
-                    "performer" => [
-                        ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                    ],
-                    "valueCodeableConcept" => [
-                        "coding" => [
-                            [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "450847001",
-                                "display" => "Response to pain",
-                            ],
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Observation"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{Observation_Nadi}}",
-                "resource" => [
-                    "resourceType" => "Observation",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/observation/{{Org_ID}}",
-                            "value" => "A202401199",
-                        ],
-                    ],
-                    "status" => "final",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/observation-category",
-                                    "code" => "vital-signs",
-                                    "display" => "Vital Signs",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://loinc.org",
-                                "code" => "8867-4",
-                                "display" => "Heart rate",
-                            ],
-                        ],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "effectiveDateTime" => "2023-07-04T08:45:00+00:00",
-                    "issued" => "2023-07-04T08:45:00+00:00",
-                    "performer" => [
-                        ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                    ],
-                    "valueQuantity" => [
-                        "value" => 80,
-                        "unit" => "beats/minute",
-                        "system" => "http://unitsofmeasure.org",
-                        "code" => "/min",
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Observation"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{Observation_RisikoJatuh}}",
-                "resource" => [
-                    "resourceType" => "Observation",
-                    "status" => "final",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/observation/{{Org_ID}}",
-                            "value" => "A2024011199",
-                        ],
-                    ],
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/observation-category",
-                                    "code" => "exam",
-                                    "display" => "Exam",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://loinc.org",
-                                "code" => "59461-4",
-                                "display" => "Fall risk level [Morse Fall Scale]",
-                            ],
-                        ],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "effectiveDateTime" => "2023-07-04T08:45:00+00:00",
-                    "issued" => "2023-07-04T08:45:00+00:00",
-                    "performer" => [
-                        ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                    ],
-                    "valueQuantity" => [
-                        "value" => 30,
-                        "unit" => "{score}",
-                        "system" => "http://unitsofmeasure.org",
-                        "code" => "{score}",
-                    ],
-                    "interpretation" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                    "code" => "OI000027",
-                                    "display" => "25 - 44 (Risiko sedang)",
-                                ],
-                            ],
-                            "text" => "Risiko sedang",
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Observation"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{CarePlan_RencanaRawat}}",
-                "resource" => [
-                    "resourceType" => "CarePlan",
-                    "title" => "Rencana Rawat",
-                    "status" => "active",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" => "http://snomed.info/sct",
-                                    "code" => "702779007",
-                                    "display" =>
-                                        "Emergency health care plan agreed",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "intent" => "plan",
-                    "description" =>
-                        "Rencana rawat tanggal 4 Juli 2023: pemeriksaan laboratorium darah lengkap, USG kehamilan, tindakan caesar emergensi, injeksi oksitosin 10 IU/mL segera pasca tindakan caesar, dan perawatan lanjutan ke rawat inap dengan waktu rawat 5-7 hari",
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "created" => "2023-07-04T09:00:00+00:00",
-                    "author" => ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                ],
-                "request" => ["method" => "POST", "url" => "CarePlan"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{CarePlan_Instruksi}}",
-                "resource" => [
-                    "resourceType" => "CarePlan",
-                    "title" => "Instruksi Medik dan Keperawatan",
-                    "status" => "active",
-                    "intent" => "plan",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" => "http://snomed.info/sct",
-                                    "code" => "702779007",
-                                    "display" =>
-                                        "Emergency health care plan agreed",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "description" =>
-                        "Intruksi medik dan keperawatan tanggal 4 Juli 2023 berupa: operasi caesar emergensi dilakukan baik dengan atau tanpa laparotomi eksplorasi, anastesi endotrakeal, pemberian injeksi intramuscular oksitosin 10 IU/mL segera pasca caesar, darah harus dipesan dan dibawa ke Ruangan Tindakan Kebidanan, IGD",
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "created" => "2023-07-04T09:00:00+00:00",
-                    "author" => ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                ],
-                "request" => ["method" => "POST", "url" => "CarePlan"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{Procedure_PraLab}}",
-                "resource" => [
-                    "resourceType" => "Procedure",
-                    "status" => "not-done",
-                    "category" => [
-                        "coding" => [
-                            [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "103693007",
-                                "display" => "Diagnostic procedure",
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "792805006",
-                                "display" => "Fasting",
-                            ],
-                        ],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "performedPeriod" => [
-                        "start" => "2023-07-04T09:13:00+00:00",
-                        "end" => "2023-07-04T09:13:00+00:00",
-                    ],
-                    "performer" => [
-                        [
-                            "actor" => [
-                                "reference" => "Practitioner/{{Practitioner_ID}}",
-                                "display" => "{{Practitioner_Name}}",
-                            ],
-                        ],
-                    ],
-                    "reasonCode" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" => "http://hl7.org/fhir/sid/icd-10",
-                                    "code" => "N93.9",
-                                    "display" =>
-                                        "Abnormal uterine and vaginal bleeding, unspecified",
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Procedure"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{ServiceRequest_Lab}}",
-                "resource" => [
-                    "resourceType" => "ServiceRequest",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/servicerequest/{{Org_ID}}",
-                            "value" => "DK19231961",
-                        ],
-                    ],
-                    "status" => "active",
-                    "intent" => "original-order",
-                    "priority" => "stat",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" => "http://snomed.info/sct",
-                                    "code" => "108252007",
-                                    "display" => "Laboratory procedure",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://loinc.org",
-                                "code" => "58410-2",
-                                "display" => "CBC panel - Blood by Automated count",
-                            ],
-                        ],
-                        "text" => "Pemeriksaan laboratorium darah lengkap",
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => [
-                        "reference" => "urn:uuid:{{Encounter_id}}",
-                        "display" =>
-                            "Permintaan pemeriksaan darah lengkap untuk Ny. {{Patient_Name}} tanggal 4 Juli 2023",
-                    ],
-                    "occurrenceDateTime" => "2023-07-04T09:15:00+00:00",
-                    "authoredOn" => "2023-07-04T09:15:00+00:00",
-                    "requester" => [
-                        "reference" => "Practitioner/{{Practitioner_ID}}",
-                        "display" => "{{Practitioner_Name}}",
-                    ],
-                    "performer" => [
-                        [
-                            "reference" => "Practitioner/N10000005",
-                            "display" => "Fatma",
-                        ],
-                    ],
-                    "reasonCode" => [
-                        [
-                            "text" =>
-                                "Periksa darah lengkap dengan keluhan utama pasien yaitu perdarahan pervagina",
-                        ],
-                    ],
-                    "reasonReference" => [
-                        ["reference" => "urn:uuid:{{Condition_DiagnosisAwal}}"],
-                    ],
-                    "supportingInfo" => [
-                        ["reference" => "urn:uuid:{{Procedure_PraLab}}"],
-                    ],
-                    "note" => [
-                        [
-                            "text" =>
-                                "Tidak ada persiapan khusus sebelum pemeriksaan darah lengkap",
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "ServiceRequest"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{Specimen_Lab}}",
-                "resource" => [
-                    "resourceType" => "Specimen",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/specimen/{{Org_ID}}",
-                            "value" => "DK19231961",
-                            "assigner" => [
-                                "reference" => "Organization/{{Org_ID}}",
-                            ],
-                        ],
-                    ],
-                    "status" => "available",
-                    "type" => [
-                        "coding" => [
-                            [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "119297000",
-                                "display" => "Blood specimen",
-                            ],
-                        ],
-                    ],
-                    "collection" => [
-                        "method" => [
-                            "coding" => [
-                                [
-                                    "system" => "http://snomed.info/sct",
-                                    "code" => "82078001",
-                                    "display" =>
-                                        "Collection of blood specimen for laboratory",
-                                ],
-                            ],
-                        ],
-                        "collectedDateTime" => "2023-07-04T09:18:00+00:00",
-                        "quantity" => ["value" => 6, "unit" => "mL"],
-                        "collector" => [
-                            "reference" => "Practitioner/{{Practitioner_ID}}",
-                            "display" => "{{Practitioner_Name}}",
-                        ],
-                        "fastingStatusCodeableConcept" => [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/v2-0916",
-                                    "code" => "NF",
-                                    "display" =>
-                                        "The patient indicated they did not fast prior to the procedure.",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "processing" => [
-                        ["timeDateTime" => "2023-07-04T09:25:00+00:00"],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "request" => [
-                        ["reference" => "urn:uuid:{{ServiceRequest_Lab}}"],
-                    ],
-                    "receivedTime" => "2023-07-04T09:23:00+00:00",
-                    "extension" => [
-                        [
-                            "url" =>
-                                "https://fhir.kemkes.go.id/r4/StructureDefinition/TransportedTime",
-                            "valueDateTime" => "2023-07-04T09:20:00+00:00",
-                        ],
-                        [
-                            "url" =>
-                                "https://fhir.kemkes.go.id/r4/StructureDefinition/TransportedPerson",
-                            "valueContactDetail" => [
-                                "name" => "Burhan",
-                                "telecom" => [
-                                    [
-                                        "system" => "phone",
-                                        "value" => "+625375162867",
-                                    ],
-                                ],
-                            ],
-                        ],
-                        [
-                            "url" =>
-                                "https://fhir.kemkes.go.id/r4/StructureDefinition/ReceivedPerson",
-                            "valueReference" => [
-                                "reference" => "Practitioner/10006926841",
-                                "display" => "Dr. John Doe",
-                            ],
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Specimen"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{Observation_Lab1}}",
-                "resource" => [
-                    "resourceType" => "Observation",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/observation/{{Org_ID}}",
-                            "value" => "DK2024019917-1",
-                        ],
-                    ],
-                    "status" => "final",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/observation-category",
-                                    "code" => "laboratory",
-                                    "display" => "Laboratory",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://loinc.org",
-                                "code" => "718-7",
-                                "display" => "Hemoglobin [Mass/volume] in Blood",
-                            ],
-                        ],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "effectiveDateTime" => "2023-07-04T09:30:00+00:00",
-                    "issued" => "2023-07-04T09:30:00+00:00",
-                    "performer" => [
-                        ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                        ["reference" => "Organization/{{Org_ID}}"],
-                    ],
-                    "specimen" => ["reference" => "urn:uuid:{{Specimen_Lab}}"],
-                    "basedOn" => [
-                        ["reference" => "urn:uuid:{{ServiceRequest_Lab}}"],
-                    ],
-                    "valueQuantity" => [
-                        "value" => 60,
-                        "unit" => "fL",
-                        "system" => "http://unitsofmeasure.org",
-                        "code" => "fL",
-                    ],
-                    "interpretation" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
-                                    "code" => "L",
-                                    "display" => "Low",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "referenceRange" => [
-                        [
-                            "high" => [
-                                "value" => 107,
-                                "unit" => "g/dL",
-                                "system" => "http://unitsofmeasure.org",
-                                "code" => "g/dL",
-                            ],
-                            "low" => [
-                                "value" => 63.9,
-                                "unit" => "g/dL",
-                                "system" => "http://unitsofmeasure.org",
-                                "code" => "g/dL",
-                            ],
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Observation"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{Observation_Lab2}}",
-                "resource" => [
-                    "resourceType" => "Observation",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/observation/{{Org_ID}}",
-                            "value" => "DK024019917-2",
-                        ],
-                    ],
-                    "status" => "final",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/observation-category",
-                                    "code" => "laboratory",
-                                    "display" => "Laboratory",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://loinc.org",
-                                "code" => "787-2",
-                                "display" =>
-                                    "MCV [Entitic volume] by Automated count",
-                            ],
-                        ],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "effectiveDateTime" => "2023-07-04T09:30:00+00:00",
-                    "issued" => "2023-07-04T09:30:00+00:00",
-                    "performer" => [
-                        ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                        ["reference" => "Organization/{{Org_ID}}"],
-                    ],
-                    "specimen" => ["reference" => "urn:uuid:{{Specimen_Lab}}"],
-                    "basedOn" => [
-                        ["reference" => "urn:uuid:{{ServiceRequest_Lab}}"],
-                    ],
-                    "valueQuantity" => [
-                        "value" => 60,
-                        "unit" => "fL",
-                        "system" => "http://unitsofmeasure.org",
-                        "code" => "fL",
-                    ],
-                    "interpretation" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
-                                    "code" => "L",
-                                    "display" => "Low",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "referenceRange" => [
-                        [
-                            "high" => [
-                                "value" => 107,
-                                "unit" => "g/dL",
-                                "system" => "http://unitsofmeasure.org",
-                                "code" => "g/dL",
-                            ],
-                            "low" => [
-                                "value" => 63.9,
-                                "unit" => "g/dL",
-                                "system" => "http://unitsofmeasure.org",
-                                "code" => "g/dL",
-                            ],
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Observation"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{DiagnosticReport_Lab}}",
-                "resource" => [
-                    "resourceType" => "DiagnosticReport",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/diagnostic/{{Org_ID}}/lab",
-                            "use" => "official",
-                            "value" => "DK20240019917",
-                        ],
-                    ],
-                    "status" => "final",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/v2-0074",
-                                    "code" => "HM",
-                                    "display" => "Hematology",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://loinc.org",
-                                "code" => "58410-2",
-                                "display" => "CBC panel - Blood by Automated count",
-                            ],
-                        ],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "effectiveDateTime" => "2023-07-04T09:30:00+00:00",
-                    "issued" => "2023-07-04T09:30:00+00:00",
-                    "performer" => [
-                        ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                        ["reference" => "Organization/{{Org_ID}}"],
-                    ],
-                    "result" => [
-                        [
-                            "id" => "1",
-                            "reference" => "urn:uuid:{{Observation_Lab1}}",
-                        ],
-                        [
-                            "id" => "2",
-                            "reference" => "urn:uuid:{{Observation_Lab2}}",
-                        ],
-                    ],
-                    "specimen" => [["reference" => "urn:uuid:{{Specimen_Lab}}"]],
-                    "basedOn" => [
-                        ["reference" => "urn:uuid:{{ServiceRequest_Lab}}"],
-                    ],
-                    "conclusion" =>
-                        "Dari pemeriksaan darah lengkap, nilai Hb dan MCV dibawah batas nilai normal",
-                ],
-                "request" => ["method" => "POST", "url" => "DiagnosticReport"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{Observation_PraRad}}",
-                "resource" => [
-                    "resourceType" => "Observation",
-                    "status" => "final",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/observation-category",
-                                    "code" => "survey",
-                                    "display" => "Survey",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://loinc.org",
-                                "code" => "82810-3",
-                                "display" => "Pregnancy status",
-                            ],
-                        ],
-                    ],
-                    "subject" => ["reference" => "Patient/{{Patient_ID}}"],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "effectiveDateTime" => "2023-07-04T09:28:00+00:00",
-                    "issued" => "2023-07-04T09:28:00+00:00",
-                    "performer" => [
-                        ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                    ],
-                    "valueCodeableConcept" => [
-                        "coding" => [
-                            [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "77386006",
-                                "display" => "Pregnancy",
-                            ],
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Observation"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{Procedure_PraRad}}",
-                "resource" => [
-                    "resourceType" => "Procedure",
-                    "status" => "not-done",
-                    "category" => [
-                        "coding" => [
-                            [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "103693007",
-                                "display" => "Diagnostic procedure",
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "792805006",
-                                "display" => "Fasting",
-                            ],
-                        ],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "performedPeriod" => [
-                        "start" => "2023-07-04T09:28:00+00:00",
-                        "end" => "2023-07-04T09:28:00+00:00",
-                    ],
-                    "performer" => [
-                        [
-                            "actor" => [
-                                "reference" => "Practitioner/{{Practitioner_ID}}",
-                                "display" => "{{Practitioner_Name}}",
-                            ],
-                        ],
-                    ],
-                    "reasonCode" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" => "http://hl7.org/fhir/sid/icd-10",
-                                    "code" => "N93.9",
-                                    "display" =>
-                                        "Abnormal uterine and vaginal bleeding, unspecified",
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Procedure"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{AllergyIntolerance_PraRad}}",
-                "resource" => [
-                    "resourceType" => "AllergyIntolerance",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/allergy/{{Org_ID}}",
-                            "use" => "official",
-                            "value" => "DK2024019917",
-                        ],
-                    ],
-                    "clinicalStatus" => [
-                        "coding" => [
-                            [
-                                "system" =>
-                                    "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
-                                "code" => "active",
-                                "display" => "Active",
-                            ],
-                        ],
-                    ],
-                    "verificationStatus" => [
-                        "coding" => [
-                            [
-                                "system" =>
-                                    "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
-                                "code" => "confirmed",
-                                "display" => "Confirmed",
-                            ],
-                        ],
-                    ],
-                    "category" => ["medication"],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://sys-ids.kemkes.go.id/kfa",
-                                "code" => "91000928",
-                                "display" => "Barium Sulfate",
-                            ],
-                        ],
-                        "text" => "Alergi Barium Sulfate",
-                    ],
-                    "patient" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "recordedDate" => "2023-07-04T09:30:00+00:00",
-                    "recorder" => [
-                        "reference" => "Practitioner/{{Practitioner_ID}}",
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "AllergyIntolerance"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{ServiceRequest_Rad}}",
-                "resource" => [
-                    "resourceType" => "ServiceRequest",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/servicerequest/{{Org_ID}}",
-                            "value" => "DK2024029917",
-                        ],
-                        [
-                            "use" => "usual",
-                            "type" => [
-                                "coding" => [
-                                    [
-                                        "system" =>
-                                            "http://terminology.hl7.org/CodeSystem/v2-0203",
-                                        "code" => "ACSN",
-                                    ],
-                                ],
-                            ],
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/acsn/{{Org_ID}}",
-                            "value" => "P20240001XY",
-                        ],
-                    ],
-                    "status" => "active",
-                    "intent" => "original-order",
-                    "priority" => "stat",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" => "http://snomed.info/sct",
-                                    "code" => "363679005",
-                                    "display" => "Imaging",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://loinc.org",
-                                "code" => "11525-3",
-                                "display" => "US for pregnancy",
-                            ],
-                        ],
-                    ],
-                    "orderDetail" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://dicom.nema.org/resources/ontology/DCM",
-                                    "code" => "US",
-                                ],
-                            ],
-                            "text" => "Modality code: US",
-                        ],
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://sys-ids.kemkes.go.id/ae-title",
-                                    "display" => "US001",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "occurrenceDateTime" => "2023-07-04T09:30:00+00:00",
-                    "authoredOn" => "2023-07-04T09:30:00+00:00",
-                    "requester" => [
-                        "reference" => "Practitioner/{{Practitioner_ID}}",
-                        "display" => "{{Practitioner_Name}}",
-                    ],
-                    "performer" => [
-                        [
-                            "reference" => "Practitioner/N10000005",
-                            "display" => "Fatma",
-                        ],
-                    ],
-                    "bodySite" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" => "http://snomed.info/sct",
-                                    "code" => "35039007",
-                                    "display" => "Uterine structure",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "reasonCode" => [
-                        [
-                            "text" =>
-                                "Pemeriksaan USG pada daerah uterus dilakukan untuk mengetahui sebab perdarahan pervagina",
-                        ],
-                    ],
-                    "reasonReference" => [
-                        ["reference" => "urn:uuid:{{Condition_DiagnosisAwal}}"],
-                    ],
-                    "note" => [["text" => "Pemeriksaan USG kehamilan"]],
-                    "supportingInfo" => [
-                        ["reference" => "urn:uuid:{{Observation_PraRad}}"],
-                        ["reference" => "urn:uuid:{{Procedure_PraRad}}"],
-                        ["reference" => "urn:uuid:{{AllergyIntolerance_PraRad}}"],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "ServiceRequest"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{Observation_Rad}}",
-                "resource" => [
-                    "resourceType" => "Observation",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/observation/{{Org_ID}}",
-                            "value" => "DK2024019917",
-                        ],
-                    ],
-                    "status" => "final",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/observation-category",
-                                    "code" => "imaging",
-                                    "display" => "Imaging",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://loinc.org",
-                                "code" => "11525-3",
-                                "display" => "US for pregnancy",
-                            ],
-                        ],
-                    ],
-                    "subject" => ["reference" => "Patient/{{Patient_ID}}"],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "effectiveDateTime" => "2023-07-04T09:35:00+00:00",
-                    "issued" => "2023-07-04T09:35:00+00:00",
-                    "performer" => [
-                        ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                        ["reference" => "Organization/{{Org_ID}}"],
-                    ],
-                    "basedOn" => [
-                        ["reference" => "urn:uuid:{{ServiceRequest_Rad}}"],
-                    ],
-                    "bodySite" => [
-                        "coding" => [
-                            [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "35039007",
-                                "display" => "Uterine structure",
-                            ],
-                        ],
-                    ],
-                    "derivedFrom" => [
-                        [
-                            "reference" =>
-                                "urn:uuid:2e483a08-6a0e-4ed1-be26-0793fda3d6c2",
-                        ],
-                    ],
-                    "valueString" =>
-                        "Ditemukan ada defek dinding uterus dengan uterus kosong, janin berada di luar rongga uterus, plasenta previa, plasenta perkreta, selaput janin menonjol, dan ada cairan bebas di rongga peritoneum",
-                ],
-                "request" => ["method" => "POST", "url" => "Observation"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{DiagnosticReport_Rad}}",
-                "resource" => [
-                    "resourceType" => "DiagnosticReport",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/diagnostic/{{Org_ID}}/rad",
-                            "use" => "official",
-                            "value" => "DK202401A9917",
-                        ],
-                    ],
-                    "status" => "final",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/v2-0074",
-                                    "code" => "OUS",
-                                    "display" => "OB Ultrasound",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://loinc.org",
-                                "code" => "11525-3",
-                                "display" => "US for pregnancy",
-                            ],
-                        ],
-                    ],
-                    "subject" => ["reference" => "Patient/{{Patient_ID}}"],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "effectiveDateTime" => "2023-07-04T09:35:00+00:00",
-                    "issued" => "2023-07-04T09:35:00+00:00",
-                    "performer" => [
-                        ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                        ["reference" => "Organization/{{Org_ID}}"],
-                    ],
-                    "imagingStudy" => [
-                        [
-                            "reference" =>
-                                "urn:uuid:2e483a08-6a0e-4ed1-be26-0793fda3d6c2",
-                        ],
-                    ],
-                    "result" => [["reference" => "urn:uuid:{{Observation_Rad}}"]],
-                    "basedOn" => [
-                        ["reference" => "urn:uuid:{{ServiceRequest_Rad}}"],
-                    ],
-                    "conclusion" =>
-                        "Defek dinding uterus dengan uterus kosong dan janin berada di luar rongga uterus, plasenta previa, plasenta perkreta, selaput janin menonjol, dan ada cairan bebas di rongga peritoneum",
-                ],
-                "request" => ["method" => "POST", "url" => "DiagnosticReport"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{Medication_forRequest}}",
-                "resource" => [
-                    "resourceType" => "Medication",
-                    "meta" => [
-                        "profile" => [
-                            "https://fhir.kemkes.go.id/r4/StructureDefinition/Medication",
-                        ],
-                    ],
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/medication/{{Org_ID}}",
-                            "use" => "official",
-                            "value" => "DK20240199Z17-1",
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://sys-ids.kemkes.go.id/kfa",
-                                "code" => "93012760",
-                                "display" =>
-                                    "Oxytocin 10 IU/mL Injeksi (FRESENIUS KABI COMBIPHAR, 1 mL)",
-                            ],
-                        ],
-                    ],
-                    "status" => "active",
-                    "manufacturer" => ["reference" => "Organization/900001"],
-                    "form" => [
-                        "coding" => [
-                            [
-                                "system" =>
-                                    "http://terminology.kemkes.go.id/CodeSystem/medication-form",
-                                "code" => "BS034",
-                                "display" => "Larutan Injeksi",
-                            ],
-                        ],
-                    ],
-                    "ingredient" => [
-                        [
-                            "itemCodeableConcept" => [
-                                "coding" => [
-                                    [
-                                        "system" =>
-                                            "http://sys-ids.kemkes.go.id/kfa",
-                                        "code" => "91000595",
-                                        "display" => "Oxytocin",
-                                    ],
-                                ],
-                            ],
-                            "isActive" => true,
-                            "strength" => [
-                                "numerator" => [
-                                    "value" => 10,
-                                    "system" => "http://unitsofmeasure.org",
-                                    "code" => "[IU]",
-                                ],
-                                "denominator" => [
-                                    "value" => 1,
-                                    "system" => "http://unitsofmeasure.org",
-                                    "code" => "mL",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "extension" => [
-                        [
-                            "url" =>
-                                "https://fhir.kemkes.go.id/r4/StructureDefinition/MedicationType",
-                            "valueCodeableConcept" => [
-                                "coding" => [
-                                    [
-                                        "system" =>
-                                            "http://terminology.kemkes.go.id/CodeSystem/medication-type",
-                                        "code" => "NC",
-                                        "display" => "Non-compound",
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Medication"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{MedicationRequest_id}}",
-                "resource" => [
-                    "resourceType" => "MedicationRequest",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/prescription/{{Org_ID}}",
-                            "use" => "official",
-                            "value" => "DK1234567899917",
-                        ],
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/prescription-item/{{Org_ID}}",
-                            "use" => "official",
-                            "value" => "DK1234567899917-1",
-                        ],
-                    ],
-                    "status" => "completed",
-                    "intent" => "order",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
-                                    "code" => "outpatient",
-                                    "display" => "Outpatient",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "priority" => "stat",
-                    "medicationReference" => [
-                        "reference" => "urn:uuid:{{Medication_forRequest}}",
-                        "display" =>
-                            "Oxytocin 10 IU/mL Injeksi (FRESENIUS KABI COMBIPHAR, 1 mL)",
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "authoredOn" => "2023-07-04T10:00:00+00:00",
-                    "requester" => [
-                        "reference" => "Practitioner/{{Practitioner_ID}}",
-                        "display" => "{{Practitioner_Name}}",
-                    ],
-                    "reasonReference" => [
-                        ["reference" => "urn:uuid:{{Condition_DiagnosisAwal}}"],
-                    ],
-                    "dosageInstruction" => [
-                        [
-                            "sequence" => 1,
-                            "patientInstruction" =>
-                                "1 kali 10 IU/mL injeksi segera pasca tindakan sectio caesaria",
-                            "additionalInstruction" => [
-                                [
-                                    "coding" => [
-                                        [
-                                            "system" => "http://snomed.info/sct",
-                                            "code" => "421769005",
-                                            "display" => "Follow directions",
-                                        ],
-                                    ],
-                                ],
-                            ],
-                            "timing" => [
-                                "repeat" => [
-                                    "frequency" => 1,
-                                    "period" => 1,
-                                    "periodUnit" => "d",
-                                ],
-                            ],
-                            "route" => [
-                                "coding" => [
-                                    [
-                                        "system" => "http://www.whocc.no/atc",
-                                        "code" => "inj.intramuscular",
-                                        "display" => "Injection Intramuscular",
-                                    ],
-                                ],
-                            ],
-                            "doseAndRate" => [
-                                [
-                                    "type" => [
-                                        "coding" => [
-                                            [
-                                                "system" =>
-                                                    "http://terminology.hl7.org/CodeSystem/dose-rate-type",
-                                                "code" => "ordered",
-                                                "display" => "Ordered",
-                                            ],
-                                        ],
-                                    ],
-                                    "doseQuantity" => [
-                                        "value" => 10,
-                                        "unit" => "IU",
-                                        "system" => "http://unitsofmeasure.org",
-                                        "code" => "[IU]",
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                    "dispenseRequest" => [
-                        "dispenseInterval" => [
-                            "value" => 1,
-                            "unit" => "days",
-                            "system" => "http://unitsofmeasure.org",
-                            "code" => "d",
-                        ],
-                        "validityPeriod" => [
-                            "start" => "2023-07-04T10:00:00+00:00",
-                            "end" => "2023-07-04T10:00:00+00:00",
-                        ],
-                        "numberOfRepeatsAllowed" => 0,
-                        "quantity" => [
-                            "value" => 1,
-                            "unit" => "Ampule - unit of product usage",
-                            "system" => "http://snomed.info/sct",
-                            "code" => "413516001",
-                        ],
-                        "expectedSupplyDuration" => [
-                            "value" => 1,
-                            "unit" => "days",
-                            "system" => "http://unitsofmeasure.org",
-                            "code" => "d",
-                        ],
-                        "performer" => ["reference" => "Organization/{{Org_ID}}"],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "MedicationRequest"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{QuestionnaireResponse_KajianResep}}",
-                "resource" => [
-                    "resourceType" => "QuestionnaireResponse",
-                    "questionnaire" =>
-                        "https://fhir.kemkes.go.id/Questionnaire/Q0007",
-                    "status" => "completed",
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "authored" => "2023-07-04T11:00:00+00:00",
-                    "author" => ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                    "source" => ["reference" => "Patient/{{Patient_ID}}"],
-                    "item" => [
-                        [
-                            "linkId" => "1",
-                            "text" => "Persyaratan Administrasi",
-                            "item" => [
-                                [
-                                    "linkId" => "1.1",
-                                    "text" =>
-                                        "Apakah nama, umur, jenis kelamin, berat badan dan tinggi badan pasien sudah sesuai?",
-                                    "answer" => [
-                                        [
-                                            "valueCoding" => [
-                                                "system" =>
-                                                    "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                                "code" => "OV000052",
-                                                "display" => "Sesuai",
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                                [
-                                    "linkId" => "1.2",
-                                    "text" =>
-                                        "Apakah nama, nomor ijin, alamat dan paraf dokter sudah sesuai?",
-                                    "answer" => [
-                                        [
-                                            "valueCoding" => [
-                                                "system" =>
-                                                    "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                                "code" => "OV000052",
-                                                "display" => "Sesuai",
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                                [
-                                    "linkId" => "1.3",
-                                    "text" => "Apakah tanggal resep sudah sesuai?",
-                                    "answer" => [
-                                        [
-                                            "valueCoding" => [
-                                                "system" =>
-                                                    "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                                "code" => "OV000053",
-                                                "display" => "Tidak Sesuai",
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                                [
-                                    "linkId" => "1.4",
-                                    "text" =>
-                                        "Apakah ruangan/unit asal resep sudah sesuai?",
-                                    "answer" => [
-                                        [
-                                            "valueCoding" => [
-                                                "system" =>
-                                                    "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                                "code" => "OV000052",
-                                                "display" => "Sesuai",
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                                [
-                                    "linkId" => "2",
-                                    "text" => "Persyaratan Farmasetik",
-                                    "item" => [
-                                        [
-                                            "linkId" => "2.1",
-                                            "text" =>
-                                                "Apakah nama obat, bentuk dan kekuatan sediaan sudah sesuai?",
-                                            "answer" => [
-                                                [
-                                                    "valueCoding" => [
-                                                        "system" =>
-                                                            "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                                        "code" => "OV000052",
-                                                        "display" => "Sesuai",
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                        [
-                                            "linkId" => "2.2",
-                                            "text" =>
-                                                "Apakah dosis dan jumlah obat sudah sesuai?",
-                                            "answer" => [
-                                                [
-                                                    "valueCoding" => [
-                                                        "system" =>
-                                                            "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                                        "code" => "OV000052",
-                                                        "display" => "Sesuai",
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                        [
-                                            "linkId" => "2.3",
-                                            "text" =>
-                                                "Apakah stabilitas obat sudah sesuai?",
-                                            "answer" => [
-                                                [
-                                                    "valueCoding" => [
-                                                        "system" =>
-                                                            "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                                        "code" => "OV000053",
-                                                        "display" => "Tidak Sesuai",
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                        [
-                                            "linkId" => "2.4",
-                                            "text" =>
-                                                "Apakah aturan dan cara penggunaan obat sudah sesuai?",
-                                            "answer" => [
-                                                [
-                                                    "valueCoding" => [
-                                                        "system" =>
-                                                            "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                                        "code" => "OV000052",
-                                                        "display" => "Sesuai",
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                                [
-                                    "linkId" => "3",
-                                    "text" => "Persyaratan Klinis",
-                                    "item" => [
-                                        [
-                                            "linkId" => "3.1",
-                                            "text" =>
-                                                "Apakah ketepatan indikasi, dosis, dan waktu penggunaan obat sudah sesuai?",
-                                            "answer" => [
-                                                [
-                                                    "valueCoding" => [
-                                                        "system" =>
-                                                            "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                                        "code" => "OV000052",
-                                                        "display" => "Sesuai",
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                        [
-                                            "linkId" => "3.2",
-                                            "text" =>
-                                                "Apakah terdapat duplikasi pengobatan?",
-                                            "answer" => [["valueBoolean" => false]],
-                                        ],
-                                        [
-                                            "linkId" => "3.3",
-                                            "text" =>
-                                                "Apakah terdapat alergi dan reaksi obat yang tidak dikehendaki (ROTD)?",
-                                            "answer" => [["valueBoolean" => false]],
-                                        ],
-                                        [
-                                            "linkId" => "3.4",
-                                            "text" =>
-                                                "Apakah terdapat kontraindikasi pengobatan?",
-                                            "answer" => [["valueBoolean" => false]],
-                                        ],
-                                        [
-                                            "linkId" => "3.5",
-                                            "text" =>
-                                                "Apakah terdapat dampak interaksi obat?",
-                                            "answer" => [["valueBoolean" => true]],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "QuestionnaireResponse"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{Medication_forDispense}}",
-                "resource" => [
-                    "resourceType" => "Medication",
-                    "meta" => [
-                        "profile" => [
-                            "https://fhir.kemkes.go.id/r4/StructureDefinition/Medication",
-                        ],
-                    ],
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/medication/{{Org_ID}}",
-                            "use" => "official",
-                            "value" => "DK12345678899917",
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" => "http://sys-ids.kemkes.go.id/kfa",
-                                "code" => "93012760",
-                                "display" =>
-                                    "Oxytocin 10 IU/mL Injeksi (FRESENIUS KABI COMBIPHAR, 1 mL)",
-                            ],
-                        ],
-                    ],
-                    "status" => "active",
-                    "manufacturer" => ["reference" => "Organization/900001"],
-                    "form" => [
-                        "coding" => [
-                            [
-                                "system" =>
-                                    "http://terminology.kemkes.go.id/CodeSystem/medication-form",
-                                "code" => "BS034",
-                                "display" => "Larutan Injeksi",
-                            ],
-                        ],
-                    ],
-                    "batch" => [
-                        "lotNumber" => "1625042A",
-                        "expirationDate" => "2026-08-28",
-                    ],
-                    "ingredient" => [
-                        [
-                            "itemCodeableConcept" => [
-                                "coding" => [
-                                    [
-                                        "system" =>
-                                            "http://sys-ids.kemkes.go.id/kfa",
-                                        "code" => "91000595",
-                                        "display" => "Oxytocin",
-                                    ],
-                                ],
-                            ],
-                            "isActive" => true,
-                            "strength" => [
-                                "numerator" => [
-                                    "value" => 10,
-                                    "system" => "http://unitsofmeasure.org",
-                                    "code" => "[IU]",
-                                ],
-                                "denominator" => [
-                                    "value" => 1,
-                                    "system" => "http://unitsofmeasure.org",
-                                    "code" => "mL",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "extension" => [
-                        [
-                            "url" =>
-                                "https://fhir.kemkes.go.id/r4/StructureDefinition/MedicationType",
-                            "valueCodeableConcept" => [
-                                "coding" => [
-                                    [
-                                        "system" =>
-                                            "http://terminology.kemkes.go.id/CodeSystem/medication-type",
-                                        "code" => "NC",
-                                        "display" => "Non-compound",
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Medication"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{MedicationDispense_id}}",
-                "resource" => [
-                    "resourceType" => "MedicationDispense",
-                    "identifier" => [
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/prescription/{{Org_ID}}",
-                            "use" => "official",
-                            "value" => "DK12345678900889917",
-                        ],
-                        [
-                            "system" =>
-                                "http://sys-ids.kemkes.go.id/prescription-item/{{Org_ID}}",
-                            "use" => "official",
-                            "value" => "DK12345678899917-1",
-                        ],
-                    ],
-                    "status" => "completed",
-                    "category" => [
-                        "coding" => [
-                            [
-                                "system" =>
-                                    "http://terminology.hl7.org/fhir/CodeSystem/medicationdispense-category",
-                                "code" => "outpatient",
-                                "display" => "Outpatient",
-                            ],
-                        ],
-                    ],
-                    "medicationReference" => [
-                        "reference" => "urn:uuid:{{Medication_forDispense}}",
-                        "display" =>
-                            "Oxytocin 10 IU/mL Injeksi (FRESENIUS KABI COMBIPHAR, 1 mL)",
-                    ],
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "context" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "performer" => [
-                        [
-                            "actor" => [
-                                "reference" => "Practitioner/{{Practitioner_ID}}",
-                                "display" => "{{Practitioner_Name}}",
-                            ],
-                        ],
-                    ],
-                    "location" => [
-                        "reference" => "Location/{{Location_RTK}}",
-                        "display" =>
-                            "Ruangan Tindakan Kebidanan, Instalasi Gawat Darurat, Gedung Utama, Lantai 1",
-                    ],
-                    "authorizingPrescription" => [
-                        ["reference" => "urn:uuid:{{MedicationRequest_id}}"],
-                    ],
-                    "quantity" => [
-                        "value" => 1,
-                        "unit" => "Ampule - unit of product usage",
-                        "system" => "http://snomed.info/sct",
-                        "code" => "413516001",
-                    ],
-                    "daysSupply" => [
-                        "value" => 1,
-                        "unit" => "Day",
-                        "system" => "http://unitsofmeasure.org",
-                        "code" => "d",
-                    ],
-                    "whenPrepared" => "2023-07-04T10:15:00+00:00",
-                    "whenHandedOver" => "2023-07-04T10:15:00+00:00",
-                    "dosageInstruction" => [
-                        [
-                            "sequence" => 1,
-                            "patientInstruction" =>
-                                "1 kali 10 IU/mL injeksi segera pasca tindakan sectio caesaria",
-                            "additionalInstruction" => [
-                                [
-                                    "coding" => [
-                                        [
-                                            "system" => "http://snomed.info/sct",
-                                            "code" => "421769005",
-                                            "display" => "Follow directions",
-                                        ],
-                                    ],
-                                ],
-                            ],
-                            "timing" => [
-                                "repeat" => [
-                                    "frequency" => 1,
-                                    "period" => 1,
-                                    "periodUnit" => "d",
-                                ],
-                            ],
-                            "route" => [
-                                "coding" => [
-                                    [
-                                        "system" => "http://www.whocc.no/atc",
-                                        "code" => "inj.intramuscular",
-                                        "display" => "Injection Intramuscular",
-                                    ],
-                                ],
-                            ],
-                            "doseAndRate" => [
-                                [
-                                    "type" => [
-                                        "coding" => [
-                                            [
-                                                "system" =>
-                                                    "http://terminology.hl7.org/CodeSystem/dose-rate-type",
-                                                "code" => "ordered",
-                                                "display" => "Ordered",
-                                            ],
-                                        ],
-                                    ],
-                                    "doseQuantity" => [
-                                        "value" => 10,
-                                        "unit" => "IU",
-                                        "system" => "http://unitsofmeasure.org",
-                                        "code" => "[IU]",
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "MedicationDispense"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{Observation_RencanaPulang}}",
-                "resource" => [
-                    "resourceType" => "Observation",
-                    "status" => "final",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" =>
-                                        "http://terminology.hl7.org/CodeSystem/observation-category",
-                                    "code" => "survey",
-                                    "display" => "Survey",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "code" => [
-                        "coding" => [
-                            [
-                                "system" =>
-                                    "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                "code" => "OC000055",
-                                "display" =>
-                                    "Kriteria Pasien yang dilakukan Rencana Pemulangan",
-                            ],
-                        ],
-                    ],
-                    "subject" => ["reference" => "Patient/{{Patient_ID}}"],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "effectiveDateTime" => "2023-07-04T13:54:00+00:00",
-                    "issued" => "2023-07-04T13:54:00+00:00",
-                    "performer" => [
-                        ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                    ],
-                    "valueCodeableConcept" => [
-                        "coding" => [
-                            [
-                                "system" =>
-                                    "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                "code" => "OV000072",
-                                "display" =>
-                                    "Pasien dengan perawatan berkelanjutan atau panjang",
-                            ],
-                        ],
-                    ],
-                ],
-                "request" => ["method" => "POST", "url" => "Observation"],
-            ],
-            [
-                "fullUrl" => "urn:uuid:{{CarePlan_RencanaPulang}}",
-                "resource" => [
-                    "resourceType" => "CarePlan",
-                    "title" => "Perencanaan Pemulangan Pasien",
-                    "status" => "active",
-                    "category" => [
-                        [
-                            "coding" => [
-                                [
-                                    "system" => "http://snomed.info/sct",
-                                    "code" => "736372004",
-                                    "display" => "Discharge care plan",
-                                ],
-                            ],
-                        ],
-                    ],
-                    "intent" => "plan",
-                    "description" =>
-                        "Rencana pemulangan: kontrol kembali ke dokter spesialis obstetri dan ginekologi 2 minggu pasca rawat inap",
-                    "subject" => [
-                        "reference" => "Patient/{{Patient_ID}}",
-                        "display" => "{{Patient_Name}}",
-                    ],
-                    "encounter" => ["reference" => "urn:uuid:{{Encounter_id}}"],
-                    "created" => "2023-07-04T13:50:00+00:00",
-                    "author" => ["reference" => "Practitioner/{{Practitioner_ID}}"],
-                ],
-                "request" => ["method" => "POST", "url" => "CarePlan"],
-            ],
-        ],
-    ];
-    
     }
 }

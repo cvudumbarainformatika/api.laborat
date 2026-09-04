@@ -4,9 +4,11 @@ namespace App\Helpers\Satsets;
 
 use App\Helpers\AuthSatsetHelper;
 use App\Helpers\BridgingSatsetHelper;
+use App\Helpers\Satsets\PostKunjunganRajalHelper;
 use App\Models\Pasien;
 use App\Models\Satset\SatsetErrorRespon;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Master\Msnomed;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -140,6 +142,93 @@ class PostKunjunganRanapHelper
                 'nursenote' => function ($t) {
                     $t->select('id', 'noreg', 'user', 'reseps');
                     $t->with('petugas:kdpegsimrs,nik,nip,nama,kdgroupnakes,foto');
+                },
+                'tindakan' => function ($t) {
+                    $t->select('rs73.rs1', 'rs73.rs2', 'rs73.rs3', 'rs73.rs4', 'rs73.rs8', 'rs73.rs9', 'rs30.rs2 as keterangan', 'rs30.rs1 as kode');
+                    $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
+                        ->with([
+                            'maapingprocedure' => function ($mp) {
+                                $mp->select('prosedur_mapping.kdMaster', 'prosedur_mapping.icd9', 'prosedur_master.prosedur')
+                                    ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
+                            },
+                            'maapingsnowmed:kdMaster,kdSnowmed,display',
+                            'petugas:nama,kdpegsimrs,satset_uuid'
+                        ])
+                        ->groupBy('rs73.rs4')
+                        ->orderBy('id', 'DESC');
+                },
+                'apotek' => function ($apot) {
+                    $apot->whereIn('flag', ['3', '4'])->with([
+                        'rincian' => function ($ri) {
+                            $ri->select(
+                                'resep_keluar_r.id',
+                                'resep_keluar_r.kdobat',
+                                'resep_keluar_r.noresep',
+                                'resep_keluar_r.jumlah',
+                                'resep_keluar_r.aturan',
+                                'resep_keluar_r.konsumsi',
+                                'resep_keluar_r.keterangan',
+                                'retur_penjualan_r.jumlah_retur',
+                                'signa.jumlah as konsumsi_perhari',
+                                DB::raw('
+                            CASE
+                            WHEN retur_penjualan_r.jumlah_retur IS NOT NULL THEN resep_keluar_r.jumlah - retur_penjualan_r.jumlah_retur
+                            ELSE resep_keluar_r.jumlah
+                            END as qty
+                            ')
+                            )
+                                ->leftJoin('retur_penjualan_r', function ($jo) {
+                                    $jo->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat')
+                                        ->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep');
+                                })
+                                ->leftJoin('signa', 'signa.signa', '=', 'resep_keluar_r.aturan')
+                                ->with([
+                                    'mobat.kfa'
+                                ]);
+                        },
+                        'rincianracik' => function ($ri) {
+                            $ri->select(
+                                'resep_keluar_racikan_r.kdobat',
+                                'resep_keluar_racikan_r.noresep',
+                                'resep_keluar_racikan_r.jumlah',
+                                'resep_keluar_racikan_r.jumlahdibutuhkan as qty',
+                                'resep_keluar_racikan_r.tiperacikan',
+                                'resep_permintaan_keluar_racikan.dosismaksimum',
+                                'resep_permintaan_keluar_racikan.aturan',
+                            )
+                                ->leftJoin('resep_permintaan_keluar_racikan', function ($jo) {
+                                    $jo->on('resep_permintaan_keluar_racikan.kdobat', '=', 'resep_keluar_racikan_r.kdobat')
+                                        ->on('resep_permintaan_keluar_racikan.noresep', '=', 'resep_keluar_racikan_r.noresep');
+                                })
+                                ->with([
+                                    'mobat.kfa'
+                                ]);
+                        },
+                        'petugas:id,nik,nama,satset_uuid',
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
+                'laborats' => function ($t) {
+                    $t->with([
+                        'details' => function ($d) {
+                            $d->with([
+                                'pemeriksaanlab' => function ($p) {
+                                    $p->select(
+                                        'rs49.*',
+                                        'rs49_spesimen.jenis_spesimen',
+                                        'rs49_spesimen.jumlah_spesimen',
+                                        'rs49_spesimen.volume_spesimen_klinis',
+                                        'rs49_spesimen.cara_pengambilan_spesimen',
+                                        'rs49_spesimen.cairan_fiksasi',
+                                        'rs49_spesimen.volume_cairan_fiksasi',
+                                    )->with('loinclab')
+                                        ->leftJoin('rs49_spesimen', 'rs49.rs1', '=', 'rs49_spesimen.rs1')
+                                        ->orderBy('id', 'ASC');
+                                }
+                            ])->orderBy('rs4', 'ASC');
+                        }
+                    ])
+                        ->orderBy('id', 'DESC');
                 }
             ])
 
@@ -282,6 +371,93 @@ class PostKunjunganRanapHelper
                 'nursenote' => function ($t) {
                     $t->select('id', 'noreg', 'user', 'reseps');
                     $t->with('petugas:kdpegsimrs,nik,nip,nama,kdgroupnakes,foto');
+                },
+                'tindakan' => function ($t) {
+                    $t->select('rs73.rs1', 'rs73.rs2', 'rs73.rs3', 'rs73.rs4', 'rs73.rs8', 'rs73.rs9', 'rs30.rs2 as keterangan', 'rs30.rs1 as kode');
+                    $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
+                        ->with([
+                            'maapingprocedure' => function ($mp) {
+                                $mp->select('prosedur_mapping.kdMaster', 'prosedur_mapping.icd9', 'prosedur_master.prosedur')
+                                    ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
+                            },
+                            'maapingsnowmed:kdMaster,kdSnowmed,display',
+                            'petugas:nama,kdpegsimrs,satset_uuid'
+                        ])
+                        ->groupBy('rs73.rs4')
+                        ->orderBy('id', 'DESC');
+                },
+                'apotek' => function ($apot) {
+                    $apot->whereIn('flag', ['3', '4'])->with([
+                        'rincian' => function ($ri) {
+                            $ri->select(
+                                'resep_keluar_r.id',
+                                'resep_keluar_r.kdobat',
+                                'resep_keluar_r.noresep',
+                                'resep_keluar_r.jumlah',
+                                'resep_keluar_r.aturan',
+                                'resep_keluar_r.konsumsi',
+                                'resep_keluar_r.keterangan',
+                                'retur_penjualan_r.jumlah_retur',
+                                'signa.jumlah as konsumsi_perhari',
+                                DB::raw('
+                            CASE
+                            WHEN retur_penjualan_r.jumlah_retur IS NOT NULL THEN resep_keluar_r.jumlah - retur_penjualan_r.jumlah_retur
+                            ELSE resep_keluar_r.jumlah
+                            END as qty
+                            ')
+                            )
+                                ->leftJoin('retur_penjualan_r', function ($jo) {
+                                    $jo->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat')
+                                        ->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep');
+                                })
+                                ->leftJoin('signa', 'signa.signa', '=', 'resep_keluar_r.aturan')
+                                ->with([
+                                    'mobat.kfa'
+                                ]);
+                        },
+                        'rincianracik' => function ($ri) {
+                            $ri->select(
+                                'resep_keluar_racikan_r.kdobat',
+                                'resep_keluar_racikan_r.noresep',
+                                'resep_keluar_racikan_r.jumlah',
+                                'resep_keluar_racikan_r.jumlahdibutuhkan as qty',
+                                'resep_keluar_racikan_r.tiperacikan',
+                                'resep_permintaan_keluar_racikan.dosismaksimum',
+                                'resep_permintaan_keluar_racikan.aturan',
+                            )
+                                ->leftJoin('resep_permintaan_keluar_racikan', function ($jo) {
+                                    $jo->on('resep_permintaan_keluar_racikan.kdobat', '=', 'resep_keluar_racikan_r.kdobat')
+                                        ->on('resep_permintaan_keluar_racikan.noresep', '=', 'resep_keluar_racikan_r.noresep');
+                                })
+                                ->with([
+                                    'mobat.kfa'
+                                ]);
+                        },
+                        'petugas:id,nik,nama,satset_uuid',
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
+                'laborats' => function ($t) {
+                    $t->with([
+                        'details' => function ($d) {
+                            $d->with([
+                                'pemeriksaanlab' => function ($p) {
+                                    $p->select(
+                                        'rs49.*',
+                                        'rs49_spesimen.jenis_spesimen',
+                                        'rs49_spesimen.jumlah_spesimen',
+                                        'rs49_spesimen.volume_spesimen_klinis',
+                                        'rs49_spesimen.cara_pengambilan_spesimen',
+                                        'rs49_spesimen.cairan_fiksasi',
+                                        'rs49_spesimen.volume_cairan_fiksasi',
+                                    )->with('loinclab')
+                                        ->leftJoin('rs49_spesimen', 'rs49.rs1', '=', 'rs49_spesimen.rs1')
+                                        ->orderBy('id', 'ASC');
+                                }
+                            ])->orderBy('rs4', 'ASC');
+                        }
+                    ])
+                        ->orderBy('id', 'DESC');
                 }
             ])
 
@@ -847,6 +1023,8 @@ class PostKunjunganRanapHelper
     {
         $organization_id = BridgingSatsetHelper::organization_id();
         $encounter_uuid = self::generateUuid();
+        $practitioner_uuid = $request->datasimpeg['satset_uuid'] ?? null;
+        $tgl_kunjungan = $request->tglmasuk;
 
         $form = [
             "resourceType" => "Bundle",
@@ -861,14 +1039,67 @@ class PostKunjunganRanapHelper
             $form['entry'][] = $cond;
         }
 
-        // 2. Tambahkan Radiologi (Menggunakan data dari $request)
+        // 2. Tindakan (Procedure)
+        if (isset($request->tindakan) && count($request->tindakan) > 0) {
+            $procedures = PostKunjunganRajalHelper::procedure($request, $encounter_uuid, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid);
+            if (is_array($procedures)) {
+                foreach ($procedures as $proc) {
+                    if (!empty($proc)) {
+                        $form['entry'][] = $proc;
+                    }
+                }
+            }
+        }
+
+        // 3. Tambahkan Radiologi (Menggunakan data dari $request)
         if (isset($request->radiologi) && count($request->radiologi) > 0) {
             $res_radiologi = self::radiologi($request, $pasien_uuid, $encounter_uuid, $organization_id);
             foreach ($res_radiologi as $rad_entry) {
                 $form['entry'][] = $rad_entry;
             }
         }
-        // 3 imunisasi
+
+        // 4. Laborat (Specimen, ServiceRequest, Observation, DiagnosticReport)
+        if (isset($request->laborats) && count($request->laborats) > 0) {
+            $specimenSnomeds = Msnomed::whereNotNull('spesimen')->get();
+            $lab_entries = PostKunjunganRajalHelper::laborats($request, $encounter_uuid, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $specimenSnomeds);
+            if (is_array($lab_entries)) {
+                for ($i = 0; $i < count($lab_entries); $i++) {
+                    $serviceRequest = $lab_entries[$i]['serviceRequests'] ?? null;
+                    $hasil = $lab_entries[$i]['hasil'] ?? null;
+                    $spesimen = $lab_entries[$i]['spesimen'] ?? null;
+                    $diagnosticReport = $lab_entries[$i]['diagnosticReport'] ?? null;
+
+                    if ($serviceRequest !== null) $form['entry'][] = $serviceRequest;
+                    if ($hasil !== null) $form['entry'][] = $hasil;
+                    if ($spesimen !== null) $form['entry'][] = $spesimen;
+                    if ($diagnosticReport !== null) $form['entry'][] = $diagnosticReport;
+                }
+            }
+        }
+
+        // 5. Farmasi (Medication, MedicationRequest, MedicationDispense)
+        if (isset($request->apotek) && count($request->apotek) > 0) {
+            $apotek_entries = PostKunjunganRajalHelper::apotek($request, $encounter_uuid, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id);
+            if (isset($apotek_entries['nonracikan']) && is_array($apotek_entries['nonracikan'])) {
+                for ($i = 0; $i < count($apotek_entries['nonracikan']); $i++) {
+                    if (!empty($apotek_entries['nonracikan'][$i]['medication'])) $form['entry'][] = $apotek_entries['nonracikan'][$i]['medication'];
+                    if (!empty($apotek_entries['nonracikan'][$i]['medication_request'])) $form['entry'][] = $apotek_entries['nonracikan'][$i]['medication_request'];
+                    if (!empty($apotek_entries['nonracikan'][$i]['medicationD'])) $form['entry'][] = $apotek_entries['nonracikan'][$i]['medicationD'];
+                    if (!empty($apotek_entries['nonracikan'][$i]['medication_dispense'])) $form['entry'][] = $apotek_entries['nonracikan'][$i]['medication_dispense'];
+                }
+            }
+            if (isset($apotek_entries['racikan']) && is_array($apotek_entries['racikan'])) {
+                for ($i = 0; $i < count($apotek_entries['racikan']); $i++) {
+                    if (!empty($apotek_entries['racikan'][$i]['medication'])) $form['entry'][] = $apotek_entries['racikan'][$i]['medication'];
+                    if (!empty($apotek_entries['racikan'][$i]['medication_request'])) $form['entry'][] = $apotek_entries['racikan'][$i]['medication_request'];
+                    if (!empty($apotek_entries['racikan'][$i]['medicationD'])) $form['entry'][] = $apotek_entries['racikan'][$i]['medicationD'];
+                    if (!empty($apotek_entries['racikan'][$i]['medication_dispense'])) $form['entry'][] = $apotek_entries['racikan'][$i]['medication_dispense'];
+                }
+            }
+        }
+
+        // 6. Imunisasi
         $imunization = self::imunisasi($request, $pasien_uuid, $encounter_uuid, $organization_id);
         if (!empty($imunization)) {
             $form['entry'][] = $imunization;

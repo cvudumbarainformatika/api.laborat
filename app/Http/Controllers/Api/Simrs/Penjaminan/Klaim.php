@@ -12,7 +12,11 @@ use App\Models\Simrs\Rajal\KunjunganPoli;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+<<<<<<< HEAD
+use Illuminate\Support\Facades\Schema;
+=======
 use Illuminate\Support\Facades\Log;
+>>>>>>> 5ed42ad2d44f9176d0da048d0ef6ec0727a47565
 
 class Klaim extends Controller
 {
@@ -67,6 +71,55 @@ class Klaim extends Controller
         return new JsonResponse($data);
     }
 
+<<<<<<< HEAD
+    public function simpanHasilGroupingIdrg(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'noreg' => ['required', 'string'],
+            'hasil' => ['required', 'array'],
+            'drug' => ['nullable', 'string'],
+            'procedure' => ['nullable', 'string'],
+            'prosthesis' => ['nullable', 'string'],
+            'investigation' => ['nullable', 'string'],
+        ]);
+
+        $noreg = trim($validated['noreg']);
+        $hasil = $validated['hasil']['idrg_klaim']
+            ?? $validated['hasil']['grouping']
+            ?? $validated['hasil']['response']
+            ?? $validated['hasil'];
+        if (is_array($hasil)) {
+            $hasil = $hasil['response_idrg']
+                ?? $hasil['response']['response_idrg']
+                ?? $hasil['response']['data']
+                ?? $hasil;
+        }
+        if (!is_array($hasil)) {
+            return new JsonResponse(['success' => false, 'message' => 'Respons grouping iDRG tidak valid'], 422);
+        }
+
+        $kolomDiizinkan = [
+            'script_version', 'logic_version', 'mdc_description', 'mdc_number',
+            'drg_description', 'drg_code', 'cost_weight', 'nbr', 'total_cost_weight',
+            'total_tarif', 'total_klaim', 'status_cd', 'special_cmg_option_code', 'opt_cmg',
+            'topup_drug_code', 'topup_drug_cost_weight', 'topup_procedure_code',
+            'topup_procedure_cost_weight', 'topup_prosthesis_code',
+            'topup_prosthesis_cost_weight', 'topup_investigation_code',
+            'topup_investigation_cost_weight',
+        ];
+        $data = array_intersect_key($hasil, array_flip($kolomDiizinkan));
+        foreach (['drug', 'procedure', 'prosthesis', 'investigation'] as $field) {
+            $data[$field.'_opt'] = $validated[$field] ?? '';
+        }
+        $data = array_intersect_key($data, array_flip(Schema::getColumnListing('idrg_klaim')));
+
+        $updated = DB::table('idrg_klaim')->where('noreg', $noreg)->update($data);
+        if (!$updated && !DB::table('idrg_klaim')->where('noreg', $noreg)->exists()) {
+            return new JsonResponse(['success' => false, 'message' => 'Data iDRG tidak ditemukan'], 404);
+        }
+
+        return new JsonResponse(['success' => true]);
+=======
     public function cariProsedurIdrg(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -510,6 +563,7 @@ class Klaim extends Controller
             'success' => $deleted > 0,
             'message' => $deleted > 0 ? 'Diagnosa berhasil dihapus.' : 'Diagnosa tidak ditemukan.',
         ], $deleted > 0 ? 200 : 404);
+>>>>>>> 5ed42ad2d44f9176d0da048d0ef6ec0727a47565
     }
 
 
@@ -1423,11 +1477,17 @@ class Klaim extends Controller
                 ->where('noreg', $noreg)
                 ->first();
 
+        // Selalu ambil hasil grouping terbaru dari database untuk ditampilkan di front-end.
+        $idrgKlaim = DB::table('idrg_klaim')
+            ->where('noreg', trim($noreg))
+            ->first();
+
         return new JsonResponse([
             'data' => $kunjungan,
             'covid19' => $covid19,
             'sudahpernahklaim' => $sudahPernahKlaim,
             'total_tarif' => 0,
+            'idrg_klaim' => $idrgKlaim,
             'layanan' => 'ranap',
         ]);
     }
@@ -1571,6 +1631,11 @@ class Klaim extends Controller
             $kunjungan->jumlah_kantong_darah = $jumlahKantongDarah;
         }
 
+        // Jangan memakai respons grouping yang lama; ambil record terbaru dari DB.
+        $idrgKlaim = DB::table('idrg_klaim')
+            ->where('noreg', trim($noreg))
+            ->first();
+
         return new JsonResponse([
             'data' => $kunjungan,
             'data_eklaim' => $eklaimData,
@@ -1582,6 +1647,7 @@ class Klaim extends Controller
             'sudahpernahklaim' => $sudahPernahKlaim,
             'total_tarif' => 0,
             'flagidrg' => DB::table('idrg_klaim')->where('noreg', trim($noreg))->exists() ? 1 : 0,
+            'idrg_klaim' => $idrgKlaim,
             'layanan' => 'rajal',
         ]);
     }

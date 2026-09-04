@@ -324,20 +324,38 @@ class BridgingSatsetHelper
     }
 
 
-    public static function post_bundle($token, $form, $noreg)
+    public static function post_bundle($token, $form, $noreg, $jenis = null)
     {
         $url = self::base_url();
         $response = Http::withToken($token)->post($url, $form);
         $data = json_decode($response, true);
-        // return $data;
+
+        // Deteksi jenis modul jika null
+        if (!$jenis) {
+            if (Str::endsWith($noreg, ['/I', '/i'])) {
+                $jenis = 'ranap';
+            } elseif (Str::endsWith($noreg, ['/X', '/x'])) {
+                $jenis = 'igd';
+            } else {
+                $jenis = 'rajal';
+            }
+        }
+
         // JIKA ERROR
-        $error = $data['resourceType'] === 'OperationOutcome';
+        $error = isset($data['resourceType']) && $data['resourceType'] === 'OperationOutcome';
         if ($error) {
+            $errorSummary = 'Error SatuSehat';
+            if (isset($data['issue']) && is_array($data['issue']) && count($data['issue']) > 0) {
+                $errorSummary = $data['issue'][0]['details']['text'] ?? $data['issue'][0]['diagnostics'] ?? 'Error SatuSehat';
+            }
+
             $err = [
                 'method' => 'POST',
                 'url' => $url,
                 'response' => $data,
-                'uuid' => $noreg
+                'uuid' => $noreg,
+                'jenis' => $jenis,
+                'error_summary' => substr($errorSummary, 0, 255),
             ];
             $resp = SatsetErrorRespon::create($err);
 
@@ -353,11 +371,13 @@ class BridgingSatsetHelper
             'method' => 'POST',
             'url' => $url,
             'response' => $data,
+            'jenis' => $jenis,
         ];
-        $resp = Satset::firstOrCreate([
-            'resource' => $data['resourceType'],
+        $resp = Satset::updateOrCreate([
+            'resource' => $data['resourceType'] ?? 'Bundle',
             'uuid' => $noreg
         ], $success);
+
         $send = [
             'message' => 'success',
             'data' => $resp

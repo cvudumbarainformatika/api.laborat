@@ -606,6 +606,11 @@ class Kunjunganranap extends Model
         return $this->hasMany(Resepkeluarheder::class, 'noreg', 'noreg');
     }
 
+    public function apotek()
+    {
+        return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
+    }
+
     public function laborats()
     {
         return $this->hasMany(LaboratMeta::class, 'noreg', 'rs1');

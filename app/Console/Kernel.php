@@ -41,6 +41,11 @@ class Kernel extends ConsoleKernel
             ->everyMinute()
             ->between('17:30', '23:50');
 
+        $schedule->command('satset:send-igd')
+            ->everyMinute()
+            ->withoutOverlapping()
+            ->between('02:00', '05:50');
+
 
         $schedule->command('cache:clear')
             ->dailyAt('00:30');
