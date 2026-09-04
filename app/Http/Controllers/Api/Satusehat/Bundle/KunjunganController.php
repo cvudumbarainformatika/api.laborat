@@ -8,6 +8,7 @@ use App\Helpers\BridgingSatsetHelper;
 use App\Helpers\PostKunjunganHelper;
 use App\Helpers\Satsets\CobaPostKunjunganRajalHelper;
 use App\Helpers\Satsets\PostKunjunganHDHerlper;
+use App\Helpers\Satsets\PostKunjunganIgdHelper;
 use App\Helpers\Satsets\PostKunjunganRajalHelper;
 use App\Helpers\Satsets\PostKunjunganRanapHelper;
 use App\Http\Controllers\Controller;
@@ -53,17 +54,11 @@ class KunjunganController extends Controller
 
 
         if ($jenis_kunjungan === 'igd') {
-            $ygTerkirim = 0;
-            $arrayKunjungan = self::cekKunjunganIgd();
-
-            return self::igd($arrayKunjungan[0]);
-
-            for ($i = 0; $i < count($arrayKunjungan); $i++) {
-                self::igd($arrayKunjungan[$i]);
-                $ygTerkirim = $i + 1;
-                // sleep(5);//menunggu 10 detik
+            $noreg = request('noreg');
+            if ($noreg) {
+                return PostKunjunganIgdHelper::cobaIgd($noreg);
             }
-            return ['yg terkirim' => $ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
+            return PostKunjunganIgdHelper::cekKunjungan();
         }
 
         return new JsonResponse(['message' => 'Jenis Kunjungan Tidak Diketahui'], 500);
