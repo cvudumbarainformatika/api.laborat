@@ -15,6 +15,7 @@ Route::group([
     Route::get('/kunjungan-klaim', [Klaim::class, 'kunjunganKlaim']);
     Route::get('/tarif', [Klaim::class, 'tarif']);
     Route::get('/diagnosa-idrg', [Klaim::class, 'cariDiagnosaIdrg']);
+    Route::post('/grouping-idrg/simpan-hasil', [Klaim::class, 'simpanHasilGroupingIdrg']);
     Route::post('/new-claim', [Klaim::class, 'newClaim']);
     Route::post('/terimapasien', [Klaim::class, 'terimapasien']);
 });
