@@ -145,8 +145,6 @@ class RadiologimetaController extends Controller
                 throw new Exception("Data Gagal Disimpan...!!!");
             }
 
-            // Ambil data dari request
-            $flagcito = $request->cito === 'Iya';
 
             // hapus billing jika ada
             Transradiologi::where('rs1',$request->noreg)
@@ -159,13 +157,9 @@ class RadiologimetaController extends Controller
                     // array_push($coba, $key->nama);
                     $hargasaranax = 0;
                     $hargapelayananx = 0;
-                    if ($flagcito) {
-                        $hargasaranax = $item['sarana'] + ($item['sarana'] * 20 / 100);
-                        $hargapelayananx = $item['pelayanan'] + ($item['pelayanan'] * 20 / 100);
-                    } else {
-                        $hargasaranax = $item['sarana'];
-                        $hargapelayananx = $item['pelayanan'];
-                    }
+                    // Cito hanya penanda prioritas; tarif tetap mengikuti tarif normal.
+                    $hargasaranax = $item['sarana'];
+                    $hargapelayananx = $item['pelayanan'];
 
 
                     // ini di awal Transradiologi di ganti ke sementara dahulu sebelum terima pasien

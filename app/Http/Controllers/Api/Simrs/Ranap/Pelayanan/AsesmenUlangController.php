@@ -34,10 +34,33 @@ class AsesmenUlangController extends Controller
             ->orderBy('created_at', 'DESC')
             ->get();
 
+        $penyakitMenular = DB::table('asesmen_penyakit_menular')
+            ->where('noreg', $noreg)
+            ->orderBy('created_at', 'DESC')
+            ->get()
+            ->map(function ($item) {
+                $item->cara_penularan = $item->cara_penularan ? json_decode($item->cara_penularan, true) : [];
+                $item->apd = $item->apd ? json_decode($item->apd, true) : [];
+                return $item;
+            });
+
+        $monitoringRestrain = DB::table('monitoring_restrain')
+            ->where('noreg', $noreg)
+            ->orderBy('tanggal', 'DESC')
+            ->orderBy('created_at', 'DESC')
+            ->get()
+            ->map(function ($item) {
+                $item->tanda_cedera = $item->tanda_cedera ? json_decode($item->tanda_cedera, true) : [];
+                $item->higiene = $item->higiene ? json_decode($item->higiene, true) : [];
+                return $item;
+            });
+
         return new JsonResponse([
             'jatuh' => $jatuh,
             'nyeri' => $nyeri,
-            'pasca_jatuh' => $pascaJatuh
+            'pasca_jatuh' => $pascaJatuh,
+            'penyakit_menular' => $penyakitMenular,
+            'monitoring_restrain' => $monitoringRestrain
         ], 200);
     }
 
@@ -406,6 +429,191 @@ class AsesmenUlangController extends Controller
             return new JsonResponse([
                 'success' => true,
                 'message' => 'Data berhasil dihapus'
+            ], 200);
+        } catch (\Throwable $th) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Gagal menghapus data',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function simpanPenyakitMenular(Request $request)
+    {
+        $kdpegsimrs = auth()->user()->pegawai->kdpegsimrs ?? $request->kdpegsimrs;
+        $petugas = auth()->user()->pegawai->nama ?? $request->petugas;
+
+        $data = [
+            'noreg' => $request->noreg,
+            'norm' => $request->norm,
+            'kdruangan' => $request->kdruangan,
+            'kdpegsimrs' => $kdpegsimrs,
+            'petugas' => $petugas,
+            'sumber' => $request->sumber ?? 'ranap',
+
+            // Section A
+            'diagnosis' => $request->diagnosis,
+            'status_diag' => $request->status_diag ?? 'baru',
+            'lama_sejak' => $request->lama_sejak,
+            'tahu_penyakit' => $request->tahu_penyakit ?? 'tahu',
+            'sumber_info' => $request->sumber_info ?? 'dokter',
+            'info_jangka' => $request->info_jangka ?? 'tidak',
+            'durasi_pengobatan' => $request->durasi_pengobatan,
+            'pemeriksaan_rutin' => $request->pemeriksaan_rutin ?? 'tidak',
+            'tempat_rutin' => $request->tempat_rutin,
+            'cara_penularan' => is_array($request->cara_penularan) ? json_encode($request->cara_penularan) : null,
+            'ruang_isolasi' => $request->ruang_isolasi ?? 'tidak',
+            'ruang_isolasi_ket' => $request->ruang_isolasi_ket,
+            'rujuk_ke' => $request->rujuk_ke,
+            'pakai_apd' => $request->pakai_apd ?? 'tidak',
+            'apd' => is_array($request->apd) ? json_encode($request->apd) : null,
+            'penyakit_penyerta' => $request->penyakit_penyerta ?? 'tidak',
+            'ket_penyakit_penyerta' => $request->ket_penyakit_penyerta,
+
+            // Section B
+            'b_tahu_penyakit' => $request->b_tahu_penyakit ?? 'tahu',
+            'b_sumber_info' => $request->b_sumber_info ?? 'dokter',
+            'b_info_jangka' => $request->b_info_jangka ?? 'tidak',
+            'b_durasi_pengobatan' => $request->b_durasi_pengobatan,
+            'b_pemeriksaan_rutin' => $request->b_pemeriksaan_rutin ?? 'tidak',
+            'b_tempat_rutin' => $request->b_tempat_rutin,
+            'b_dirawat_terpisah' => $request->b_dirawat_terpisah ?? 'tidak',
+            'b_tempat_terpisah' => $request->b_tempat_terpisah,
+
+            // Section C & D
+            'analisa_masalah' => $request->analisa_masalah,
+            'tindakan' => $request->tindakan,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        DB::beginTransaction();
+        try {
+            if ($request->filled('id')) {
+                DB::table('asesmen_penyakit_menular')
+                    ->where('id', $request->id)
+                    ->update($data);
+            } else {
+                $data['created_at'] = date('Y-m-d H:i:s');
+                DB::table('asesmen_penyakit_menular')->insert($data);
+            }
+
+            DB::commit();
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Data Asesmen Penyakit Menular Berhasil Disimpan'
+            ], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Gagal menyimpan data',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function hapusPenyakitMenular(Request $request)
+    {
+        $id = $request->id;
+        try {
+            DB::table('asesmen_penyakit_menular')->where('id', $id)->delete();
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Data berhasil dihapus'
+            ], 200);
+        } catch (\Throwable $th) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Gagal menghapus data',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function simpanMonitoringRestrain(Request $request)
+    {
+        $kdpegsimrs = auth()->user()->pegawai->kdpegsimrs ?? $request->kdpegsimrs;
+        $petugas = auth()->user()->pegawai->nama ?? $request->petugas;
+
+        $data = [
+            'noreg' => $request->noreg,
+            'norm' => $request->norm,
+            'kdruangan' => $request->kdruangan,
+            'kdpegsimrs' => $kdpegsimrs,
+            'petugas' => $petugas,
+            'sumber' => $request->sumber ?? 'ranap',
+            'tanggal' => $request->tanggal ?? date('Y-m-d H:i:s'),
+
+            // TTV
+            'ttv_t' => $request->ttv_t,
+            'ttv_n' => $request->ttv_n,
+            'ttv_s' => $request->ttv_s,
+            'ttv_rr' => $request->ttv_rr,
+            'ttv_crt' => $request->ttv_crt,
+            'ttv_akral' => $request->ttv_akral,
+
+            // Tanda Cedera Akibat Fiksasi (Array JSON)
+            'tanda_cedera' => is_array($request->tanda_cedera) ? json_encode($request->tanda_cedera) : null,
+
+            // Nutrisi
+            'nutrisi_makan' => $request->nutrisi_makan,
+            'nutrisi_minum_gelas' => $request->nutrisi_minum_gelas,
+            'nutrisi_minum_cc' => $request->nutrisi_minum_cc,
+
+            // Mobilisasi Tempat Fiksasi
+            'mobilisasi' => $request->mobilisasi,
+            'mobilisasi_tiap_jam' => $request->mobilisasi_tiap_jam,
+
+            // Higiene
+            'higiene' => is_array($request->higiene) ? json_encode($request->higiene) : null,
+            'higiene_mandi_x' => $request->higiene_mandi_x,
+            'higiene_oral_x' => $request->higiene_oral_x,
+
+            // Eliminasi
+            'eliminasi_bab_x' => $request->eliminasi_bab_x,
+            'eliminasi_bak_x' => $request->eliminasi_bak_x,
+
+            // Kesadaran
+            'kesadaran' => $request->kesadaran,
+
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        DB::beginTransaction();
+        try {
+            if ($request->filled('id')) {
+                DB::table('monitoring_restrain')
+                    ->where('id', $request->id)
+                    ->update($data);
+            } else {
+                $data['created_at'] = date('Y-m-d H:i:s');
+                DB::table('monitoring_restrain')->insert($data);
+            }
+
+            DB::commit();
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Data Monitoring Pengikatan Restrain Berhasil Disimpan'
+            ], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Gagal menyimpan data monitoring restrain',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function hapusMonitoringRestrain(Request $request)
+    {
+        $id = $request->id;
+        try {
+            DB::table('monitoring_restrain')->where('id', $id)->delete();
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Data monitoring restrain berhasil dihapus'
             ], 200);
         } catch (\Throwable $th) {
             return new JsonResponse([
