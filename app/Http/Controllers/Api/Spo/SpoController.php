@@ -7,6 +7,7 @@ use App\Models\Spo\Mspo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class SpoController extends Controller
 {
@@ -89,14 +90,9 @@ class SpoController extends Controller
         $spo->sop4 = implode('|', $data['unit_terkait'] ?? []);
 
         if ($request->hasFile('dokumen')) {
-            $directory = public_path('spo/uploadsxxxspo/' . $folder);
-            if (!is_dir($directory)) {
-                mkdir($directory, 0755, true);
-            }
-
             $file = $request->file('dokumen');
             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-            $file->move($directory, $filename);
+            Storage::disk('public')->putFileAs('spo/uploadsxxxspo/' . $folder, $file, $filename);
             $spo->sop3 = $filename;
         }
 
@@ -111,10 +107,12 @@ class SpoController extends Controller
     public function destroy(int $id)
     {
         $spo = Mspo::findOrFail($id);
-        $filePath = public_path('spo/uploadsxxxspo/' . $spo->sop1 . '/' . $spo->sop3);
+        $storagePath = 'spo/uploadsxxxspo/' . $spo->sop1 . '/' . $spo->sop3;
+        $legacyPath = public_path($storagePath);
 
-        if ($spo->sop3 && is_file($filePath)) {
-            unlink($filePath);
+        if ($spo->sop3) {
+            Storage::disk('public')->delete($storagePath);
+            if (is_file($legacyPath)) unlink($legacyPath);
         }
 
         $spo->delete();
