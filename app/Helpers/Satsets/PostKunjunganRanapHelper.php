@@ -529,7 +529,7 @@ class PostKunjunganRanapHelper
         $send = self::form($data, $pasien_uuid);
         if ($send['message'] === 'success') {
             $token = AuthSatsetHelper::accessToken();
-            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg, 'ranap');
         }
         return $send;
     }
@@ -671,7 +671,9 @@ class PostKunjunganRanapHelper
             // Gagal
             SatsetErrorRespon::create([
                 'uuid' => $pasien->noreg,
-                'response' => $send
+                'response' => $send,
+                'jenis' => 'ranap',
+                'error_summary' => 'Gagal verifikasi / create Patient IHS SatuSehat'
             ]);
 
             return [
@@ -681,7 +683,9 @@ class PostKunjunganRanapHelper
         } catch (\Throwable $e) {
             SatsetErrorRespon::create([
                 'uuid' => $pasien->noreg,
-                'response' => $e->getMessage()
+                'response' => $e->getMessage(),
+                'jenis' => 'ranap',
+                'error_summary' => 'Exception createPatientSatset: ' . substr($e->getMessage(), 0, 200)
             ]);
 
             return [
@@ -981,8 +985,10 @@ class PostKunjunganRanapHelper
         // ERROR TEKNIS
         // =========================
         SatsetErrorRespon::create([
-            'uuid'     => $noreg,
-            'response' => $send
+            'uuid'          => $noreg,
+            'response'      => $send,
+            'jenis'         => 'ranap',
+            'error_summary' => 'Gagal verifikasi NIK Pasien ke SatuSehat'
         ]);
 
         return [
@@ -1006,8 +1012,10 @@ class PostKunjunganRanapHelper
             $data->save();
         } else {
             SatsetErrorRespon::create([
-                'uuid' => $pasien->noreg,
-                'response' => $send
+                'uuid'          => $pasien->noreg,
+                'response'      => $send,
+                'jenis'         => 'ranap',
+                'error_summary' => 'Practitioner NIK Dokter tidak ditemukan di SatuSehat Kemkes (NIK: ' . $nik . ')'
             ]);
         }
         return $send;

@@ -26,6 +26,61 @@ class DashboardSatsetController extends Controller
         $tglAwal = $request->input('tgl_awal', Carbon::today()->toDateString());
         $tglAkhir = $request->input('tgl_akhir', Carbon::today()->toDateString());
 
+        // 0. Auto-heal records using exact RS SIMRS rules (rs23 = Ranap, rs17 /X = IGD, rs17 non-/X = Rajal)
+        try {
+            DB::statement("
+                UPDATE satsets 
+                JOIN rs23 ON rs23.rs1 = satsets.uuid 
+                SET satsets.jenis = 'ranap' 
+                WHERE satsets.jenis IS NULL OR satsets.jenis != 'ranap'
+            ");
+
+            DB::statement("
+                UPDATE satsets 
+                JOIN rs17 ON rs17.rs1 = satsets.uuid 
+                SET satsets.jenis = 'igd' 
+                WHERE (rs17.rs8 = 'POL014' OR rs17.rs1 LIKE '%/X' OR rs17.rs1 LIKE '%/x')
+                AND (satsets.jenis IS NULL OR satsets.jenis != 'igd')
+            ");
+
+            DB::statement("
+                UPDATE satsets 
+                JOIN rs17 ON rs17.rs1 = satsets.uuid 
+                SET satsets.jenis = 'rajal' 
+                WHERE rs17.rs8 != 'POL014' 
+                AND rs17.rs1 NOT LIKE '%/X' 
+                AND rs17.rs1 NOT LIKE '%/x'
+                AND (satsets.jenis IS NULL OR satsets.jenis != 'rajal')
+            ");
+
+            DB::statement("
+                UPDATE satset_error_respon 
+                JOIN rs23 ON rs23.rs1 = satset_error_respon.uuid 
+                SET satset_error_respon.jenis = 'ranap' 
+                WHERE satset_error_respon.jenis IS NULL OR satset_error_respon.jenis != 'ranap'
+            ");
+
+            DB::statement("
+                UPDATE satset_error_respon 
+                JOIN rs17 ON rs17.rs1 = satset_error_respon.uuid 
+                SET satset_error_respon.jenis = 'igd' 
+                WHERE (rs17.rs8 = 'POL014' OR rs17.rs1 LIKE '%/X' OR rs17.rs1 LIKE '%/x')
+                AND (satset_error_respon.jenis IS NULL OR satset_error_respon.jenis != 'igd')
+            ");
+
+            DB::statement("
+                UPDATE satset_error_respon 
+                JOIN rs17 ON rs17.rs1 = satset_error_respon.uuid 
+                SET satset_error_respon.jenis = 'rajal' 
+                WHERE rs17.rs8 != 'POL014' 
+                AND rs17.rs1 NOT LIKE '%/X' 
+                AND rs17.rs1 NOT LIKE '%/x'
+                AND (satset_error_respon.jenis IS NULL OR satset_error_respon.jenis != 'rajal')
+            ");
+        } catch (\Throwable $e) {
+            // Ignore if any DB permission issue
+        }
+
         // 1. Total Kunjungan Selesai di SIMRS pada periode
         $bukanPoli = ['POL014', 'PEN005', 'PEN004'];
 

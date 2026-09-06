@@ -470,7 +470,7 @@ class PostKunjunganIgdHelper
         $send = self::form($data, $pasien_uuid, $practitioner);
         if ($send['message'] === 'success') {
             $token = AuthSatsetHelper::accessToken();
-            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg, 'igd');
         }
         return $send;
     }
