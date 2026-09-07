@@ -26,61 +26,6 @@ class DashboardSatsetController extends Controller
         $tglAwal = $request->input('tgl_awal', Carbon::today()->toDateString());
         $tglAkhir = $request->input('tgl_akhir', Carbon::today()->toDateString());
 
-        // 0. Auto-heal records using exact RS SIMRS rules (rs23 = Ranap, rs17 /X = IGD, rs17 non-/X = Rajal)
-        try {
-            DB::statement("
-                UPDATE satsets 
-                JOIN rs23 ON rs23.rs1 = satsets.uuid 
-                SET satsets.jenis = 'ranap' 
-                WHERE satsets.jenis IS NULL OR satsets.jenis != 'ranap'
-            ");
-
-            DB::statement("
-                UPDATE satsets 
-                JOIN rs17 ON rs17.rs1 = satsets.uuid 
-                SET satsets.jenis = 'igd' 
-                WHERE (rs17.rs8 = 'POL014' OR rs17.rs1 LIKE '%/X' OR rs17.rs1 LIKE '%/x')
-                AND (satsets.jenis IS NULL OR satsets.jenis != 'igd')
-            ");
-
-            DB::statement("
-                UPDATE satsets 
-                JOIN rs17 ON rs17.rs1 = satsets.uuid 
-                SET satsets.jenis = 'rajal' 
-                WHERE rs17.rs8 != 'POL014' 
-                AND rs17.rs1 NOT LIKE '%/X' 
-                AND rs17.rs1 NOT LIKE '%/x'
-                AND (satsets.jenis IS NULL OR satsets.jenis != 'rajal')
-            ");
-
-            DB::statement("
-                UPDATE satset_error_respon 
-                JOIN rs23 ON rs23.rs1 = satset_error_respon.uuid 
-                SET satset_error_respon.jenis = 'ranap' 
-                WHERE satset_error_respon.jenis IS NULL OR satset_error_respon.jenis != 'ranap'
-            ");
-
-            DB::statement("
-                UPDATE satset_error_respon 
-                JOIN rs17 ON rs17.rs1 = satset_error_respon.uuid 
-                SET satset_error_respon.jenis = 'igd' 
-                WHERE (rs17.rs8 = 'POL014' OR rs17.rs1 LIKE '%/X' OR rs17.rs1 LIKE '%/x')
-                AND (satset_error_respon.jenis IS NULL OR satset_error_respon.jenis != 'igd')
-            ");
-
-            DB::statement("
-                UPDATE satset_error_respon 
-                JOIN rs17 ON rs17.rs1 = satset_error_respon.uuid 
-                SET satset_error_respon.jenis = 'rajal' 
-                WHERE rs17.rs8 != 'POL014' 
-                AND rs17.rs1 NOT LIKE '%/X' 
-                AND rs17.rs1 NOT LIKE '%/x'
-                AND (satset_error_respon.jenis IS NULL OR satset_error_respon.jenis != 'rajal')
-            ");
-        } catch (\Throwable $e) {
-            // Ignore if any DB permission issue
-        }
-
         // 1. Total Kunjungan Selesai di SIMRS pada periode
         $bukanPoli = ['POL014', 'PEN005', 'PEN004'];
 
@@ -176,7 +121,7 @@ class DashboardSatsetController extends Controller
         $jenis = $request->input('jenis', 'all');
 
         $query = SatsetErrorRespon::select(
-            DB::raw("COALESCE(NULLIF(error_summary, ''), 'Respon Error Umum / Validasi Payload') as pesan_error"),
+            DB::raw("TRIM(SUBSTRING_INDEX(COALESCE(NULLIF(error_summary, ''), 'Respon Error Umum / Validasi Payload'), ';', 1)) as pesan_error"),
             DB::raw('count(*) as total')
         )
             ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
@@ -187,8 +132,17 @@ class DashboardSatsetController extends Controller
 
         $topErrors = $query->groupBy('pesan_error')
             ->orderBy('total', 'desc')
-            ->limit(10)
-            ->get();
+            ->limit(5)
+            ->get()
+            ->map(function ($item) {
+                $human = self::humanizeErrorMessage($item->pesan_error);
+                return [
+                    'pesan_error' => $human['title'],
+                    'keterangan' => $human['description'],
+                    'raw_error' => $item->pesan_error,
+                    'total' => (int) $item->total,
+                ];
+            });
 
         return response()->json([
             'status' => 'success',
@@ -199,6 +153,115 @@ class DashboardSatsetController extends Controller
             ],
             'top_errors' => $topErrors
         ]);
+    }
+
+    /**
+     * Menerjemahkan pesan error teknis SatuSehat / FHIR ke Bahasa Indonesia yang mudah dipahami
+     */
+    public static function humanizeErrorMessage(?string $raw): array
+    {
+        $raw = trim($raw ?? '');
+        if (empty($raw) || $raw === 'Respon Error Umum / Validasi Payload') {
+            return [
+                'title' => 'Format Payload / Struktur Data FHIR Tidak Sesuai',
+                'description' => 'Ada ketidaksesuaian struktur JSON/elemen wajib FHIR dengan spesifikasi Kemenkes.',
+                'raw' => $raw ?: 'Respon Error Umum'
+            ];
+        }
+
+        if (stripos($raw, 'Encounter.diagnosis') !== false) {
+            return [
+                'title' => 'Diagnosa Utama / ICD-10 Belum Diisi',
+                'description' => 'Kunjungan pasien belum memiliki entri diagnosa primer (ICD-10) di SIMRS.',
+                'raw' => $raw
+            ];
+        }
+
+        if (stripos($raw, 'icd-10') !== false) {
+            return [
+                'title' => 'Kode Diagnosa (ICD-10) Tidak Ditemukan / Tidak Valid',
+                'description' => 'Kode ICD-10 yang dikirim tidak terdaftar atau belum sesuai standar terminologi Kemenkes.',
+                'raw' => $raw
+            ];
+        }
+
+        if (stripos($raw, 'Patient/') !== false || stripos($raw, 'citizen') !== false || stripos($raw, 'NIK') !== false) {
+            return [
+                'title' => 'NIK / IHS Pasien Tidak Ditemukan di SatuSehat',
+                'description' => 'NIK pasien belum terdaftar atau tidak sinkron dengan Dukcapil / SatuSehat.',
+                'raw' => $raw
+            ];
+        }
+
+        if (stripos($raw, 'Practitioner') !== false || stripos($raw, 'Tenaga Kesehatan') !== false || stripos($raw, 'SDMK') !== false) {
+            return [
+                'title' => 'IHS Dokter / Nakes Belum Terdaftar di SatuSehat',
+                'description' => 'IHS Number dokter penanggung jawab belum terdaftar atau belum sesuai data SISDMK.',
+                'raw' => $raw
+            ];
+        }
+
+        if (stripos($raw, 'Location') !== false || stripos($raw, 'locationServiceClass') !== false || stripos($raw, 'locationUpgradeClass') !== false) {
+            return [
+                'title' => 'ID Lokasi / Kelas Kamar Belum Sesuai Master Ruangan',
+                'description' => 'Mapping Location UUID atau kelas rawat SatuSehat untuk unit/ruangan belum lengkap.',
+                'raw' => $raw
+            ];
+        }
+
+        if (stripos($raw, 'dicom') !== false || stripos($raw, 'DCM') !== false) {
+            return [
+                'title' => 'Kode Modalitas Radiologi (DICOM) Tidak Sesuai',
+                'description' => 'Modalitas pemeriksaan penunjang (CR, CT, USG, dll.) belum terisi sesuai standar DCM.',
+                'raw' => $raw
+            ];
+        }
+
+        if (stripos($raw, 'snomed') !== false) {
+            return [
+                'title' => 'Kode Tindakan (SNOMED-CT) Tidak Valid',
+                'description' => 'Kode tindakan medis SNOMED-CT tidak ditemukan dalam dictionary Kemenkes.',
+                'raw' => $raw
+            ];
+        }
+
+        if (stripos($raw, 'duplicate') !== false) {
+            return [
+                'title' => 'Data Resource Sudah Pernah Terkirim (Duplikasi)',
+                'description' => 'Resource ini sudah tercatat sebelumnya di server SatuSehat Kemenkes.',
+                'raw' => $raw
+            ];
+        }
+
+        if (stripos($raw, 'Access Token') !== false || stripos($raw, 'Unauthorized') !== false) {
+            return [
+                'title' => 'Token Otentikasi SatuSehat Expired / Gagal',
+                'description' => 'Kredensial API Client ID / Secret SatuSehat perlu diperbarui.',
+                'raw' => $raw
+            ];
+        }
+
+        if (stripos($raw, 'reference_not_found') !== false) {
+            return [
+                'title' => 'Referensi ID Resource Induk Belum Ada',
+                'description' => 'Resource utama (misal Encounter ID) belum berhasil terbuat sebelum data ini dikirim.',
+                'raw' => $raw
+            ];
+        }
+
+        if (stripos($raw, 'failed') !== false || stripos($raw, 'Invalid query') !== false) {
+            return [
+                'title' => 'Permintaan / Koneksi API SatuSehat Gagal',
+                'description' => 'Server SatuSehat Kemenkes mengalami timeout atau query tidak valid.',
+                'raw' => $raw
+            ];
+        }
+
+        return [
+            'title' => $raw,
+            'description' => 'Kendala respon validasi SatuSehat Kemenkes.',
+            'raw' => $raw
+        ];
     }
 
     /**
@@ -435,7 +498,29 @@ class DashboardSatsetController extends Controller
             $query->where('jenis', $jenis);
         }
 
-        $records = $query->select('response', 'jenis')->get();
+        $records = $query->select('response', 'jenis', 'resource')->get();
+
+        $standardGrid = [
+            'Encounter' => 0,
+            'Condition' => 0,
+            'Observation' => 0,
+            'Procedure' => 0,
+            'Composition' => 0,
+            'Medication' => 0,
+            'MedicationRequest' => 0,
+            'MedicationDispense' => 0,
+            'AllergyIntolerance' => 0,
+            'ImagingStudy' => 0,
+            'ServiceRequest' => 0,
+            'ClinicalImpression' => 0,
+            'Immunization' => 0,
+            'QuestionnaireResponse' => 0,
+            'MedicationStatement' => 0,
+            'CarePlan' => 0,
+            'Specimen' => 0,
+            'DiagnosticReport' => 0,
+            'EpisodeOfCare' => 0,
+        ];
 
         $resourceCounts = [];
         $totalResourceCount = 0;
@@ -448,6 +533,10 @@ class DashboardSatsetController extends Controller
                 }
                 $resourceCounts[$resType] += $count;
                 $totalResourceCount += $count;
+
+                if (isset($standardGrid[$resType])) {
+                    $standardGrid[$resType] += $count;
+                }
             }
         }
 
@@ -469,8 +558,10 @@ class DashboardSatsetController extends Controller
                 'tgl_akhir' => $tglAkhir,
                 'jenis' => $jenis
             ],
+            'last_updated' => Carbon::now()->translatedFormat('d F Y, H:i') . ' WIB',
             'total_transaksi_bundle' => $records->count(),
             'total_resource_terkirim' => $totalResourceCount,
+            'card_grid' => $standardGrid,
             'detail_resource' => $breakdownList
         ]);
     }

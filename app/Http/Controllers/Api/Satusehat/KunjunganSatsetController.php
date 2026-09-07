@@ -186,10 +186,9 @@ class KunjunganSatsetController extends Controller
                 'message' => 'Maaf ... Tidak Ada Diagnosa Pada Kunjungan Ini'
             ], 500);
         }
-        // return $practitioner;
         $form = PostKunjunganHelper::form($request);
 
-        $send = BridgingSatsetHelper::post_bundle($request->token, $form, $request->noreg);
+        $send = BridgingSatsetHelper::post_bundle($request->token, $form, $request->noreg, $request->jenis ?? 'rajal');
         return $send;
     }
 }

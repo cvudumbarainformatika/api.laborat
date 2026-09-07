@@ -19,37 +19,6 @@ class SatsetErrorRespon extends Model
     protected static function booted()
     {
         static::saving(function ($model) {
-            // Auto detect jenis from uuid
-            if (empty($model->jenis) && !empty($model->uuid)) {
-                $uuid = (string) $model->uuid;
-                // 1. Jika dari rs23 -> Pasti Ranap
-                $isRanap = DB::table('rs23')->where('rs1', $uuid)->exists();
-                if ($isRanap) {
-                    $model->jenis = 'ranap';
-                } else {
-                    // 2. Jika dari rs17
-                    $rajal = DB::table('rs17')->where('rs1', $uuid)->first(['rs1', 'rs8']);
-                    if ($rajal) {
-                        if ($rajal->rs8 === 'POL014' || str_ends_with(strtolower($rajal->rs1), '/x')) {
-                            $model->jenis = 'igd';
-                        } else {
-                            $model->jenis = 'rajal';
-                        }
-                    } else {
-                        // 3. Fallback jika tidak ditemukan di rs17/rs23 (HANYA jika formatnya noreg SIMRS)
-                        if (str_ends_with(strtolower($uuid), '/i')) {
-                            $model->jenis = 'ranap';
-                        } elseif (str_ends_with(strtolower($uuid), '/x')) {
-                            $model->jenis = 'igd';
-                        } elseif (str_ends_with(strtolower($uuid), '/j')) {
-                            $model->jenis = 'rajal';
-                        } else {
-                            $model->jenis = null;
-                        }
-                    }
-                }
-            }
-
             // Auto extract error_summary if empty
             if (empty($model->error_summary) && !empty($model->response)) {
                 $resp = is_array($model->response) ? $model->response : json_decode($model->response, true);

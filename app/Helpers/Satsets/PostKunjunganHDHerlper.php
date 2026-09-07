@@ -581,7 +581,7 @@ class PostKunjunganHDHerlper
         $send = self::form($data, $pasien_uuid, $practitioner_uuid);
         if ($send['message'] === 'success') {
             $token = AuthSatsetHelper::accessToken();
-            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg, 'rajal');
         }
         return $send;
     }
