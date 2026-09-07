@@ -8,6 +8,7 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use LZCompressor\LZString;
 
 class BridgingSatsetHelper
@@ -332,27 +333,49 @@ class BridgingSatsetHelper
 
         // Deteksi jenis modul jika null
         if (!$jenis) {
-            if (Str::endsWith($noreg, ['/I', '/i'])) {
+            $noregStr = (string) $noreg;
+            // 1. Jika dari rs23 -> Pasti Ranap
+            $isRanap = DB::table('rs23')->where('rs1', $noregStr)->exists();
+            if ($isRanap) {
                 $jenis = 'ranap';
-            } elseif (Str::endsWith($noreg, ['/X', '/x'])) {
-                $jenis = 'igd';
             } else {
-                $jenis = 'rajal';
+                // 2. Jika dari rs17
+                $rajal = DB::table('rs17')->where('rs1', $noregStr)->first(['rs1', 'rs8']);
+                if ($rajal) {
+                    if ($rajal->rs8 === 'POL014' || str_ends_with(strtolower($rajal->rs1), '/x')) {
+                        $jenis = 'igd';
+                    } else {
+                        $jenis = 'rajal';
+                    }
+                } else {
+                    // 3. Fallback
+                    if (str_ends_with(strtolower($noregStr), '/i')) {
+                        $jenis = 'ranap';
+                    } elseif (str_ends_with(strtolower($noregStr), '/x')) {
+                        $jenis = 'igd';
+                    } else {
+                        $jenis = 'rajal';
+                    }
+                }
             }
         }
 
-        // JIKA ERROR
-        $error = isset($data['resourceType']) && $data['resourceType'] === 'OperationOutcome';
-        if ($error) {
-            $errorSummary = 'Error SatuSehat';
+        $statusCode = $response->status();
+        $isSuccess = ($statusCode === 200 || $statusCode === 201) && isset($data['resourceType']) && $data['resourceType'] === 'Bundle';
+
+        // JIKA GAGAL / ERROR
+        if (!$isSuccess) {
+            $errorSummary = 'Error SatuSehat HTTP ' . $statusCode;
             if (isset($data['issue']) && is_array($data['issue']) && count($data['issue']) > 0) {
-                $errorSummary = $data['issue'][0]['details']['text'] ?? $data['issue'][0]['diagnostics'] ?? 'Error SatuSehat';
+                $errorSummary = $data['issue'][0]['details']['text'] ?? $data['issue'][0]['diagnostics'] ?? $errorSummary;
+            } elseif (isset($data['message'])) {
+                $errorSummary = $data['message'];
             }
 
             $err = [
                 'method' => 'POST',
                 'url' => $url,
-                'response' => $data,
+                'response' => $data ?? ['raw' => $response->body()],
                 'uuid' => $noreg,
                 'jenis' => $jenis,
                 'error_summary' => substr($errorSummary, 0, 255),

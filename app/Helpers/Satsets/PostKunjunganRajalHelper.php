@@ -613,7 +613,7 @@ class PostKunjunganRajalHelper
         $send = self::form($data, $pasien_uuid, $practitioner_uuid);
         if ($send['message'] === 'success') {
             $token = AuthSatsetHelper::accessToken();
-            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg, 'rajal');
         }
         return $send;
     }
@@ -640,7 +640,9 @@ class PostKunjunganRajalHelper
         } else {
             SatsetErrorRespon::create([
                 'uuid' => $pasien->noreg,
-                'response' => $send
+                'response' => $send,
+                'jenis' => 'rajal',
+                'error_summary' => 'Patient UUID tidak ditemukan di SatuSehat Kemkes (NIK: ' . $nik . ')'
             ]);
         }
         return $send;
@@ -662,7 +664,9 @@ class PostKunjunganRajalHelper
         } else {
             SatsetErrorRespon::create([
                 'uuid' => $pasien->noreg,
-                'response' => $send
+                'response' => $send,
+                'jenis' => 'rajal',
+                'error_summary' => 'Practitioner NIK Dokter tidak ditemukan di SatuSehat Kemkes (NIK: ' . $nik . ')'
             ]);
         }
         return $send;
@@ -684,7 +688,7 @@ class PostKunjunganRajalHelper
 
         $practitioner = $practitioner_uuid;
 
-        $taskid = collect($request->taskid);
+        $taskid = Bpjsrespontime::where('noreg', $request->noreg)->get();
         if (count($taskid) === 0) {
             $send['data'] = 'data taskid dari request kosong';
             return $send;
@@ -705,6 +709,8 @@ class PostKunjunganRajalHelper
             SatsetErrorRespon::create([
                 'uuid' => $request->noreg,
                 'response' => 'TASK iD Tdk lengkap',
+                'jenis' => 'rajal',
+                'error_summary' => 'Task ID Antrean BPJS / SIMRS Tidak Lengkap (Task 3 / 5)'
             ]);
 
             $send['data'] = 'TASK iD Tdk lengkap';

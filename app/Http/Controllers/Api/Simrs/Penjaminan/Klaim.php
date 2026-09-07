@@ -12,11 +12,8 @@ use App\Models\Simrs\Rajal\KunjunganPoli;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-<<<<<<< HEAD
 use Illuminate\Support\Facades\Schema;
-=======
 use Illuminate\Support\Facades\Log;
->>>>>>> 5ed42ad2d44f9176d0da048d0ef6ec0727a47565
 
 class Klaim extends Controller
 {
@@ -71,7 +68,7 @@ class Klaim extends Controller
         return new JsonResponse($data);
     }
 
-<<<<<<< HEAD
+
     public function simpanHasilGroupingIdrg(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -119,7 +116,7 @@ class Klaim extends Controller
         }
 
         return new JsonResponse(['success' => true]);
-=======
+
     public function cariProsedurIdrg(Request $request): JsonResponse
     {
         $validated = $request->validate([
