@@ -92,7 +92,7 @@ class SpoController extends Controller
         if ($request->hasFile('dokumen')) {
             $file = $request->file('dokumen');
             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-            Storage::disk('public')->putFileAs('spo/uploadsxxxspo/' . $folder, $file, $filename);
+            Storage::disk('remote')->putFileAs('public/spo/uploadsxxxspo/' . $folder, $file, $filename);
             $spo->sop3 = $filename;
         }
 
@@ -111,6 +111,7 @@ class SpoController extends Controller
         $legacyPath = public_path($storagePath);
 
         if ($spo->sop3) {
+            Storage::disk('remote')->delete('public/' . $storagePath);
             Storage::disk('public')->delete($storagePath);
             if (is_file($legacyPath)) unlink($legacyPath);
         }
