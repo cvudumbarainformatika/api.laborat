@@ -348,13 +348,15 @@ class BridgingSatsetHelper
                         $jenis = 'rajal';
                     }
                 } else {
-                    // 3. Fallback
+                    // 3. Fallback (Hanya jika noreg SIMRS)
                     if (str_ends_with(strtolower($noregStr), '/i')) {
                         $jenis = 'ranap';
                     } elseif (str_ends_with(strtolower($noregStr), '/x')) {
                         $jenis = 'igd';
-                    } else {
+                    } elseif (str_ends_with(strtolower($noregStr), '/j')) {
                         $jenis = 'rajal';
+                    } else {
+                        $jenis = null;
                     }
                 }
             }

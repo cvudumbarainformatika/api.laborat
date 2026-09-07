@@ -36,13 +36,15 @@ class SatsetErrorRespon extends Model
                             $model->jenis = 'rajal';
                         }
                     } else {
-                        // 3. Fallback
+                        // 3. Fallback jika tidak ditemukan di rs17/rs23 (HANYA jika formatnya noreg SIMRS)
                         if (str_ends_with(strtolower($uuid), '/i')) {
                             $model->jenis = 'ranap';
                         } elseif (str_ends_with(strtolower($uuid), '/x')) {
                             $model->jenis = 'igd';
-                        } else {
+                        } elseif (str_ends_with(strtolower($uuid), '/j')) {
                             $model->jenis = 'rajal';
+                        } else {
+                            $model->jenis = null;
                         }
                     }
                 }

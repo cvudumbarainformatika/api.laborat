@@ -13,6 +13,7 @@ use App\Models\Simrs\Master\Allergy;
 use App\Models\Simrs\Master\MkuSnomed;
 use App\Models\Simrs\Master\Msnomed;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -38,8 +39,7 @@ class PostKunjunganRajalHelper
         // }
         // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
 
-        $tgl = Carbon::now()->subDays(5)->toDateString();
-        return self::rajal($tgl);
+        return self::rajal();
     }
 
     public static function cekKunjunganRajal()
@@ -320,11 +320,11 @@ class PostKunjunganRajalHelper
         return self::kirimKunjungan($data);
     }
 
-    public static function rajal($tgl)
+    public static function rajal($tgl = null)
     {
         $bukanPoli = ['POL014', 'PEN005', 'PEN004'];
 
-        $data = KunjunganPoli::select(
+        $query = KunjunganPoli::select(
             'rs17.rs1',
             'rs17.rs9',
             'rs17.rs4',
@@ -343,20 +343,26 @@ class PostKunjunganRajalHelper
             'rs15.rs49 as nik',
             'rs17.rs19 as status',
             'rs15.satset_uuid as pasien_uuid',
-            // 'satsets.uuid as satset',
-            // 'satset_error_respon.uuid as satset_error',
         )
             ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
-            // ->leftjoin('satsets', 'satsets.uuid', '=', 'rs17.rs1') //satset
-            // ->leftjoin('satset_error_respon', 'satset_error_respon.uuid', '=', 'rs17.rs1') //satset error
-
-            // ->where('rs17.rs1', $noreg)
             ->whereNotIn('rs17.rs8', $bukanPoli)
-            ->where('rs17.rs19', '=', '1') // kunjungan selesai
-            ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
+            ->where('rs17.rs1', 'NOT LIKE', '%/X')
+            ->where('rs17.rs1', 'NOT LIKE', '%/x')
+            ->where('rs17.rs19', '=', '1'); // kunjungan selesai
+
+        if ($tgl) {
+            $query->where('rs17.rs3', 'LIKE', '%' . $tgl . '%');
+        } else {
+            $tglAwal = Carbon::now()->subDays(60)->toDateString() . ' 00:00:00';
+            $tglAkhir = Carbon::now()->subDays(1)->toDateString() . ' 23:59:59';
+            $query->whereBetween('rs17.rs3', [$tglAwal, $tglAkhir])
+                  ->has('diagnosa');
+        }
+
+        $data = $query
 
             // ->whereBetween('rs17.rs3', [$tgl, $tglx])
             // ->where('rs17.rs8', $user->kdruangansim ?? '')
@@ -600,12 +606,25 @@ class PostKunjunganRajalHelper
 
         if (!$pasien_uuid) {
             $getPasienFromSatset = self::getPasienByNikSatset($data);
-            $pasien_uuid = $getPasienFromSatset['data']['uuid'];
+            $pasien_uuid = $getPasienFromSatset['data']['uuid'] ?? null;
+        }
+
+        if (!$pasien_uuid) {
+            $err = [
+                'method' => 'POST',
+                'url' => 'https://api-satusehat.kemkes.go.id/fhir-r4/v1',
+                'response' => ['message' => 'Pasien UUID / NIK Tidak Ditemukan di SatuSehat'],
+                'uuid' => $data->noreg,
+                'jenis' => 'rajal',
+                'error_summary' => 'Pasien UUID / NIK Tidak Ditemukan',
+            ];
+            SatsetErrorRespon::create($err);
+            return ['message' => 'failed', 'data' => 'Pasien UUID / NIK Tidak Ditemukan'];
         }
 
         if (!$practitioner_uuid) {
             $getFromSatset = self::getPractitionerFromSatset($data);
-            $practitioner_uuid = $getFromSatset['data']['uuid'];
+            $practitioner_uuid = $getFromSatset['data']['uuid'] ?? null;
         }
 
 
@@ -1016,8 +1035,8 @@ class PostKunjunganRajalHelper
                             "coding" => [
                                 [
                                     "system" => "http://hl7.org/fhir/sid/icd-10",
-                                    "code" => $value['rs3'],
-                                    "display" => $value['masterdiagnosa']['rs4']
+                                    "code" => (strlen(trim($value['rs3'])) > 3 && !str_contains($value['rs3'], '.')) ? (substr(trim($value['rs3']), 0, 3) . '.' . substr(trim($value['rs3']), 3)) : trim($value['rs3']),
+                                    "display" => $value['masterdiagnosa']['rs4'] ?? $value['masterdiagnosa']['rs3'] ?? 'Diagnosis'
                                 ]
                             ]
                         ],
@@ -3684,8 +3703,8 @@ class PostKunjunganRajalHelper
                                             "performer" => [
                                                 [
                                                     "actor" => [
-                                                        "reference" => "Practitioner/" . $apoteker_uuid,
-                                                        "display" => $nama_apoteker,
+                                                        "reference" => "Practitioner/" . (!empty($apoteker_uuid) ? $apoteker_uuid : (!empty($practitioner_uuid) ? $practitioner_uuid : '10000001')),
+                                                        "display" => !empty($apoteker_uuid) ? $nama_apoteker : (!empty($nama_practitioner) ? $nama_practitioner : 'Petugas Farmasi'),
                                                     ],
                                                 ],
                                             ],

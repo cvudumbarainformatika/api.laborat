@@ -39,13 +39,16 @@ class Satset extends Model
                     return;
                 }
 
-                // 3. Fallback jika tidak ditemukan di rs17/rs23
+                // 3. Fallback jika tidak ditemukan di rs17/rs23 (HANYA jika formatnya adalah noreg SIMRS)
                 if (str_ends_with(strtolower($uuid), '/i')) {
                     $model->jenis = 'ranap';
                 } elseif (str_ends_with(strtolower($uuid), '/x')) {
                     $model->jenis = 'igd';
-                } else {
+                } elseif (str_ends_with(strtolower($uuid), '/j')) {
                     $model->jenis = 'rajal';
+                } else {
+                    // Resource master (Patient, Practitioner, Location, Organization, dll) tetap NULL
+                    $model->jenis = null;
                 }
             }
         });

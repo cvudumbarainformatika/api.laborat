@@ -16,11 +16,8 @@ use Illuminate\Support\Str;
 
 class PostKunjunganRanapHelper
 {
-    public static function ranap()
+    public static function ranap($tgl = null)
     {
-        // 1. Ambil tanggal 5 hari yang lalu
-        $tglTarget = Carbon::now()->subDays(5)->toDateString();
-
         $query = Kunjunganranap::query();
 
         $select = $query->select(
@@ -232,17 +229,25 @@ class PostKunjunganRanapHelper
                 }
             ])
 
-            // ->where('rs23.rs1', $noreg)
-            ->where('rs23.rs4', 'LIKE', $tglTarget . '%')
-            ->whereIn('rs23.rs22', ['2', '3'])                                   // Status sudah pulang
-            ->doesntHave('satset')
-            ->doesntHave('satset_error')                                         // Belum terkirim
-            ->orderBy('rs23.rs4', 'asc')
+            ->whereIn('rs23.rs22', ['2', '3']); // Status sudah pulang
 
+        if ($tgl) {
+            $select->where('rs23.rs4', 'LIKE', $tgl . '%');
+        } else {
+            $tglAwal = Carbon::now()->subDays(60)->toDateString() . ' 00:00:00';
+            $tglAkhir = Carbon::now()->subDays(1)->toDateString() . ' 23:59:59';
+            $select->whereBetween('rs23.rs4', [$tglAwal, $tglAkhir])
+                   ->has('diagnosa');
+        }
+
+        $data = $select
+            ->doesntHave('satset')
+            ->doesntHave('satset_error') // Belum terkirim
+            ->orderBy('rs23.rs4', 'asc')
             ->first();
 
         // return $select;
-        return self::kirimKunjunganRanap($select);
+        return self::kirimKunjunganRanap($data);
     }
 
     public static function cobaRanap($noreg)
@@ -523,7 +528,16 @@ class PostKunjunganRanapHelper
         }
 
         if (!$pasien_uuid) {
-            return ['message' => 'error', 'data' => 'Pasien UUID Tidak Ditemukan'];
+            $err = [
+                'method' => 'POST',
+                'url' => 'https://api-satusehat.kemkes.go.id/fhir-r4/v1',
+                'response' => ['message' => 'Pasien UUID / NIK Tidak Ditemukan di SatuSehat'],
+                'uuid' => $data->noreg,
+                'jenis' => 'ranap',
+                'error_summary' => 'Pasien UUID / NIK Tidak Ditemukan',
+            ];
+            SatsetErrorRespon::create($err);
+            return ['message' => 'failed', 'data' => 'Pasien UUID / NIK Tidak Ditemukan'];
         }
 
         $send = self::form($data, $pasien_uuid);
@@ -1161,8 +1175,23 @@ class PostKunjunganRanapHelper
 
         // B. Data Lokasi (Bangsal)
         $ruangId = $request->relmasterruangranap->ruang->satset_uuid ?? $request->relmasterruangranap['ruang']['satset_uuid'] ?? null;
-        $lantai = $request->relmasterruangranap->ruang->lantai ?? $request->relmasterruangranap['ruang']['lantai'] ?? '-';
-        $gedung = $request->relmasterruangranap->ruang->gedung ?? $request->relmasterruangranap['ruang']['gedung'] ?? '-';
+        if (empty($ruangId) || $ruangId === '00000000-0000-0000-0000-000000000000') {
+            $kodeRuang = $request->relmasterruangranap->kode_ruang ?? null;
+            if ($kodeRuang) {
+                $locRecord = DB::table('satsets')
+                    ->where('resource', 'Location')
+                    ->where('response', 'like', '%"value":"' . $kodeRuang . '"%')
+                    ->first(['uuid']);
+                if ($locRecord && !empty($locRecord->uuid)) {
+                    $ruangId = $locRecord->uuid;
+                }
+            }
+        }
+        if (empty($ruangId) || $ruangId === '00000000-0000-0000-0000-000000000000') {
+            $ruangId = '0251eaf2-295f-4e87-9fb8-b180e743db00'; // Default Ruang Rawat Inap RSUD Mohamad Saleh
+        }
+        $lantai = $request->relmasterruangranap->ruang->lantai ?? $request->relmasterruangranap['ruang']['lantai'] ?? '1';
+        $gedung = $request->relmasterruangranap->ruang->gedung ?? $request->relmasterruangranap['ruang']['gedung'] ?? '1';
 
         // C. Perakit Resource Encounter (IMP)
         $formEncounter = [
@@ -1250,13 +1279,13 @@ class PostKunjunganRanapHelper
             $diagnosa_klinis = $rad['diagnosakerja'] ?? 'Permintaan Foto';
 
             foreach ($rad['rincians'] as $rincian) {
-                $modality = $rincian['relmasterpemeriksaan']['modality'] ?? 'CR';
-                $nama_foto = $rincian['relmasterpemeriksaan']['rs2'] ?? $rincian['pemeriksaan'] ?? '-';
+                $modality = !empty($rincian['relmasterpemeriksaan']['modality']) ? $rincian['relmasterpemeriksaan']['modality'] : 'CR';
+                $nama_foto = !empty($rincian['relmasterpemeriksaan']['rs2']) ? $rincian['relmasterpemeriksaan']['rs2'] : ($rincian['pemeriksaan'] ?? 'Pemeriksaan Radiologi');
                 $study_uid = $rincian['study_instance_uid'] ?? null;
                 $hasil_expertise = $rincian['hasil'] ?? null;
 
-                $loinc_code = $rincian['relmasterpemeriksaan']['loinc_code'] ?? '24648-8';
-                $loinc_display = $rincian['relmasterpemeriksaan']['loinc_display'] ?? 'Chest XR';
+                $loinc_code = !empty($rincian['relmasterpemeriksaan']['loinc_code']) ? $rincian['relmasterpemeriksaan']['loinc_code'] : '24648-8';
+                $loinc_display = !empty($rincian['relmasterpemeriksaan']['loinc_display']) ? $rincian['relmasterpemeriksaan']['loinc_display'] : 'Chest XR';
 
                 // 1. ServiceRequest (ORDER)
                 $servisRequest_uuid = "urn:uuid:" . self::generateUuid();

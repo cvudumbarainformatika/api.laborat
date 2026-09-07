@@ -20,11 +20,9 @@ class PostKunjunganIgdHelper
         return (string) Str::orderedUuid();
     }
 
-    public static function cekKunjungan()
+    public static function cekKunjungan($tgl = null)
     {
-        $tgl = Carbon::now()->subDays(1)->toDateString();
-
-        $data = KunjunganPoli::select(
+        $query = KunjunganPoli::select(
             'rs17.rs1',
             'rs17.rs9',
             'rs17.rs4',
@@ -49,9 +47,23 @@ class PostKunjunganIgdHelper
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8')
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9')
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14')
-            ->where('rs17.rs8', '=', 'POL014')
-            ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
-            ->where('rs17.rs19', '=', '1')
+            ->where(function ($q) {
+                $q->where('rs17.rs8', '=', 'POL014')
+                  ->orWhere('rs17.rs1', 'LIKE', '%/X')
+                  ->orWhere('rs17.rs1', 'LIKE', '%/x');
+            })
+            ->where('rs17.rs19', '=', '1');
+
+        if ($tgl) {
+            $query->where('rs17.rs3', 'LIKE', '%' . $tgl . '%');
+        } else {
+            $tglAwal = Carbon::now()->subDays(60)->toDateString() . ' 00:00:00';
+            $tglAkhir = Carbon::now()->subDays(1)->toDateString() . ' 23:59:59';
+            $query->whereBetween('rs17.rs3', [$tglAwal, $tglAkhir])
+                  ->has('diagnosa');
+        }
+
+        $data = $query
             ->doesntHave('satset')
             ->doesntHave('satset_error')
             ->with([
