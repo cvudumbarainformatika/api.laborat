@@ -456,6 +456,20 @@ class LaporanRadiologiController extends Controller
             ->distinct('rs106.rs2')
             ->count('rs106.rs2');
 
+        if ($jenis_pasien === 'ALL') {
+            $baseCountLuar = DB::table('rs270')->whereBetween('rs270.rs8', [$tglAwal, $tglAkhir]);
+            if ($status !== 'ALL' && $status !== '') {
+                if ($status === 'Selesai' || $status === 'Terlayani') {
+                    $baseCountLuar->where('rs270.rs10', '1');
+                } elseif ($status === 'Belum') {
+                    $baseCountLuar->where(function ($q) {
+                        $q->whereNull('rs270.rs10')->orWhere('rs270.rs10', '!=', '1');
+                    });
+                }
+            }
+            $totalNotaUnik += $baseCountLuar->distinct('rs270.rs1')->count('rs270.rs1');
+        }
+
         // ===================== GROUP BY =====================
         switch ($group_by) {
 
@@ -475,20 +489,29 @@ class LaporanRadiologiController extends Controller
                     ->get();
 
                 if ($jenis_pasien === 'ALL') {
-                    $dataLuar = DB::table('rs270')
+                    $queryLuar = DB::table('rs270')
                         ->join('rs271', 'rs271.rs1', '=', 'rs270.rs1')
                         ->leftJoin('rs47 as master', 'master.rs1', '=', 'rs271.rs3')
-                        ->whereBetween('rs270.rs8', [$tglAwal, $tglAkhir])
-                        ->select(
-                            'rs271.rs3 as kode',
-                            DB::raw('COALESCE(master.rs2, "Tidak diketahui") as nama'),
-                            DB::raw('COUNT(DISTINCT rs270.rs1) as total_nota'),
-                            DB::raw('COUNT(*) as total')
-                        )
+                        ->whereBetween('rs270.rs8', [$tglAwal, $tglAkhir]);
+
+                    if ($status !== 'ALL' && $status !== '') {
+                        if ($status === 'Selesai' || $status === 'Terlayani') {
+                            $queryLuar->where('rs270.rs10', '1');
+                        } elseif ($status === 'Belum') {
+                            $queryLuar->where(function ($q) {
+                                $q->whereNull('rs270.rs10')->orWhere('rs270.rs10', '!=', '1');
+                            });
+                        }
+                    }
+
+                    $dataLuar = $queryLuar->select(
+                        'rs271.rs3 as kode',
+                        DB::raw('COALESCE(master.rs2, "Tidak diketahui") as nama'),
+                        DB::raw('COUNT(DISTINCT rs270.rs1) as total_nota'),
+                        DB::raw('COUNT(*) as total')
+                    )
                         ->groupBy('rs271.rs3', 'master.rs2')
                         ->get();
-
-                    $totalNotaUnik += DB::table('rs270')->whereBetween('rs270.rs8', [$tglAwal, $tglAkhir])->distinct('rs270.rs1')->count('rs270.rs1');
 
                     $dataMap = $data->keyBy('kode');
                     foreach ($dataLuar as $l) {
@@ -517,6 +540,34 @@ class LaporanRadiologiController extends Controller
                     ->groupBy('rs106.rs8', 'petugas.nama')
                     ->orderByDesc('total')
                     ->get();
+
+                if ($jenis_pasien === 'ALL') {
+                    $queryLuarMinta = DB::table('rs270')
+                        ->join('rs271', 'rs271.rs1', '=', 'rs270.rs1')
+                        ->leftJoin('perusahaan', 'perusahaan.id', '=', 'rs270.perusahaan')
+                        ->whereBetween('rs270.rs8', [$tglAwal, $tglAkhir]);
+
+                    if ($status !== 'ALL' && $status !== '') {
+                        if ($status === 'Selesai' || $status === 'Terlayani') {
+                            $queryLuarMinta->where('rs270.rs10', '1');
+                        } elseif ($status === 'Belum') {
+                            $queryLuarMinta->where(function ($q) {
+                                $q->whereNull('rs270.rs10')->orWhere('rs270.rs10', '!=', '1');
+                            });
+                        }
+                    }
+
+                    $dataLuarMinta = $queryLuarMinta->select(
+                        DB::raw('"Luar" as kode'),
+                        DB::raw('COALESCE(NULLIF(perusahaan.perusahaan, ""), NULLIF(rs270.rs6, ""), "PASIEN LUAR MANDIRI") as nama'),
+                        DB::raw('COUNT(DISTINCT rs270.rs1) as total_nota'),
+                        DB::raw('COUNT(*) as total')
+                    )
+                        ->groupBy(DB::raw('COALESCE(NULLIF(perusahaan.perusahaan, ""), NULLIF(rs270.rs6, ""), "PASIEN LUAR MANDIRI")'))
+                        ->get();
+
+                    $data = $data->concat($dataLuarMinta)->sortByDesc('total')->values();
+                }
                 break;
 
             // 3. Per Dokter yang melaksanakan
@@ -531,6 +582,45 @@ class LaporanRadiologiController extends Controller
                     ->groupBy('rs151.rs4')
                     ->orderByDesc('total')
                     ->get();
+
+                if ($jenis_pasien === 'ALL') {
+                    $queryLuarLaksana = DB::table('rs270')
+                        ->join('rs271', 'rs271.rs1', '=', 'rs270.rs1')
+                        ->leftJoin('rs272', function ($j) {
+                            $j->on('rs272.rs1', '=', 'rs271.rs1')->on('rs272.kode', '=', 'rs271.rs3');
+                        })
+                        ->whereBetween('rs270.rs8', [$tglAwal, $tglAkhir]);
+
+                    if ($status !== 'ALL' && $status !== '') {
+                        if ($status === 'Selesai' || $status === 'Terlayani') {
+                            $queryLuarLaksana->where('rs270.rs10', '1');
+                        } elseif ($status === 'Belum') {
+                            $queryLuarLaksana->where(function ($q) {
+                                $q->whereNull('rs270.rs10')->orWhere('rs270.rs10', '!=', '1');
+                            });
+                        }
+                    }
+
+                    $dataLuarLaksana = $queryLuarLaksana->select(
+                        DB::raw('COALESCE(rs272.rs9, "Dokter Pelaksana Luar") as nama'),
+                        DB::raw('COUNT(DISTINCT rs270.rs1) as total_nota'),
+                        DB::raw('COUNT(*) as total')
+                    )
+                        ->groupBy(DB::raw('COALESCE(rs272.rs9, "Dokter Pelaksana Luar")'))
+                        ->get();
+
+                    $dataMap = $data->keyBy('nama');
+                    foreach ($dataLuarLaksana as $l) {
+                        if ($dataMap->has($l->nama)) {
+                            $item = $dataMap->get($l->nama);
+                            $item->total_nota += $l->total_nota;
+                            $item->total += $l->total;
+                        } else {
+                            $dataMap->put($l->nama, $l);
+                        }
+                    }
+                    $data = $dataMap->values()->sortByDesc('total')->values();
+                }
                 break;
 
             // 4. Per Ruangan
@@ -548,14 +638,25 @@ class LaporanRadiologiController extends Controller
                     ->get();
 
                 if ($jenis_pasien === 'ALL') {
-                    $dataLuar = DB::table('rs270')
+                    $queryLuarRuangan = DB::table('rs270')
                         ->join('rs271', 'rs271.rs1', '=', 'rs270.rs1')
-                        ->whereBetween('rs270.rs8', [$tglAwal, $tglAkhir])
-                        ->select(
-                            DB::raw('"Permintaan Luar" as nama'),
-                            DB::raw('COUNT(DISTINCT rs270.rs1) as total_nota'),
-                            DB::raw('COUNT(*) as total')
-                        )
+                        ->whereBetween('rs270.rs8', [$tglAwal, $tglAkhir]);
+
+                    if ($status !== 'ALL' && $status !== '') {
+                        if ($status === 'Selesai' || $status === 'Terlayani') {
+                            $queryLuarRuangan->where('rs270.rs10', '1');
+                        } elseif ($status === 'Belum') {
+                            $queryLuarRuangan->where(function ($q) {
+                                $q->whereNull('rs270.rs10')->orWhere('rs270.rs10', '!=', '1');
+                            });
+                        }
+                    }
+
+                    $dataLuar = $queryLuarRuangan->select(
+                        DB::raw('"Permintaan Luar" as nama'),
+                        DB::raw('COUNT(DISTINCT rs270.rs1) as total_nota'),
+                        DB::raw('COUNT(*) as total')
+                    )
                         ->groupBy(DB::raw('"Permintaan Luar"'))
                         ->get();
 
@@ -586,19 +687,30 @@ class LaporanRadiologiController extends Controller
                     ->get();
 
                 if ($jenis_pasien === 'ALL') {
-                    $rowsLuar = DB::table('rs270')
+                    $queryLuarMinta = DB::table('rs270')
                         ->join('rs271', 'rs271.rs1', '=', 'rs270.rs1')
                         ->leftJoin('perusahaan', 'perusahaan.id', '=', 'rs270.perusahaan')
                         ->leftJoin('rs47 as master', 'master.rs1', '=', 'rs271.rs3')
-                        ->whereBetween('rs270.rs8', [$tglAwal, $tglAkhir])
-                        ->select(
-                            DB::raw('"Luar" as kode_dokter'),
-                            DB::raw('COALESCE(NULLIF(perusahaan.perusahaan, ""), NULLIF(rs270.rs6, ""), "PASIEN LUAR MANDIRI") as nama_dokter'),
-                            'rs271.rs3 as kode_pemeriksaan',
-                            DB::raw('COALESCE(master.rs2, "Tidak diketahui") as nama_pemeriksaan'),
-                            DB::raw('COUNT(DISTINCT rs270.rs1) as total_nota'),
-                            DB::raw('COUNT(*) as total')
-                        )
+                        ->whereBetween('rs270.rs8', [$tglAwal, $tglAkhir]);
+
+                    if ($status !== 'ALL' && $status !== '') {
+                        if ($status === 'Selesai' || $status === 'Terlayani') {
+                            $queryLuarMinta->where('rs270.rs10', '1');
+                        } elseif ($status === 'Belum') {
+                            $queryLuarMinta->where(function ($q) {
+                                $q->whereNull('rs270.rs10')->orWhere('rs270.rs10', '!=', '1');
+                            });
+                        }
+                    }
+
+                    $rowsLuar = $queryLuarMinta->select(
+                        DB::raw('"Luar" as kode_dokter'),
+                        DB::raw('COALESCE(NULLIF(perusahaan.perusahaan, ""), NULLIF(rs270.rs6, ""), "PASIEN LUAR MANDIRI") as nama_dokter'),
+                        'rs271.rs3 as kode_pemeriksaan',
+                        DB::raw('COALESCE(master.rs2, "Tidak diketahui") as nama_pemeriksaan'),
+                        DB::raw('COUNT(DISTINCT rs270.rs1) as total_nota'),
+                        DB::raw('COUNT(*) as total')
+                    )
                         ->groupBy(DB::raw('COALESCE(NULLIF(perusahaan.perusahaan, ""), NULLIF(rs270.rs6, ""), "PASIEN LUAR MANDIRI")'), 'rs271.rs3', 'master.rs2')
                         ->get();
 
@@ -646,20 +758,31 @@ class LaporanRadiologiController extends Controller
                     ->get();
 
                 if ($jenis_pasien === 'ALL') {
-                    $rowsLuar = DB::table('rs270')
+                    $queryLuarLaksana = DB::table('rs270')
                         ->join('rs271', 'rs271.rs1', '=', 'rs270.rs1')
                         ->leftJoin('rs272', function ($j) {
                             $j->on('rs272.rs1', '=', 'rs271.rs1')->on('rs272.kode', '=', 'rs271.rs3');
                         })
                         ->leftJoin('rs47 as master', 'master.rs1', '=', 'rs271.rs3')
-                        ->whereBetween('rs270.rs8', [$tglAwal, $tglAkhir])
-                        ->select(
-                            DB::raw('COALESCE(rs272.rs9, "Tidak diketahui") as nama_dokter'),
-                            'rs271.rs3 as kode_pemeriksaan',
-                            DB::raw('COALESCE(master.rs2, "Tidak diketahui") as nama_pemeriksaan'),
-                            DB::raw('COUNT(DISTINCT rs270.rs1) as total_nota'),
-                            DB::raw('COUNT(*) as total')
-                        )
+                        ->whereBetween('rs270.rs8', [$tglAwal, $tglAkhir]);
+
+                    if ($status !== 'ALL' && $status !== '') {
+                        if ($status === 'Selesai' || $status === 'Terlayani') {
+                            $queryLuarLaksana->where('rs270.rs10', '1');
+                        } elseif ($status === 'Belum') {
+                            $queryLuarLaksana->where(function ($q) {
+                                $q->whereNull('rs270.rs10')->orWhere('rs270.rs10', '!=', '1');
+                            });
+                        }
+                    }
+
+                    $rowsLuar = $queryLuarLaksana->select(
+                        DB::raw('COALESCE(rs272.rs9, "Tidak diketahui") as nama_dokter'),
+                        'rs271.rs3 as kode_pemeriksaan',
+                        DB::raw('COALESCE(master.rs2, "Tidak diketahui") as nama_pemeriksaan'),
+                        DB::raw('COUNT(DISTINCT rs270.rs1) as total_nota'),
+                        DB::raw('COUNT(*) as total')
+                    )
                         ->groupBy('rs272.rs9', 'rs271.rs3', 'master.rs2')
                         ->get();
 
