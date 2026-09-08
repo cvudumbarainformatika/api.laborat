@@ -165,6 +165,8 @@ class DashboardSatsetController extends Controller
 
             if ($jenis !== 'all') {
                 $query->where('jenis', $jenis);
+            } else {
+                $query->whereIn('jenis', ['rajal', 'ranap', 'igd', 'hd']);
             }
 
             $topErrors = $query->groupBy('pesan_error')
@@ -185,6 +187,8 @@ class DashboardSatsetController extends Controller
                 ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                 ->when($jenis !== 'all', function ($q) use ($jenis) {
                     return $q->where('jenis', $jenis);
+                }, function ($q) {
+                    return $q->whereIn('jenis', ['rajal', 'ranap', 'igd', 'hd']);
                 })
                 ->count();
 
@@ -548,6 +552,8 @@ class DashboardSatsetController extends Controller
 
             if ($jenis !== 'all') {
                 $query->where('jenis', $jenis);
+            } else {
+                $query->whereIn('jenis', ['rajal', 'ranap', 'igd', 'hd']);
             }
 
             $records = $query->select('response')->get();
