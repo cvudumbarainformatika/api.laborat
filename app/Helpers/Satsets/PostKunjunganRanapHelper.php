@@ -3,10 +3,12 @@
 namespace App\Helpers\Satsets;
 
 use App\Helpers\AuthSatsetHelper;
+use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\BridgingSatsetHelper;
 use App\Helpers\Satsets\PostKunjunganRajalHelper;
 use App\Models\Pasien;
 use App\Models\Satset\SatsetErrorRespon;
+use App\Models\Satset\SatsetAuditDataLog;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Msnomed;
 use App\Models\Simrs\Ranap\Kunjunganranap;
@@ -527,6 +529,19 @@ class PostKunjunganRanapHelper
             $practitioner_uuid = $getFromSatset['data']['uuid'] ?? null;
         }
 
+        if (!$practitioner_uuid) {
+            $err = [
+                'method' => 'POST',
+                'url' => 'https://api-satusehat.kemkes.go.id/fhir-r4/v1',
+                'response' => ['message' => 'Practitioner UUID Dokter Tidak Ditemukan di SatuSehat'],
+                'uuid' => $data->noreg,
+                'jenis' => 'ranap',
+                'error_summary' => 'Practitioner Dokter Tidak Ditemukan',
+            ];
+            SatsetErrorRespon::create($err);
+            return ['message' => 'failed', 'data' => 'Practitioner UUID Dokter Tidak Ditemukan'];
+        }
+
         if (!$pasien_uuid) {
             $err = [
                 'method' => 'POST',
@@ -550,16 +565,129 @@ class PostKunjunganRanapHelper
 
 
 
+    public static function fetchBpjsPeserta($pasien, $unit = 'ranap')
+    {
+        $nik = trim((string)($pasien->nik ?? $pasien->rs49 ?? ''));
+        $noka = trim((string)($pasien->noka ?? $pasien->rs46 ?? ''));
+        $tglSep = date('Y-m-d');
+        $bpjsPeserta = null;
+
+        // 1. Coba by NIK jika valid 16 digit dan bukan dummy
+        if (!empty($nik) && strlen($nik) === 16 && !str_starts_with($nik, '8888') && !str_starts_with($nik, '9999') && !str_starts_with($nik, '0000')) {
+            try {
+                $res = BridgingbpjsHelper::get_url('vclaim', 'Peserta/nik/' . $nik . '/tglSEP/' . $tglSep);
+                if (isset($res['result']->peserta) && !empty($res['result']->peserta->nik)) {
+                    $bpjsPeserta = $res['result']->peserta;
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        // 2. Coba by NOKA jika belum dapat atau NIK dummy/kosong
+        if (!$bpjsPeserta && !empty($noka) && strlen($noka) >= 10) {
+            try {
+                $res = BridgingbpjsHelper::get_url('vclaim', 'Peserta/nokartu/' . $noka . '/tglSEP/' . $tglSep);
+                if (isset($res['result']->peserta) && !empty($res['result']->peserta->nik)) {
+                    $bpjsPeserta = $res['result']->peserta;
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        // Audit Log jika terdeteksi ketidaksesuaian data input SIMRS vs BPJS
+        if ($bpjsPeserta) {
+            $norm = trim((string)($pasien->norm ?? $pasien->rs1 ?? ''));
+            $noreg = $pasien->noreg ?? ($pasien->rs1 ?? null);
+            $namaSimrs = trim((string)(!empty($pasien->nama) ? $pasien->nama : (!empty($pasien->rs2) ? $pasien->rs2 : '')));
+            $tglLahirSimrs = $pasien->tgllahir ?? $pasien->rs16 ?? null;
+
+            $nikBpjs = trim((string)$bpjsPeserta->nik);
+            $namaBpjs = trim((string)$bpjsPeserta->nama);
+            $tglLahirBpjs = trim((string)$bpjsPeserta->tglLahir);
+
+            $diffNik = empty($nik) || $nik !== $nikBpjs || str_starts_with($nik, '8888') || str_starts_with($nik, '9999') || strlen($nik) < 16;
+            $diffNama = !empty($namaSimrs) && strtolower($namaSimrs) !== strtolower($namaBpjs);
+            $diffTgl = !empty($tglLahirSimrs) && trim((string)$tglLahirSimrs) !== $tglLahirBpjs;
+
+            if ($diffNik || $diffNama || $diffTgl) {
+                $alasan = [];
+                if ($diffNik) $alasan[] = "NIK SIMRS ('" . ($nik ?: 'KOSONG') . "') berbeda dg BPJS ('" . $nikBpjs . "')";
+                if ($diffNama) $alasan[] = "Nama SIMRS ('$namaSimrs') berbeda dg BPJS ('$namaBpjs')";
+                if ($diffTgl) $alasan[] = "Tgl Lahir SIMRS ('$tglLahirSimrs') berbeda dg BPJS ('$tglLahirBpjs')";
+
+                SatsetAuditDataLog::recordAudit([
+                    'kategori' => 'PASIEN_MISMATCH_BPJS',
+                    'unit' => $unit,
+                    'ref_id' => $norm ?: ($noreg ?: '-'),
+                    'noreg' => $noreg,
+                    'nama' => $namaSimrs ?: $namaBpjs,
+                    'nik_simrs' => $nik ?: null,
+                    'nik_valid' => $nikBpjs,
+                    'data_simrs' => [
+                        'nama' => $namaSimrs,
+                        'nik' => $nik,
+                        'tgllahir' => $tglLahirSimrs,
+                        'noka' => $noka,
+                    ],
+                    'data_pembanding' => [
+                        'nama' => $namaBpjs,
+                        'nik' => $nikBpjs,
+                        'tglLahir' => $tglLahirBpjs,
+                        'noKartu' => $bpjsPeserta->noKartu ?? null,
+                        'sex' => $bpjsPeserta->sex ?? null,
+                    ],
+                    'keterangan' => implode('; ', $alasan),
+                ]);
+            }
+        }
+
+        return $bpjsPeserta;
+    }
+
     public static function createPatientSatset($pasien)
     {
         try {
             $token = AuthSatsetHelper::accessToken();
 
-            $isBayi = Carbon::parse($pasien->tgllahir)->diffInYears(now()) < 1;
-            $nikIbu = $pasien?->nik_ibu ?? null; // fallback sementara
+            // 1. Prioritaskan ambil data valid dari BPJS (terintegrasi Dukcapil)
+            $bpjs = self::fetchBpjsPeserta($pasien);
 
-            $genderLower = strtolower(trim($pasien->kelamin));
+            $nik = $bpjs ? trim((string)$bpjs->nik) : trim((string)($pasien->nik ?? $pasien->rs49 ?? ''));
+            $norm = trim((string)($pasien->norm ?? $pasien->rs1 ?? ''));
+
+            if (empty($nik) || strlen($nik) < 16) {
+                return [
+                    'message' => 'failed',
+                    'data' => 'NIK Pasien kosong atau kurang dari 16 digit (baik di SIMRS maupun BPJS)'
+                ];
+            }
+
+            $tgllahir = $bpjs ? trim((string)$bpjs->tglLahir) : ($pasien->tgllahir ?? $pasien->rs16 ?? null);
+
+            $isBayi = false;
+            if (!empty($tgllahir)) {
+                $isBayi = Carbon::parse($tgllahir)->diffInYears(now()) < 1;
+            }
+
+            $genderRaw = $bpjs ? trim((string)$bpjs->sex) : trim((string)($pasien->kelamin ?? $pasien->rs17 ?? ''));
+            $genderLower = strtolower($genderRaw);
             $gender = ($genderLower === 'l' || str_starts_with($genderLower, 'laki') || $genderLower === 'male') ? 'male' : 'female';
+
+            $nama = $bpjs ? trim((string)$bpjs->nama) : (!empty($pasien->nama) ? $pasien->nama : (!empty($pasien->rs2) ? $pasien->rs2 : ($pasien->nama_panggil ?? '-')));
+            $alamat = $pasien->alamatbarcode ?? $pasien->alamat ?? $pasien->rs4 ?? '-';
+            $templahir = $pasien->templahir ?? $pasien->rs37 ?? '-';
+            $nohp = ($bpjs && !empty($bpjs->mr->noTelepon)) ? trim((string)$bpjs->mr->noTelepon) : ($pasien->nohp ?? $pasien->rs55 ?? '-');
+
+
+            $rawProv = trim((string)($pasien?->patient?->satset_province ?? $pasien?->satset_province ?? $pasien?->kd_propinsi ?? '35'));
+            $prov = (strlen($rawProv) === 2 && $rawProv !== '00') ? $rawProv : '35';
+
+            $rawCity = trim((string)($pasien?->patient?->satset_city ?? $pasien?->satset_city ?? $pasien?->kd_kota ?? '74'));
+            $cityCode = (strlen($rawCity) >= 4) ? $rawCity : ((strlen($rawCity) > 0 && $rawCity !== '00') ? ($prov . str_pad($rawCity, 2, '0', STR_PAD_LEFT)) : ($prov === '35' ? '3574' : $prov . '01'));
+
+            $rawDist = trim((string)($pasien?->patient?->satset_district ?? $pasien?->satset_district ?? $pasien?->kd_kec ?? '02'));
+            $distCode = (strlen($rawDist) >= 6) ? $rawDist : ((strlen($rawDist) > 0 && $rawDist !== '00') ? ($cityCode . str_pad($rawDist, 2, '0', STR_PAD_LEFT)) : ($cityCode === '3574' ? '357402' : $cityCode . '01'));
+
+            $rawVill = trim((string)($pasien?->patient?->satset_village ?? $pasien?->satset_village ?? $pasien?->kd_kel ?? '1005'));
+            $villCode = (strlen($rawVill) >= 10) ? $rawVill : ((strlen($rawVill) > 0 && $rawVill !== '0000' && $rawVill !== '00') ? ($distCode . str_pad($rawVill, 4, '0', STR_PAD_LEFT)) : ($distCode === '357402' ? '3574021005' : $distCode . '1001'));
 
             $payload = [
                 "resourceType" => "Patient",
@@ -573,17 +701,17 @@ class PostKunjunganRanapHelper
                     [
                         "use" => "official",
                         "system" => "https://fhir.kemkes.go.id/id/nik",
-                        "value" => trim($pasien->nik)
+                        "value" => $nik
                     ]
                 ],
                 "name" => [
                     [
                         "use" => "official",
-                        "text" => $pasien->nama_panggil ?? "-",
+                        "text" => $nama
                     ]
                 ],
                 "gender" => $gender,
-                "birthDate" => $pasien->tgllahir ?? null,
+                "birthDate" => $tgllahir,
                 "deceasedBoolean" => false,
                 "multipleBirthBoolean" => false,
 
@@ -591,7 +719,7 @@ class PostKunjunganRanapHelper
                 "telecom" => [
                     [
                         "system" => "phone",
-                        "value" => $pasien->nohp ?? '-',
+                        "value" => $nohp ?: '-',
                         "use" => "mobile"
                     ]
                 ],
@@ -599,7 +727,7 @@ class PostKunjunganRanapHelper
                 "address" => [
                     [
                         "use" => "home",
-                        "line" => [(string)($pasien->alamatbarcode ?? $pasien->alamat ?? "-")],
+                        "line" => [(string)$alamat],
                         "city" => !empty($pasien?->patient?->nama_kota) && $pasien?->patient?->nama_kota !== '-' ? $pasien->patient->nama_kota : "KOTA PROBOLINGGO",
                         "district" => !empty($pasien?->patient?->nama_kecamatan) && $pasien?->patient?->nama_kecamatan !== '-' ? $pasien->patient->nama_kecamatan : "Wonoasih",
                         "country" => "ID",
@@ -607,10 +735,10 @@ class PostKunjunganRanapHelper
                             [
                                 "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/administrativeCode",
                                 "extension" => [
-                                    ["url" => "province", "valueCode" => (string)($pasien?->patient?->satset_province ?? '35')],
-                                    ["url" => "city",    "valueCode" => (string)($pasien?->patient?->satset_city ?? '3574')],
-                                    ["url" => "district", "valueCode" => (string)($pasien?->patient?->satset_district ?? '357402')],
-                                    ["url" => "village", "valueCode" => (string)($pasien?->patient?->satset_village ?? '3574021005')]
+                                    ["url" => "province", "valueCode" => (string)$prov],
+                                    ["url" => "city",    "valueCode" => (string)$cityCode],
+                                    ["url" => "district", "valueCode" => (string)$distCode],
+                                    ["url" => "village", "valueCode" => (string)$villCode]
                                 ]
                             ]
                         ]
@@ -622,7 +750,7 @@ class PostKunjunganRanapHelper
                     [
                         "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/birthPlace",
                         "valueAddress" => [
-                            "city" => $pasien?->templahir ?? "-",
+                            "city" => $templahir ?: "PROBOLINGGO",
                             "country" => "ID"
                         ]
                     ],
@@ -670,10 +798,11 @@ class PostKunjunganRanapHelper
             if (isset($send['data']['id']) && !empty($send['data']['id'])) {
                 $uuid = $send['data']['id'];
 
-                Pasien::where('rs1', $pasien->norm)
-                    ->update([
-                        'satset_uuid' => $uuid
-                    ]);
+                if (!empty($norm)) {
+                    Pasien::where('rs1', $norm)->update(['satset_uuid' => $uuid]);
+                } elseif (!empty($nik)) {
+                    Pasien::where('rs49', $nik)->update(['satset_uuid' => $uuid]);
+                }
 
                 return [
                     'message' => 'success',
@@ -941,9 +1070,17 @@ class PostKunjunganRanapHelper
         if (!$pasien) {
             return ['message' => 'failed', 'data' => 'Data pasien kosong'];
         }
-        $nik   = trim($pasien->nik);
-        $norm  = $pasien->norm;
-        $noreg = $pasien->noreg;
+        $nik   = trim((string)($pasien->nik ?? $pasien->rs49 ?? ''));
+        $norm  = $pasien->norm ?? $pasien->rs1 ?? null;
+        $noreg = $pasien->noreg ?? $pasien->rs1 ?? null;
+
+        // Jika NIK belum valid atau kosong, coba cari di BPJS terlebih dahulu
+        if (empty($nik) || strlen($nik) !== 16 || str_starts_with($nik, '8888') || str_starts_with($nik, '9999')) {
+            $bpjs = self::fetchBpjsPeserta($pasien);
+            if ($bpjs && !empty($bpjs->nik)) {
+                $nik = trim((string)$bpjs->nik);
+            }
+        }
 
         $token  = AuthSatsetHelper::accessToken();
         $params = '/Patient?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
@@ -1014,6 +1151,22 @@ class PostKunjunganRanapHelper
     public static function getPractitionerFromSatset($pasien)
     {
         $nik = $pasien->datasimpeg ? $pasien->datasimpeg['nik'] : null;
+        $kdpeg = $pasien->kdpegsimrs ?? $pasien->nip ?? $pasien->id ?? '-';
+        $namaDokter = $pasien->nama ?? '-';
+
+        if (!$nik) {
+            SatsetAuditDataLog::recordAudit([
+                'kategori' => 'PEGAWAI_NIK_KOSONG',
+                'unit' => 'kepegawaian',
+                'ref_id' => (string)$kdpeg,
+                'noreg' => $pasien->noreg ?? null,
+                'nama' => $namaDokter,
+                'nik_simrs' => null,
+                'keterangan' => 'NIK Pegawai/Dokter (' . $namaDokter . ') belum diisi di SIMPEG / Master Pegawai'
+            ]);
+            return ['message' => 'failed', 'data' => 'NIK Dokter Kosong'];
+        }
+
         $token = AuthSatsetHelper::accessToken();
         $params = '/Practitioner?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
 
@@ -1021,15 +1174,27 @@ class PostKunjunganRanapHelper
 
         $data = Pegawai::where('nik', $nik)->where('aktif', 'AKTIF')->first();
 
-        if ($send['message'] === 'success') {
-            $data->satset_uuid = $send['data']['uuid'];
-            $data->save();
+        if ($send['message'] === 'success' && isset($send['data']['uuid'])) {
+            if ($data) {
+                $data->satset_uuid = $send['data']['uuid'];
+                $data->save();
+            }
         } else {
             SatsetErrorRespon::create([
-                'uuid'          => $pasien->noreg,
+                'uuid'          => $pasien->noreg ?? $kdpeg,
                 'response'      => $send,
                 'jenis'         => 'ranap',
                 'error_summary' => 'Practitioner NIK Dokter tidak ditemukan di SatuSehat Kemkes (NIK: ' . $nik . ')'
+            ]);
+
+            SatsetAuditDataLog::recordAudit([
+                'kategori' => 'PEGAWAI_UNREGISTERED_SATSET',
+                'unit' => 'kepegawaian',
+                'ref_id' => (string)$kdpeg,
+                'noreg' => $pasien->noreg ?? null,
+                'nama' => $namaDokter,
+                'nik_simrs' => $nik,
+                'keterangan' => 'Pegawai/Dokter (' . $namaDokter . ' - NIK: ' . $nik . ') tidak ditemukan/belum terdaftar di SatuSehat Kemkes'
             ]);
         }
         return $send;

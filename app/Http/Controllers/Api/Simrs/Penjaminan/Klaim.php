@@ -116,6 +116,7 @@ class Klaim extends Controller
         }
 
         return new JsonResponse(['success' => true]);
+    }
 
     public function cariProsedurIdrg(Request $request): JsonResponse
     {
@@ -560,7 +561,6 @@ class Klaim extends Controller
             'success' => $deleted > 0,
             'message' => $deleted > 0 ? 'Diagnosa berhasil dihapus.' : 'Diagnosa tidak ditemukan.',
         ], $deleted > 0 ? 200 : 404);
->>>>>>> 5ed42ad2d44f9176d0da048d0ef6ec0727a47565
     }
 
 

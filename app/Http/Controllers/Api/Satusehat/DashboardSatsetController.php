@@ -8,6 +8,7 @@ use App\Helpers\Satsets\PostKunjunganRanapHelper;
 use App\Helpers\Satsets\PostKunjunganIgdHelper;
 use App\Models\Satset\Satset;
 use App\Models\Satset\SatsetErrorRespon;
+use App\Models\Satset\SatsetAuditDataLog;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use Carbon\Carbon;
@@ -715,6 +716,120 @@ class DashboardSatsetController extends Controller
             'noreg' => $noreg,
             'jenis' => $jenis,
             'result' => $res
+        ]);
+    }
+
+    /**
+     * Statistik Ringkasan Audit Log
+     */
+    public function auditStats(Request $request): JsonResponse
+    {
+        $tglAwal = $request->input('tgl_awal', Carbon::today()->subDays(30)->toDateString());
+        $tglAkhir = $request->input('tgl_akhir', Carbon::today()->toDateString());
+
+        $query = SatsetAuditDataLog::whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
+
+        $totalTemuan = (clone $query)->count();
+        $totalPending = (clone $query)->where('status_perbaikan', 'PENDING')->count();
+        $totalDiperbaiki = (clone $query)->where('status_perbaikan', 'DIPERBAIKI')->count();
+        $totalDiabaikan = (clone $query)->where('status_perbaikan', 'DIABAIKAN')->count();
+
+        $pasienMismatch = (clone $query)->where('kategori', 'PASIEN_MISMATCH_BPJS')->count();
+        $pegawaiNikKosong = (clone $query)->where('kategori', 'PEGAWAI_NIK_KOSONG')->count();
+        $pegawaiUnregistered = (clone $query)->where('kategori', 'PEGAWAI_UNREGISTERED_SATSET')->count();
+
+        return response()->json([
+            'status' => 'success',
+            'stats' => [
+                'total_temuan' => $totalTemuan,
+                'total_pending' => $totalPending,
+                'total_diperbaiki' => $totalDiperbaiki,
+                'total_diabaikan' => $totalDiabaikan,
+                'pasien_mismatch' => $pasienMismatch,
+                'pegawai_nik_kosong' => $pegawaiNikKosong,
+                'pegawai_unregistered' => $pegawaiUnregistered,
+            ]
+        ]);
+    }
+
+    /**
+     * Daftar Audit Data Log dengan Filter & Pagination
+     */
+    public function auditList(Request $request): JsonResponse
+    {
+        $tglAwal = $request->input('tgl_awal', Carbon::today()->subDays(30)->toDateString());
+        $tglAkhir = $request->input('tgl_akhir', Carbon::today()->toDateString());
+        $kategori = $request->input('kategori');
+        $unit = $request->input('unit');
+        $status = $request->input('status');
+        $q = $request->input('q');
+        $perPage = (int) $request->input('per_page', 20);
+
+        $query = SatsetAuditDataLog::query();
+
+        if (!empty($tglAwal) && !empty($tglAkhir)) {
+            $query->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
+        }
+
+        if (!empty($kategori) && $kategori !== 'all') {
+            $query->where('kategori', $kategori);
+        }
+
+        if (!empty($unit) && $unit !== 'all') {
+            $query->where('unit', $unit);
+        }
+
+        if (!empty($status) && $status !== 'all') {
+            $query->where('status_perbaikan', $status);
+        }
+
+        if (!empty($q)) {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('nama', 'like', "%{$q}%")
+                    ->orWhere('ref_id', 'like', "%{$q}%")
+                    ->orWhere('noreg', 'like', "%{$q}%")
+                    ->orWhere('nik_simrs', 'like', "%{$q}%")
+                    ->orWhere('nik_valid', 'like', "%{$q}%")
+                    ->orWhere('keterangan', 'like', "%{$q}%");
+            });
+        }
+
+        $list = $query->orderBy('created_at', 'DESC')->paginate($perPage);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $list
+        ]);
+    }
+
+    /**
+     * Update Status Perbaikan Audit Log
+     */
+    public function updateAuditStatus(Request $request): JsonResponse
+    {
+        $id = $request->input('id');
+        $status = $request->input('status'); // 'PENDING', 'DIPERBAIKI', 'DIABAIKAN'
+        $user = $request->input('user', 'Administrator');
+
+        if (!$id || !$status || !in_array($status, ['PENDING', 'DIPERBAIKI', 'DIABAIKAN'])) {
+            return response()->json(['status' => 'failed', 'message' => 'Data tidak valid'], 400);
+        }
+
+        $audit = SatsetAuditDataLog::find($id);
+        if (!$audit) {
+            return response()->json(['status' => 'failed', 'message' => 'Data log audit tidak ditemukan'], 404);
+        }
+
+        $audit->update([
+            'status_perbaikan' => $status,
+            'user_perbaikan' => $user,
+            'tgl_perbaikan' => ($status !== 'PENDING') ? now() : null,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Status berhasil diperbarui',
+            'data' => $audit
         ]);
     }
 }

@@ -328,8 +328,6 @@ class BridgingSatsetHelper
     public static function post_bundle($token, $form, $noreg, $jenis = null)
     {
         $url = self::base_url();
-        $response = Http::withToken($token)->post($url, $form);
-        $data = json_decode($response, true);
 
         // Deteksi jenis modul jika null
         if (!$jenis) {
@@ -362,79 +360,95 @@ class BridgingSatsetHelper
             }
         }
 
-        $statusCode = $response->status();
-        $isSuccess = ($statusCode === 200 || $statusCode === 201) && isset($data['resourceType']) && $data['resourceType'] === 'Bundle';
+        try {
+            $response = Http::timeout(60)->withToken($token)->post($url, $form);
+            $data = json_decode($response, true);
 
-        // JIKA GAGAL / ERROR
-        if (!$isSuccess) {
-            $errorSummary = 'Error SatuSehat HTTP ' . $statusCode;
-            if (isset($data['issue']) && is_array($data['issue']) && count($data['issue']) > 0) {
-                $errorSummary = $data['issue'][0]['details']['text'] ?? $data['issue'][0]['diagnostics'] ?? $errorSummary;
-            } elseif (isset($data['message'])) {
-                $errorSummary = $data['message'];
+            $statusCode = $response->status();
+            $isSuccess = ($statusCode === 200 || $statusCode === 201) && isset($data['resourceType']) && $data['resourceType'] === 'Bundle';
+
+            // JIKA GAGAL / ERROR
+            if (!$isSuccess) {
+                $errorSummary = 'Error SatuSehat HTTP ' . $statusCode;
+                if (isset($data['issue']) && is_array($data['issue']) && count($data['issue']) > 0) {
+                    $errorSummary = $data['issue'][0]['details']['text'] ?? $data['issue'][0]['diagnostics'] ?? $errorSummary;
+                } elseif (isset($data['message'])) {
+                    $errorSummary = $data['message'];
+                }
+
+                $err = [
+                    'method' => 'POST',
+                    'url' => $url,
+                    'response' => $data ?? ['raw' => $response->body()],
+                    'uuid' => $noreg,
+                    'jenis' => $jenis,
+                    'error_summary' => substr($errorSummary, 0, 255),
+                ];
+                $resp = SatsetErrorRespon::create($err);
+
+                return [
+                    'message' => 'failed',
+                    'data' => $resp
+                ];
             }
 
+            // JIKA SUCCESS
+            $success = [
+                'method' => 'POST',
+                'url' => $url,
+                'response' => $data,
+                'jenis' => $jenis,
+            ];
+            $resp = Satset::updateOrCreate([
+                'resource' => $data['resourceType'] ?? 'Bundle',
+                'uuid' => $noreg
+            ], $success);
+
+            $send = [
+                'message' => 'success',
+                'data' => $resp
+            ];
+
+            // Push DICOM PACS jika ada
+            try {
+                $pacs = DB::table('rs48_pacs')
+                    ->where('noreg', $noreg)
+                    ->where('status', 'COMPLETED')
+                    ->whereNotNull('study_id')
+                    ->get(['nota', 'study_id']);
+                foreach ($pacs as $item) {
+                    try {
+                        Http::withHeaders(['X-API-KEY' => config('services.orthanc.api_key')])
+                            ->timeout(3)
+                            ->post(config('services.orthanc.url') . '/api/v1/satusehat/push-dicom', [
+                                'nota'     => $item->nota,
+                                'study_id' => $item->study_id,
+                            ]);
+                    } catch (\Exception $e) {
+                        Log::error("Gagal Push DICOM ke Middleware untuk Nota: " . $item->nota . ". Error: " . $e->getMessage());
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error("Gagal Query rs48_pacs untuk Noreg: " . $noreg . ". Error: " . $e->getMessage());
+            }
+
+            return $send;
+        } catch (\Throwable $e) {
             $err = [
                 'method' => 'POST',
                 'url' => $url,
-                'response' => $data ?? ['raw' => $response->body()],
+                'response' => ['error' => $e->getMessage()],
                 'uuid' => $noreg,
                 'jenis' => $jenis,
-                'error_summary' => substr($errorSummary, 0, 255),
+                'error_summary' => substr('Connection Timeout / Error: ' . $e->getMessage(), 0, 255),
             ];
             $resp = SatsetErrorRespon::create($err);
 
-            $send = [
+            return [
                 'message' => 'failed',
-                'data' => $resp
+                'data' => $resp,
+                'error' => $e->getMessage()
             ];
-            return $send;
         }
-
-        // JIKA SUCCESS
-        $success = [
-            'method' => 'POST',
-            'url' => $url,
-            'response' => $data,
-            'jenis' => $jenis,
-        ];
-        $resp = Satset::updateOrCreate([
-            'resource' => $data['resourceType'] ?? 'Bundle',
-            'uuid' => $noreg
-        ], $success);
-
-        $send = [
-            'message' => 'success',
-            'data' => $resp
-        ];
-
-
-
-        // Sebelum return $send:
-        try {
-            $pacs = DB::table('rs48_pacs')
-                ->where('noreg', $noreg)
-                ->where('status', 'COMPLETED')
-                ->whereNotNull('study_id')
-                ->get(['nota', 'study_id']);
-            foreach ($pacs as $item) {
-                try {
-                    Http::withHeaders(['X-API-KEY' => config('services.orthanc.api_key')])
-                        ->timeout(3)
-                        ->post(config('services.orthanc.url') . '/api/v1/satusehat/push-dicom', [
-                            'nota'     => $item->nota,
-                            'study_id' => $item->study_id,  // langsung pakai!
-                        ]);
-                } catch (\Exception $e) { /* abaikan */
-                    // Log error per nota
-                    Log::error("Gagal Push DICOM ke Middleware untuk Nota: " . $item->nota . ". Error: " . $e->getMessage());
-                }
-            }
-        } catch (\Exception $e) { /* abaikan */
-            // Log error query database
-            Log::error("Gagal Query rs48_pacs untuk Noreg: " . $noreg . ". Error: " . $e->getMessage());
-        }
-
-        return $send;
     }
 }
