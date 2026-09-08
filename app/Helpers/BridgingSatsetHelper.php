@@ -246,11 +246,10 @@ class BridgingSatsetHelper
             isset($data['resourceType']) &&
             $data['resourceType'] === 'OperationOutcome'
         ) {
-
             $err = [
                 'method'   => 'POST',
                 'url'      => $params,
-                'response' => $data
+                'response' => self::compactErrorResponse($data, $response->status(), $response->body())
             ];
 
             // simpan log
@@ -290,12 +289,12 @@ class BridgingSatsetHelper
         $data = json_decode($response, true);
 
         // JIKA ERROR
-        $error = $data['resourceType'] === 'OperationOutcome';
+        $error = ($data['resourceType'] ?? '') === 'OperationOutcome';
         if ($error) {
             $err = [
                 'method' => 'PUT',
                 'url' => $params,
-                'response' => $data
+                'response' => self::compactErrorResponse($data, $response->status(), $response->body())
             ];
             $resp = SatsetErrorRespon::create($err);
 
@@ -376,10 +375,12 @@ class BridgingSatsetHelper
                     $errorSummary = $data['message'];
                 }
 
+                $cleanError = self::compactErrorResponse($data, $statusCode, $response->body());
+
                 $err = [
                     'method' => 'POST',
                     'url' => $url,
-                    'response' => $data ?? ['raw' => $response->body()],
+                    'response' => $cleanError,
                     'uuid' => $noreg,
                     'jenis' => $jenis,
                     'error_summary' => substr($errorSummary, 0, 255),
@@ -392,27 +393,8 @@ class BridgingSatsetHelper
                 ];
             }
 
-            // JIKA SUCCESS
-            $saveData = $data;
-            if (isset($data['entry']) && is_array($data['entry']) && strlen(json_encode($data)) > 60000) {
-                $compactEntries = [];
-                foreach ($data['entry'] as $e) {
-                    $res = $e['response'] ?? [];
-                    $compactEntries[] = [
-                        'response' => [
-                            'status' => $res['status'] ?? '201 Created',
-                            'resourceType' => $res['resourceType'] ?? null,
-                            'resourceID' => $res['resourceID'] ?? null,
-                        ]
-                    ];
-                }
-                $saveData = [
-                    'resourceType' => $data['resourceType'] ?? 'Bundle',
-                    'type' => $data['type'] ?? 'transaction-response',
-                    'total' => $data['total'] ?? count($compactEntries),
-                    'entry' => $compactEntries
-                ];
-            }
+            // JIKA SUCCESS - Standarkan compact bundle response untuk semua modul (Rajal, IGD, Ranap)
+            $saveData = self::compactBundleResponse($data);
 
             $success = [
                 'method' => 'POST',
@@ -458,7 +440,7 @@ class BridgingSatsetHelper
             $err = [
                 'method' => 'POST',
                 'url' => $url,
-                'response' => ['error' => $e->getMessage()],
+                'response' => ['error' => substr($e->getMessage(), 0, 500)],
                 'uuid' => $noreg,
                 'jenis' => $jenis,
                 'error_summary' => substr('Connection Timeout / Error: ' . $e->getMessage(), 0, 255),
@@ -471,5 +453,80 @@ class BridgingSatsetHelper
                 'error' => $e->getMessage()
             ];
         }
+    }
+
+    /**
+     * Memadatkan respons Bundle SatuSehat (Rajal, IGD, Ranap) agar database tidak membengkak
+     * Membuang etag, lastModified, dan location URL panjang yang redundan
+     */
+    public static function compactBundleResponse($data): array
+    {
+        if (!is_array($data) || !isset($data['entry']) || !is_array($data['entry'])) {
+            return is_array($data) ? $data : [];
+        }
+
+        $compactEntries = [];
+        foreach ($data['entry'] as $e) {
+            $res = $e['response'] ?? [];
+            $resType = $res['resourceType'] ?? ($e['resource']['resourceType'] ?? null);
+            $resId = $res['resourceID'] ?? ($e['resource']['id'] ?? null);
+            $status = $res['status'] ?? '201 Created';
+
+            if ($resType) {
+                $compactEntries[] = [
+                    'response' => [
+                        'status' => $status,
+                        'resourceType' => $resType,
+                        'resourceID' => $resId,
+                    ]
+                ];
+            }
+        }
+
+        return [
+            'resourceType' => $data['resourceType'] ?? 'Bundle',
+            'type' => $data['type'] ?? 'transaction-response',
+            'total' => $data['total'] ?? count($compactEntries),
+            'entry' => $compactEntries
+        ];
+    }
+
+    /**
+     * Memadatkan respons Error SatuSehat agar rapi dan tidak menyimpan HTML/Stack trace raksasa
+     */
+    public static function compactErrorResponse($data, $statusCode, $rawBody = ''): array
+    {
+        if (is_array($data) && isset($data['issue']) && is_array($data['issue'])) {
+            $cleanIssues = [];
+            foreach ($data['issue'] as $iss) {
+                $cleanIssues[] = [
+                    'severity' => $iss['severity'] ?? 'error',
+                    'code' => $iss['code'] ?? 'invalid',
+                    'details' => [
+                        'text' => $iss['details']['text'] ?? ($iss['diagnostics'] ?? 'Error SatuSehat')
+                    ],
+                    'expression' => $iss['expression'] ?? []
+                ];
+            }
+            return [
+                'resourceType' => 'OperationOutcome',
+                'issue' => $cleanIssues
+            ];
+        }
+
+        // Jika respons bukan JSON valid (misal HTML 502/504 dari Cloudflare/Gateway)
+        $cleanText = strip_tags(substr($rawBody, 0, 500));
+        return [
+            'resourceType' => 'OperationOutcome',
+            'issue' => [
+                [
+                    'severity' => 'error',
+                    'code' => 'http_' . $statusCode,
+                    'details' => [
+                        'text' => 'HTTP ' . $statusCode . ': ' . ($cleanText ?: 'Server SatuSehat Tidak Merespon')
+                    ]
+                ]
+            ]
+        ];
     }
 }
