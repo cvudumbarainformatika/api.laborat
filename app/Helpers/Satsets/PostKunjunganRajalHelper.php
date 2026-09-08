@@ -25,6 +25,40 @@ use function PHPUnit\Framework\isEmpty;
 
 class PostKunjunganRajalHelper
 {
+    public static function sanitizeUcumUnit($satuan)
+    {
+        $satuan = trim((string)$satuan);
+        $map = [
+            'mIU/L' => 'm[IU]/L',
+            'mIU/mL' => 'm[IU]/mL',
+            'IU/L' => '[IU]/L',
+            'IU/mL' => '[IU]/mL',
+            'uIU/mL' => 'u[IU]/mL',
+            'uIU/L' => 'u[IU]/L',
+            'µIU/mL' => 'u[IU]/mL',
+            'copies/mL' => '{copies}/mL',
+            'copies/ml' => '{copies}/mL',
+            'sel/uL' => '/uL',
+            'sel/ul' => '/uL',
+            'cells/uL' => '/uL',
+            '/uL' => '/uL',
+            '/ul' => '/uL',
+            'pg/mL' => 'pg/mL',
+            'ng/mL' => 'ng/mL',
+            'ug/dL' => 'ug/dL',
+            'mg/dL' => 'mg/dL',
+            'g/dL' => 'g/dL',
+            'mmol/L' => 'mmol/L',
+            'umol/L' => 'umol/L',
+            '%' => '%',
+            '/min' => '/min',
+            'mm/jam' => 'mm/h',
+            'mm/h' => 'mm/h',
+            'detik' => 's',
+            'menit' => 'min',
+        ];
+        return $map[$satuan] ?? ($satuan ?: '1');
+    }
 
     public static function cekKunjungan()
     {
@@ -3273,13 +3307,15 @@ class PostKunjunganRajalHelper
                                     ],
                                     "request" => ["method" => "POST", "url" => "Observation"],
                                 ];
+                            $rawSatuan = $pemetaan['satuan'] ?? '';
+                            $ucumUnit = self::sanitizeUcumUnit($rawSatuan);
                             $includHasil =
                                 [
                                     "valueQuantity" => [
-                                        "value" => $hasil,
-                                        "unit" => $pemetaan['satuan'], // ini satuan
+                                        "value" => is_numeric($hasil) ? (float)$hasil : $hasil,
+                                        "unit" => $rawSatuan, // display unit
                                         "system" => "http://unitsofmeasure.org",
-                                        "code" => $pemetaan['satuan'],
+                                        "code" => $ucumUnit,
                                     ]
                                 ];
 
