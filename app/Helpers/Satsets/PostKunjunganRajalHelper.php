@@ -1351,10 +1351,62 @@ class PostKunjunganRajalHelper
 
 
         //  PUSH CONDITION
-        foreach ($request->diagnosa as $key => $value) {
-            $cond =
-                [
-                    // "fullUrl" => "urn:uuid:ba5a7dec-023f-45e1-adb9-1b9d71737a5f",
+        $condition_entries = [];
+        if (count($request->diagnosa) == 0) {
+            foreach ($refference as $key => $value) {
+                $cond = [
+                    "fullUrl" => "urn:uuid:" . $value['reference'],
+                    "resource" => [
+                        "resourceType" => "Condition",
+                        "clinicalStatus" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://terminology.hl7.org/CodeSystem/condition-clinical",
+                                    "code" => "active",
+                                    "display" => "Active"
+                                ]
+                            ]
+                        ],
+                        "category" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://terminology.hl7.org/CodeSystem/condition-category",
+                                        "code" => "encounter-diagnosis",
+                                        "display" => "Encounter Diagnosis"
+                                    ]
+                                ]
+                            ]
+                        ],
+                        "code" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://hl7.org/fhir/sid/icd-10",
+                                    "code" => $value['code'] ?? 'Z00.0',
+                                    "display" => $value['display'] ?? 'General medical examination'
+                                ]
+                            ]
+                        ],
+                        "subject" => [
+                            "reference" => "Patient/$pasien_uuid",
+                            "display" => $request->nama
+                        ],
+                        "encounter" => [
+                            "reference" => "urn:uuid:$encounter",
+                            "display" => "Kunjungan $request->nama di hari $tgl_kunjungan"
+                        ]
+                    ],
+                    "request" => [
+                        "method" => "POST",
+                        "url" => "Condition"
+                    ]
+                ];
+                $condition_entries[] = $cond;
+                array_push($body['entry'], $cond);
+            }
+        } else {
+            foreach ($request->diagnosa as $key => $value) {
+                $cond = [
                     "fullUrl" => $diagnosa[$key]['condition']['reference'],
                     "resource" => [
                         "resourceType" => "Condition",
@@ -1401,8 +1453,9 @@ class PostKunjunganRajalHelper
                         "url" => "Condition"
                     ]
                 ];
-
-            array_push($body['entry'], $cond);
+                $condition_entries[] = $cond;
+                array_push($body['entry'], $cond);
+            }
         }
 
 
@@ -1491,6 +1544,11 @@ class PostKunjunganRajalHelper
             }
         }
 
+        // PUSH COMPOSITION (Resume Medis Rawat Jalan)
+        $composition = self::compositionRajal($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $condition_entries ?? []);
+        if ($composition !== null) {
+            array_push($body['entry'], $composition);
+        }
 
         $send['message'] = 'success';
         $send['data'] = $body;
@@ -4197,10 +4255,93 @@ class PostKunjunganRajalHelper
                 ];
         }
 
-
-
-
         return $data;
+    }
+
+
+
+
+    static function compositionRajal($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $diagnosa = [])
+    {
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama'] : '-';
+        $tglKirim = Carbon::parse($request->tgl_kunjungan ?? now())->toIso8601String();
+
+        $sections = [];
+
+        // Section 1: Diagnosis Pelayanan Rawat Jalan
+        $diagRefs = [];
+        if (!empty($diagnosa)) {
+            foreach ($diagnosa as $d) {
+                if (!empty($d['fullUrl'])) {
+                    $diagRefs[] = ["reference" => $d['fullUrl']];
+                }
+            }
+        }
+
+        $displayDiag = $request->diagnosa[0]['masterdiagnosa']['rs4'] ?? ($request->diagnosa[0]['masterdiagnosa']['rs3'] ?? 'Pelayanan Rawat Jalan');
+
+        $sections[] = [
+            "title" => "Diagnosis Pelayanan Rawat Jalan",
+            "code" => [
+                "coding" => [
+                    [
+                        "system" => "http://loinc.org",
+                        "code" => "11535-2",
+                        "display" => "Hospital discharge Dx"
+                    ]
+                ]
+            ],
+            "text" => [
+                "status" => "additional",
+                "div" => $displayDiag
+            ],
+            "entry" => !empty($diagRefs) ? $diagRefs : [["reference" => "urn:uuid:" . self::generateUuid()]]
+        ];
+
+        return [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "Composition",
+                "identifier" => [
+                    [
+                        "system" => "http://sys-ids.kemkes.go.id/composition/" . $organization_id,
+                        "value" => "RESUME-RAJAL-" . ($request->noreg ?? $request->rs1)
+                    ]
+                ],
+                "status" => "final",
+                "type" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "11488-4",
+                            "display" => "Consultation note"
+                        ]
+                    ]
+                ],
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://loinc.org",
+                                "code" => "LP173421-1",
+                                "display" => "Report"
+                            ]
+                        ]
+                    ]
+                ],
+                "subject" => ["reference" => "Patient/" . $pasien_uuid, "display" => $request->nama],
+                "encounter" => [
+                    "reference" => "urn:uuid:" . $encounter,
+                    "display" => "Pelayanan Rawat Jalan " . $request->nama
+                ],
+                "date" => $tglKirim,
+                "author" => [["reference" => "Practitioner/" . $practitioner_uuid, "display" => $nama_practitioner]],
+                "title" => "Resume Medis Rawat Jalan",
+                "custodian" => ["reference" => "Organization/" . $organization_id],
+                "section" => $sections
+            ],
+            "request" => ["method" => "POST", "url" => "Composition"]
+        ];
     }
 
     static function telaah($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)

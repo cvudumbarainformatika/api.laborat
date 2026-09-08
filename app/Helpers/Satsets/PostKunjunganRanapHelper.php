@@ -1150,6 +1150,12 @@ class PostKunjunganRanapHelper
             $form['entry'][] = $imunization;
         }
 
+        // 11. Composition (Ringkasan Pulang Pasien Rawat Inap / Discharge Summary)
+        $composition = self::compositionRanap($request, $encounter_uuid, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $condPrimerUuid, $diagPrimer, $res_ec['condition'] ?? [], $procedures ?? []);
+        if (!empty($composition)) {
+            $form['entry'][] = $composition;
+        }
+
         return ['message' => 'success', 'data' => $form];
     }
 
@@ -2437,6 +2443,132 @@ class PostKunjunganRanapHelper
                 "patientInstruction" => "Kontrol rutin 1 minggu pasca rawat inap. Dalam keadaan darurat segera menuju IGD Rumah Sakit."
             ],
             "request" => ["method" => "POST", "url" => "ServiceRequest"]
+        ];
+    }
+
+    public static function compositionRanap($request, $encounter_uuid, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $condPrimerUuid, $diagPrimer, $conditionEntries = [], $procedureEntries = [])
+    {
+        $namaPasien = $request->nama ?? $request->nama_panggil ?? 'Pasien';
+        $tglPulang = ($request->tglkeluar && $request->tglkeluar != '0000-00-00 00:00:00') ? Carbon::parse($request->tglkeluar)->toIso8601String() : Carbon::parse($tgl_kunjungan)->toIso8601String();
+        $displayDiag = $diagPrimer['inggris'] ?? $diagPrimer['indonesia'] ?? ($request->diagakhir ?? 'Pemeriksaan Rawat Inap');
+
+        $sections = [];
+
+        // Section 1: Diagnosis Pulang
+        $diagRefs = [];
+        if (!empty($condPrimerUuid)) {
+            $diagRefs[] = ["reference" => $condPrimerUuid];
+        }
+        foreach ($conditionEntries as $c) {
+            if (!empty($c['fullUrl']) && $c['fullUrl'] !== $condPrimerUuid) {
+                $diagRefs[] = ["reference" => $c['fullUrl']];
+            }
+        }
+
+        if (empty($diagRefs)) {
+            $diagRefs[] = ["reference" => "urn:uuid:" . self::generateUuid()];
+        }
+
+        $sections[] = [
+            "title" => "Diagnosis Akhir / Pulang",
+            "code" => [
+                "coding" => [
+                    [
+                        "system" => "http://loinc.org",
+                        "code" => "11535-2",
+                        "display" => "Hospital discharge Dx"
+                    ]
+                ]
+            ],
+            "text" => [
+                "status" => "additional",
+                "div" => $displayDiag
+            ],
+            "entry" => $diagRefs
+        ];
+
+        // Section 2: Tindakan / Prosedur (jika ada)
+        if (!empty($procedureEntries)) {
+            $procRefs = [];
+            foreach ($procedureEntries as $p) {
+                if (!empty($p['fullUrl'])) {
+                    $procRefs[] = ["reference" => $p['fullUrl']];
+                }
+            }
+            if (!empty($procRefs)) {
+                $sections[] = [
+                    "title" => "Tindakan dan Prosedur Medis",
+                    "code" => [
+                        "coding" => [
+                            [
+                                "system" => "http://loinc.org",
+                                "code" => "8724-7",
+                                "display" => "Surgical operation note description"
+                            ]
+                        ]
+                    ],
+                    "text" => [
+                        "status" => "additional",
+                        "div" => "Tindakan dan asuhan medis selama perawatan rawat inap"
+                    ],
+                    "entry" => $procRefs
+                ];
+            }
+        }
+
+        return [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "Composition",
+                "identifier" => [
+                    [
+                        "system" => "http://sys-ids.kemkes.go.id/composition/" . $organization_id,
+                        "value" => "RESUME-" . ($request->noreg ?? $request->rs1)
+                    ]
+                ],
+                "status" => "final",
+                "type" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "18842-5",
+                            "display" => "Discharge summary"
+                        ]
+                    ]
+                ],
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://loinc.org",
+                                "code" => "LP173421-1",
+                                "display" => "Report"
+                            ]
+                        ]
+                    ]
+                ],
+                "subject" => [
+                    "reference" => "Patient/$pasien_uuid",
+                    "display" => $namaPasien
+                ],
+                "encounter" => [
+                    "reference" => "urn:uuid:$encounter_uuid",
+                    "display" => "Kunjungan Rawat Inap $namaPasien"
+                ],
+                "date" => $tglPulang,
+                "author" => [
+                    [
+                        "reference" => "Practitioner/$practitioner_uuid",
+                        "display" => $request->datasimpeg['nama'] ?? '-'
+                    ]
+                ],
+                "title" => "Ringkasan Pulang Rawat Inap",
+                "custodian" => [
+                    "reference" => "Organization/$organization_id"
+                ],
+                "section" => $sections
+            ],
+            "request" => ["method" => "POST", "url" => "Composition"]
         ];
     }
 

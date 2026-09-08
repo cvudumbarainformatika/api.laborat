@@ -831,10 +831,28 @@ class PostKunjunganIgdHelper
         // 1. Waktu IGD
         $waktu = $request->taskid;
         $tglBase = Carbon::parse($tgl_kunjungan);
-        $antri = count($waktu) > 0 ? Carbon::parse($waktu[0]->waktu)->toIso8601String() : $tglBase->toIso8601String();
-        $triase_start = count($waktu) > 0 ? Carbon::parse($waktu[0]->waktu)->addMinute()->toIso8601String() : $tglBase->addMinute()->toIso8601String();
-        $start = count($waktu) > 1 ? Carbon::parse($waktu[1]->waktu)->toIso8601String() : $tglBase->addMinutes(10)->toIso8601String();
-        $end = count($waktu) > 4 ? Carbon::parse($waktu[4]->waktu)->toIso8601String() : $tglBase->addHours(2)->toIso8601String();
+        $parseTime = function ($val, $fallback) {
+            if (empty($val)) return Carbon::parse($fallback);
+            if (is_numeric($val)) {
+                return strlen((string)$val) >= 13 ? Carbon::createFromTimestampMs((int)$val) : Carbon::createFromTimestamp((int)$val);
+            }
+            return Carbon::parse($val);
+        };
+
+        $antri = count($waktu) > 0 ? $parseTime($waktu[0]->waktu ?? null, $tglBase)->toIso8601String() : $tglBase->toIso8601String();
+        $triase_start = count($waktu) > 0 ? $parseTime($waktu[0]->waktu ?? null, $tglBase)->addMinute()->toIso8601String() : $tglBase->copy()->addMinute()->toIso8601String();
+        $start = count($waktu) > 1 ? $parseTime($waktu[1]->waktu ?? null, $tglBase)->toIso8601String() : $tglBase->copy()->addMinutes(10)->toIso8601String();
+        $end = count($waktu) > 4 ? $parseTime($waktu[4]->waktu ?? null, $tglBase)->toIso8601String() : $tglBase->copy()->addHours(2)->toIso8601String();
+
+        if ($antri > $triase_start) {
+            $triase_start = $antri;
+        }
+        if ($triase_start > $start) {
+            $start = $triase_start;
+        }
+        if ($start > $end) {
+            $end = $start;
+        }
 
         // 2. Ruangan IGD
         $relmasterRuang = $request->relmpoli ? $request->relmpoli['ruang'] : null;
@@ -1162,10 +1180,139 @@ class PostKunjunganIgdHelper
             }
         }
 
+        // Push Composition (Ringkasan Pelayanan IGD)
+        $composition = self::compositionIgd($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $condition_entries ?? [], $procedure ?? []);
+        if (!empty($composition)) {
+            $body['entry'][] = $composition;
+        }
+
         $send['message'] = 'success';
         $send['data'] = $body;
 
         return $send;
+    }
+
+    public static function compositionIgd($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $condition_entries = [], $procedure_entries = [])
+    {
+        $namaPasien = $request->nama ?? $request->nama_panggil ?? 'Pasien';
+        $tglKirim = Carbon::parse($tgl_kunjungan)->toIso8601String();
+
+        $sections = [];
+
+        // Section 1: Diagnosis
+        $diagRefs = [];
+        foreach ($condition_entries as $c) {
+            if (!empty($c['fullUrl'])) {
+                $diagRefs[] = ["reference" => $c['fullUrl']];
+            }
+        }
+        if (!empty($diagRefs)) {
+            $sections[] = [
+                "title" => "Diagnosis Instalasi Gawat Darurat",
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "11535-2",
+                            "display" => "Hospital discharge Dx"
+                        ]
+                    ]
+                ],
+                "text" => [
+                    "status" => "additional",
+                    "div" => "Diagnosis Pelayanan Gawat Darurat"
+                ],
+                "entry" => $diagRefs
+            ];
+        }
+
+        // Section 2: Tindakan Emergensi
+        if (!empty($procedure_entries)) {
+            $procRefs = [];
+            foreach ($procedure_entries as $p) {
+                if (!empty($p['fullUrl'])) {
+                    $procRefs[] = ["reference" => $p['fullUrl']];
+                }
+            }
+            if (!empty($procRefs)) {
+                $sections[] = [
+                    "title" => "Tindakan dan Asuhan Kegawatdaruratan",
+                    "code" => [
+                        "coding" => [
+                            [
+                                "system" => "http://loinc.org",
+                                "code" => "8724-7",
+                                "display" => "Surgical operation note description"
+                            ]
+                        ]
+                    ],
+                    "text" => [
+                        "status" => "additional",
+                        "div" => "Tindakan medis dan stabilisasi di IGD"
+                    ],
+                    "entry" => $procRefs
+                ];
+            }
+        }
+
+        if (empty($sections)) {
+            return null;
+        }
+
+        return [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "Composition",
+                "identifier" => [
+                    [
+                        "system" => "http://sys-ids.kemkes.go.id/composition/" . $organization_id,
+                        "value" => "RESUME-IGD-" . ($request->noreg ?? $request->rs1)
+                    ]
+                ],
+                "status" => "final",
+                "type" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "34133-9",
+                            "display" => "Summary of episode note"
+                        ]
+                    ]
+                ],
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://loinc.org",
+                                "code" => "LP173421-1",
+                                "display" => "Report"
+                            ]
+                        ]
+                    ]
+                ],
+                "subject" => [
+                    "reference" => "Patient/$pasien_uuid",
+                    "display" => $namaPasien
+                ],
+                "encounter" => [
+                    "reference" => "urn:uuid:$encounter",
+                    "display" => "Pelayanan IGD $namaPasien"
+                ],
+                "date" => $tglKirim,
+                "author" => [
+                    [
+                        "reference" => "Practitioner/$practitioner",
+                        "display" => $request->datasimpeg['nama'] ?? '-'
+                    ]
+                ],
+                "title" => "Ringkasan Pelayanan Gawat Darurat (IGD)",
+                "custodian" => [
+                    "reference" => "Organization/$organization_id"
+                ],
+                "section" => $sections
+            ],
+            "request" => ["method" => "POST", "url" => "Composition"]
+        ];
     }
 
     public static function observationIgd($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
