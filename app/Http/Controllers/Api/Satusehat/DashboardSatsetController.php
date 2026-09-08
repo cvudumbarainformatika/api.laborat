@@ -20,6 +20,15 @@ use Illuminate\Support\Str;
 
 class DashboardSatsetController extends Controller
 {
+    private static function cacheRemember(string $key, int $ttlSeconds, \Closure $callback)
+    {
+        try {
+            return Cache::remember($key, $ttlSeconds, $callback);
+        } catch (\Throwable $e) {
+            return $callback();
+        }
+    }
+
     /**
      * Ringkasan / Summary statistik pengiriman SatuSehat per modul
      */
@@ -29,7 +38,7 @@ class DashboardSatsetController extends Controller
         $tglAkhir = $request->input('tgl_akhir', Carbon::today()->toDateString());
 
         $cacheKey = "satset_dash_summary_{$tglAwal}_{$tglAkhir}";
-        $data = Cache::store('file')->remember($cacheKey, 30, function () use ($tglAwal, $tglAkhir) {
+        $data = self::cacheRemember($cacheKey, 30, function () use ($tglAwal, $tglAkhir) {
             $bukanPoli = ['POL014', 'PEN005', 'PEN004'];
 
             // Rajal
@@ -147,7 +156,7 @@ class DashboardSatsetController extends Controller
         $jenis = $request->input('jenis', 'all');
 
         $cacheKey = "satset_dash_error_stats_{$tglAwal}_{$tglAkhir}_{$jenis}";
-        $data = Cache::store('file')->remember($cacheKey, 30, function () use ($tglAwal, $tglAkhir, $jenis) {
+        $data = self::cacheRemember($cacheKey, 30, function () use ($tglAwal, $tglAkhir, $jenis) {
             $query = DB::table('satset_error_respon')->select(
                 DB::raw("TRIM(SUBSTRING_INDEX(COALESCE(NULLIF(error_summary, ''), 'Respon Error Umum / Validasi Payload'), ';', 1)) as pesan_error"),
                 DB::raw('count(*) as total')
@@ -532,7 +541,7 @@ class DashboardSatsetController extends Controller
         $jenis = $request->input('jenis', 'all');
 
         $cacheKey = "satset_dash_resource_stats_{$tglAwal}_{$tglAkhir}_{$jenis}";
-        $data = Cache::store('file')->remember($cacheKey, 30, function () use ($tglAwal, $tglAkhir, $jenis) {
+        $data = self::cacheRemember($cacheKey, 30, function () use ($tglAwal, $tglAkhir, $jenis) {
             $query = DB::table('satsets')
                 ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                 ->whereNotNull('response');
