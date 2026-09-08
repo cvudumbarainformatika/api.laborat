@@ -2174,13 +2174,19 @@ class PostKunjunganRanapHelper
                                 "text" => "Prosedur Terapetik"
                             ],
                             "code" => [
-                                "coding" => [
-                                    [
+                                "coding" => array_values(array_filter([
+                                    !empty($isi->maapingprocedure['icd9']) ? [
                                         "system" => "http://hl7.org/fhir/sid/icd-9-cm",
-                                        "code" => $isi->maapingprocedure['icd9'] ?? '39.95',
+                                        "code" => $isi->maapingprocedure['icd9'],
                                         "display" => $isi->maapingprocedure['prosedur'] ?? ($isi->keterangan ?? 'Tindakan Terapeutik')
-                                    ]
-                                ]
+                                    ] : null,
+                                    !empty($isi->maapingsnowmed['kdSnowmed']) ? [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => (string)$isi->maapingsnowmed['kdSnowmed'],
+                                        "display" => $isi->maapingsnowmed['display'] ?? ($isi->keterangan ?? 'Procedure')
+                                    ] : null,
+                                ])),
+                                "text" => $isi->keterangan ?? 'Tindakan Medis'
                             ],
                             "subject" => [
                                 "reference" => "Patient/$pasien_uuid",

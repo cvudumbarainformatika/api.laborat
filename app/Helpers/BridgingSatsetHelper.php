@@ -393,10 +393,31 @@ class BridgingSatsetHelper
             }
 
             // JIKA SUCCESS
+            $saveData = $data;
+            if (isset($data['entry']) && is_array($data['entry']) && strlen(json_encode($data)) > 60000) {
+                $compactEntries = [];
+                foreach ($data['entry'] as $e) {
+                    $res = $e['response'] ?? [];
+                    $compactEntries[] = [
+                        'response' => [
+                            'status' => $res['status'] ?? '201 Created',
+                            'resourceType' => $res['resourceType'] ?? null,
+                            'resourceID' => $res['resourceID'] ?? null,
+                        ]
+                    ];
+                }
+                $saveData = [
+                    'resourceType' => $data['resourceType'] ?? 'Bundle',
+                    'type' => $data['type'] ?? 'transaction-response',
+                    'total' => $data['total'] ?? count($compactEntries),
+                    'entry' => $compactEntries
+                ];
+            }
+
             $success = [
                 'method' => 'POST',
                 'url' => $url,
-                'response' => $data,
+                'response' => $saveData,
                 'jenis' => $jenis,
             ];
             $resp = Satset::updateOrCreate([
