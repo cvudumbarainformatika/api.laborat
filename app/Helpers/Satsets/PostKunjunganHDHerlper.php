@@ -2230,7 +2230,7 @@ class PostKunjunganHDHerlper
                 return $item['jenis'] === 'Primer';
             })->first();
 
-            $pasienKonsul = !isEmpty($request->rs4);
+            $pasienKonsul = !empty($request->rs4);
 
             if ($ref && !$pasienKonsul) {
                 $prognosis =
@@ -2348,7 +2348,7 @@ class PostKunjunganHDHerlper
             'kontrol' => $kontrol,
             'prognosis' => $prognosis,
             'refference' => $refference,
-            'pasienKonsul' => !isEmpty($request->rs4)
+            'pasienKonsul' => !empty($request->rs4)
 
         ];
         return $data;
