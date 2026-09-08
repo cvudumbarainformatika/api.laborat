@@ -90,6 +90,13 @@ class PostKunjunganIgdHelper
                         ->orderBy('taskid', 'ASC');
                 },
                 'anamnesis',
+                'triage',
+                'penilaiananamnesis' => function ($p) {
+                    $p->orderBy('id', 'DESC');
+                },
+                'planheder' => function ($p) {
+                    $p->with(['planranap.ruangranap', 'planrujukan', 'planpulang']);
+                },
                 'pemeriksaanfisik' => function ($a) {
                     $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
                         ->orderBy('id', 'DESC');
@@ -287,6 +294,13 @@ class PostKunjunganIgdHelper
                         ->orderBy('taskid', 'ASC');
                 },
                 'anamnesis',
+                'triage',
+                'penilaiananamnesis' => function ($p) {
+                    $p->orderBy('id', 'DESC');
+                },
+                'planheder' => function ($p) {
+                    $p->with(['planranap.ruangranap', 'planrujukan', 'planpulang']);
+                },
                 'pemeriksaanfisik' => function ($a) {
                     $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
                         ->orderBy('id', 'DESC');
@@ -1157,26 +1171,301 @@ class PostKunjunganIgdHelper
     public static function observationIgd($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
     {
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama'] : '-';
-        $obsBase = PostKunjunganRajalHelper::observation($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid);
-        $form = is_array($obsBase) ? $obsBase : [];
-
         $organization_id = BridgingSatsetHelper::organization_id();
         $tglEff = Carbon::parse($tgl_kunjungan)->toIso8601String();
 
-        // 1. Observation Risiko Jatuh (Morse Fall Scale)
-        $morseScore = 30; // Default risiko sedang jika ada asesmen risiko jatuh
-        $interpretationCode = 'OI000027';
-        $interpretationText = '25 - 44 (Risiko sedang)';
+        // 1. Ambil data TTV (Prioritaskan dari Triage IGD -> fallback ke Pemeriksaan Fisik)
+        $triage = count($request->triage ?? []) > 0 ? $request->triage[0] : null;
+        $fisik = count($request->pemeriksaanfisik ?? []) > 0 ? $request->pemeriksaanfisik[0] : null;
 
-        if (count($request->pemeriksaanfisik) > 0 && isset($request->pemeriksaanfisik[0]['risikojatuh'])) {
-            $morseScore = (int)$request->pemeriksaanfisik[0]['risikojatuh'];
-            if ($morseScore < 25) {
-                $interpretationCode = 'OI000026';
-                $interpretationText = '0 - 24 (Risiko rendah)';
-            } elseif ($morseScore >= 45) {
-                $interpretationCode = 'OI000028';
-                $interpretationText = '>= 45 (Risiko tinggi)';
+        $nadi = $triage ? (int)($triage->rs11 ?? 0) : ($fisik ? (int)($fisik['rs4'] ?? 0) : 0);
+        $pernapasan = $triage ? (int)($triage->rs10 ?? 0) : ($fisik ? (int)($fisik['pernapasan'] ?? 0) : 0);
+        $sistole = $triage ? (int)($triage->sistole ?? 0) : ($fisik ? (int)($fisik['sistole'] ?? 0) : 0);
+        $diastole = $triage ? (int)($triage->diastole ?? 0) : ($fisik ? (int)($fisik['diastole'] ?? 0) : 0);
+        $suhu = $triage ? (float)($triage->rs8 ?? 0) : ($fisik ? (float)($fisik['suhutubuh'] ?? 0) : 0);
+
+        // Kesadaran SNOMED
+        $kesadaranRaw = $triage ? ($triage->kesadarans ?? '') : ($fisik ? ($fisik['tingkatkesadaran'] ?? '') : '');
+        $snowmedKesadaran = [
+            "kode" => "248234008",
+            "display" => "Mentally alert"
+        ];
+        $kesadaranLower = strtolower((string)$kesadaranRaw);
+        if (str_contains($kesadaranLower, 'voice') || $kesadaranRaw === '1') {
+            $snowmedKesadaran = ["kode" => "300202002", "display" => "Response to voice"];
+        } elseif (str_contains($kesadaranLower, 'pain') || $kesadaranRaw === '2') {
+            $snowmedKesadaran = ["kode" => "450847001", "display" => "Responds to pain"];
+        } elseif (str_contains($kesadaranLower, 'unresponsive') || str_contains($kesadaranLower, 'koma') || $kesadaranRaw === '3') {
+            $snowmedKesadaran = ["kode" => "422768004", "display" => "Unresponsive"];
+        } elseif (str_contains($kesadaranLower, 'delirium') || $kesadaranRaw === '5') {
+            $snowmedKesadaran = ["kode" => "2776000", "display" => "Delirium"];
+        }
+
+        $formNadi = [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "Observation",
+                "status" => "final",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code" => "vital-signs",
+                                "display" => "Vital Signs",
+                            ]
+                        ]
+                    ]
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "8867-4",
+                            "display" => "Heart rate",
+                        ]
+                    ]
+                ],
+                "subject" => ["reference" => "Patient/$pasien_uuid", "display" => $request->nama],
+                "encounter" => ["reference" => "urn:uuid:$encounter"],
+                "effectiveDateTime" => $tglEff,
+                "issued" => $tglEff,
+                "performer" => [["reference" => "Practitioner/$practitioner_uuid", "display" => $nama_practitioner]],
+                "valueQuantity" => [
+                    "value" => $nadi,
+                    "unit" => "/min",
+                    "system" => "http://unitsofmeasure.org",
+                    "code" => "/min",
+                ]
+            ],
+            "request" => ["method" => "POST", "url" => "Observation"]
+        ];
+
+        $formPernapasan = [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "Observation",
+                "status" => "final",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code" => "vital-signs",
+                                "display" => "Vital Signs",
+                            ]
+                        ]
+                    ]
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "9279-1",
+                            "display" => "Respiratory rate",
+                        ]
+                    ]
+                ],
+                "subject" => ["reference" => "Patient/$pasien_uuid", "display" => $request->nama],
+                "encounter" => ["reference" => "urn:uuid:$encounter"],
+                "effectiveDateTime" => $tglEff,
+                "issued" => $tglEff,
+                "performer" => [["reference" => "Practitioner/$practitioner_uuid", "display" => $nama_practitioner]],
+                "valueQuantity" => [
+                    "value" => $pernapasan,
+                    "unit" => "/min",
+                    "system" => "http://unitsofmeasure.org",
+                    "code" => "/min",
+                ]
+            ],
+            "request" => ["method" => "POST", "url" => "Observation"]
+        ];
+
+        $formSistole = [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "Observation",
+                "status" => "final",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code" => "vital-signs",
+                                "display" => "Vital Signs",
+                            ]
+                        ]
+                    ]
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "8480-6",
+                            "display" => "Systolic blood pressure",
+                        ]
+                    ]
+                ],
+                "subject" => ["reference" => "Patient/$pasien_uuid", "display" => $request->nama],
+                "encounter" => ["reference" => "urn:uuid:$encounter"],
+                "effectiveDateTime" => $tglEff,
+                "issued" => $tglEff,
+                "performer" => [["reference" => "Practitioner/$practitioner_uuid", "display" => $nama_practitioner]],
+                "valueQuantity" => [
+                    "value" => $sistole,
+                    "unit" => "mm[Hg]",
+                    "system" => "http://unitsofmeasure.org",
+                    "code" => "mm[Hg]",
+                ]
+            ],
+            "request" => ["method" => "POST", "url" => "Observation"]
+        ];
+
+        $formDiastole = [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "Observation",
+                "status" => "final",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code" => "vital-signs",
+                                "display" => "Vital Signs",
+                            ]
+                        ]
+                    ]
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "8462-4",
+                            "display" => "Diastolic blood pressure",
+                        ]
+                    ]
+                ],
+                "subject" => ["reference" => "Patient/$pasien_uuid", "display" => $request->nama],
+                "encounter" => ["reference" => "urn:uuid:$encounter"],
+                "effectiveDateTime" => $tglEff,
+                "issued" => $tglEff,
+                "performer" => [["reference" => "Practitioner/$practitioner_uuid", "display" => $nama_practitioner]],
+                "valueQuantity" => [
+                    "value" => $diastole,
+                    "unit" => "mm[Hg]",
+                    "system" => "http://unitsofmeasure.org",
+                    "code" => "mm[Hg]",
+                ]
+            ],
+            "request" => ["method" => "POST", "url" => "Observation"]
+        ];
+
+        $formSuhu = [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "Observation",
+                "status" => "final",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code" => "vital-signs",
+                                "display" => "Vital Signs",
+                            ]
+                        ]
+                    ]
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "8310-5",
+                            "display" => "Body temperature",
+                        ]
+                    ]
+                ],
+                "subject" => ["reference" => "Patient/$pasien_uuid", "display" => $request->nama],
+                "encounter" => ["reference" => "urn:uuid:$encounter"],
+                "effectiveDateTime" => $tglEff,
+                "issued" => $tglEff,
+                "performer" => [["reference" => "Practitioner/$practitioner_uuid", "display" => $nama_practitioner]],
+                "valueQuantity" => [
+                    "value" => $suhu,
+                    "unit" => "C",
+                    "system" => "http://unitsofmeasure.org",
+                    "code" => "Cel"
+                ]
+            ],
+            "request" => ["method" => "POST", "url" => "Observation"]
+        ];
+
+        $formKesadaran = [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "Observation",
+                "status" => "final",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code" => "exam",
+                                "display" => "Exam",
+                            ]
+                        ]
+                    ]
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "67775-7",
+                            "display" => "Level of responsiveness",
+                        ]
+                    ]
+                ],
+                "subject" => ["reference" => "Patient/$pasien_uuid", "display" => $request->nama],
+                "encounter" => ["reference" => "urn:uuid:$encounter"],
+                "effectiveDateTime" => $tglEff,
+                "issued" => $tglEff,
+                "performer" => [["reference" => "Practitioner/$practitioner_uuid", "display" => $nama_practitioner]],
+                "valueCodeableConcept" => [
+                    "coding" => [
+                        [
+                            "system" => "http://snomed.info/sct",
+                            "code" => $snowmedKesadaran['kode'],
+                            "display" => $snowmedKesadaran['display'],
+                        ]
+                    ]
+                ]
+            ],
+            "request" => ["method" => "POST", "url" => "Observation"]
+        ];
+
+        // 2. Observation Risiko Jatuh (Morse Fall Scale)
+        $morseScore = 0;
+        $interpretationCode = 'OI000026';
+        $interpretationText = '0 - 24 (Risiko rendah)';
+
+        // Cek data dari Penilaian Anamnesis IGD
+        if (count($request->penilaiananamnesis ?? []) > 0) {
+            $penilaian = $request->penilaiananamnesis[0];
+            $morseJson = is_string($penilaian->morse_fall) ? json_decode($penilaian->morse_fall, true) : $penilaian->morse_fall;
+            if (isset($morseJson['skorMorse']['skor'])) {
+                $morseScore = (int)$morseJson['skorMorse']['skor'];
             }
+        } elseif ($fisik && isset($fisik['risikojatuh'])) {
+            $morseScore = (int)$fisik['risikojatuh'];
+        }
+
+        if ($morseScore >= 45) {
+            $interpretationCode = 'OI000028';
+            $interpretationText = '>= 45 (Risiko tinggi)';
+        } elseif ($morseScore >= 25) {
+            $interpretationCode = 'OI000027';
+            $interpretationText = '25 - 44 (Risiko sedang)';
         }
 
         $formRisikoJatuh = [
@@ -1244,9 +1533,7 @@ class PostKunjunganIgdHelper
             "request" => ["method" => "POST", "url" => "Observation"]
         ];
 
-        $form['risikoJatuh'] = $formRisikoJatuh;
-
-        // 2. Observation Kriteria Rencana Pemulangan
+        // 3. Observation Kriteria Rencana Pemulangan
         $formRencanaPulang = [
             "fullUrl" => "urn:uuid:" . self::generateUuid(),
             "resource" => [
@@ -1296,9 +1583,16 @@ class PostKunjunganIgdHelper
             "request" => ["method" => "POST", "url" => "Observation"]
         ];
 
-        $form['rencanaPulang'] = $formRencanaPulang;
-
-        return $form;
+        return [
+            'nadi' => $formNadi,
+            'pernapasan' => $formPernapasan,
+            'sistole' => $formSistole,
+            'diastole' => $formDiastole,
+            'suhu' => $formSuhu,
+            'kesadaran' => $formKesadaran,
+            'risikoJatuh' => $formRisikoJatuh,
+            'rencanaPulang' => $formRencanaPulang,
+        ];
     }
 
     public static function carePlanIgd($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
