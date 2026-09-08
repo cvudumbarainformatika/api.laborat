@@ -1444,8 +1444,10 @@ class PostKunjunganIgdHelper
             "request" => ["method" => "POST", "url" => "Observation"]
         ];
 
-        // 2. Observation Risiko Jatuh (Morse Fall Scale)
-        $morseScore = 0;
+        // 2. Observation Risiko Jatuh (Multi-Scale: Morse Fall / Ontario / Humpty Dumpty / Edmonson)
+        $fallScore = 0;
+        $fallScaleLoinc = "59461-4";
+        $fallScaleDisplay = "Fall risk level [Morse Fall Scale]";
         $interpretationCode = 'OI000026';
         $interpretationText = '0 - 24 (Risiko rendah)';
 
@@ -1453,19 +1455,71 @@ class PostKunjunganIgdHelper
         if (count($request->penilaiananamnesis ?? []) > 0) {
             $penilaian = $request->penilaiananamnesis[0];
             $morseJson = is_string($penilaian->morse_fall) ? json_decode($penilaian->morse_fall, true) : $penilaian->morse_fall;
-            if (isset($morseJson['skorMorse']['skor'])) {
-                $morseScore = (int)$morseJson['skorMorse']['skor'];
+            $ontarioJson = is_string($penilaian->ontario) ? json_decode($penilaian->ontario, true) : $penilaian->ontario;
+            $humptyJson = is_string($penilaian->humpty_dumpty) ? json_decode($penilaian->humpty_dumpty, true) : $penilaian->humpty_dumpty;
+            $edmonsonJson = is_string($penilaian->edmonson) ? json_decode($penilaian->edmonson, true) : $penilaian->edmonson;
+
+            if (!empty($ontarioJson) && (isset($ontarioJson['skorOntario']['skor']) || isset($ontarioJson['skor']))) {
+                // Skala Ontario (Geriatrik)
+                $fallScore = (int)($ontarioJson['skorOntario']['skor'] ?? $ontarioJson['skor'] ?? 0);
+                $fallScaleLoinc = "75278-2";
+                $fallScaleDisplay = "STRATIFY score [Ontario scale]";
+                $label = $ontarioJson['skorOntario']['label'] ?? ($fallScore >= 17 ? 'Risiko tinggi' : ($fallScore >= 6 ? 'Risiko sedang' : 'Risiko rendah'));
+                if (str_contains(strtolower($label), 'tinggi') || $fallScore >= 17) {
+                    $interpretationCode = 'OI000028';
+                    $interpretationText = '>= 17 (Risiko tinggi)';
+                } elseif (str_contains(strtolower($label), 'sedang') || $fallScore >= 6) {
+                    $interpretationCode = 'OI000027';
+                    $interpretationText = '6 - 16 (Risiko sedang)';
+                } else {
+                    $interpretationCode = 'OI000026';
+                    $interpretationText = '0 - 5 (Risiko rendah)';
+                }
+            } elseif (!empty($humptyJson) && (isset($humptyJson['skorHumpty']['skor']) || isset($humptyJson['skor']))) {
+                // Skala Humpty Dumpty (Pediatrik)
+                $fallScore = (int)($humptyJson['skorHumpty']['skor'] ?? $humptyJson['skor'] ?? 0);
+                $fallScaleLoinc = "75277-4";
+                $fallScaleDisplay = "Humpty Dumpty fall risk assessment score";
+                $label = $humptyJson['skorHumpty']['label'] ?? ($fallScore >= 12 ? 'Risiko tinggi' : 'Risiko rendah');
+                if (str_contains(strtolower($label), 'tinggi') || $fallScore >= 12) {
+                    $interpretationCode = 'OI000028';
+                    $interpretationText = '>= 12 (Risiko tinggi)';
+                } else {
+                    $interpretationCode = 'OI000026';
+                    $interpretationText = '7 - 11 (Risiko rendah)';
+                }
+            } elseif (!empty($morseJson) && (isset($morseJson['skorMorse']['skor']) || isset($morseJson['skor']))) {
+                // Skala Morse Fall (Dewasa)
+                $fallScore = (int)($morseJson['skorMorse']['skor'] ?? $morseJson['skor'] ?? 0);
+                $fallScaleLoinc = "59461-4";
+                $fallScaleDisplay = "Fall risk level [Morse Fall Scale]";
+                $label = $morseJson['skorMorse']['label'] ?? ($fallScore >= 45 ? 'Risiko tinggi' : ($fallScore >= 25 ? 'Risiko sedang' : 'Risiko rendah'));
+                if (str_contains(strtolower($label), 'tinggi') || $fallScore >= 45) {
+                    $interpretationCode = 'OI000028';
+                    $interpretationText = '>= 45 (Risiko tinggi)';
+                } elseif (str_contains(strtolower($label), 'sedang') || $fallScore >= 25) {
+                    $interpretationCode = 'OI000027';
+                    $interpretationText = '25 - 44 (Risiko sedang)';
+                } else {
+                    $interpretationCode = 'OI000026';
+                    $interpretationText = '0 - 24 (Risiko rendah)';
+                }
+            } elseif (!empty($edmonsonJson)) {
+                $fallScore = (int)($edmonsonJson['skor'] ?? 0);
+                $fallScaleLoinc = "75280-8";
+                $fallScaleDisplay = "Edmonson psychiatric fall risk assessment score";
+                $interpretationCode = $fallScore >= 90 ? 'OI000028' : 'OI000026';
+                $interpretationText = $fallScore >= 90 ? 'Risiko tinggi' : 'Risiko rendah';
             }
         } elseif ($fisik && isset($fisik['risikojatuh'])) {
-            $morseScore = (int)$fisik['risikojatuh'];
-        }
-
-        if ($morseScore >= 45) {
-            $interpretationCode = 'OI000028';
-            $interpretationText = '>= 45 (Risiko tinggi)';
-        } elseif ($morseScore >= 25) {
-            $interpretationCode = 'OI000027';
-            $interpretationText = '25 - 44 (Risiko sedang)';
+            $fallScore = (int)$fisik['risikojatuh'];
+            if ($fallScore >= 45) {
+                $interpretationCode = 'OI000028';
+                $interpretationText = '>= 45 (Risiko tinggi)';
+            } elseif ($fallScore >= 25) {
+                $interpretationCode = 'OI000027';
+                $interpretationText = '25 - 44 (Risiko sedang)';
+            }
         }
 
         $formRisikoJatuh = [
@@ -1494,8 +1548,8 @@ class PostKunjunganIgdHelper
                     "coding" => [
                         [
                             "system" => "http://loinc.org",
-                            "code" => "59461-4",
-                            "display" => "Fall risk level [Morse Fall Scale]"
+                            "code" => $fallScaleLoinc,
+                            "display" => $fallScaleDisplay
                         ]
                     ]
                 ],
@@ -1512,7 +1566,7 @@ class PostKunjunganIgdHelper
                     ]
                 ],
                 "valueQuantity" => [
-                    "value" => $morseScore,
+                    "value" => $fallScore,
                     "unit" => "{score}",
                     "system" => "http://unitsofmeasure.org",
                     "code" => "{score}"
@@ -1597,7 +1651,24 @@ class PostKunjunganIgdHelper
 
     public static function carePlanIgd($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
     {
-        $carePlans = PostKunjunganRajalHelper::carePlan($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid);
+        $carePlansRaw = PostKunjunganRajalHelper::carePlan($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid);
+        $carePlans = [];
+
+        if (is_array($carePlansRaw)) {
+            foreach ($carePlansRaw as $cp) {
+                if (!empty($cp)) {
+                    $authRef = $cp['resource']['author']['reference'] ?? '';
+                    if (empty($authRef) || $authRef === 'Practitioner/' || $authRef === 'Practitioner/null' || $authRef === 'Practitioner/-') {
+                        $cp['resource']['author'] = [
+                            "reference" => "Practitioner/$practitioner_uuid",
+                            "display" => $request->datasimpeg['nama'] ?? '-'
+                        ];
+                    }
+                    $carePlans[] = $cp;
+                }
+            }
+        }
+
         $tglCreated = Carbon::parse($tgl_kunjungan)->addMinutes(15)->toIso8601String();
 
         // 1. CarePlan Rencana Rawat IGD (Emergency health care plan agreed)
