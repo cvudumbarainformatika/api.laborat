@@ -2233,20 +2233,21 @@ class PostKunjunganRajalHelper
                                         "coding" => [
                                             [
                                                 "system" => "http://snomed.info/sct",
-                                                "code" => $isi->maapingsnowmed['kdSnowmed'] ?? '-',
-                                                "display" => $isi->maapingsnowmed['display'] ?? '-',
+                                                "code" => "103693007",
+                                                "display" => "Diagnostic procedure",
                                             ],
                                         ],
-                                        "text" => $isi->maapingsnowmed['display'] ?? '-'
+                                        "text" => "Diagnostic procedure"
                                     ],
                                     "code" => [
                                         "coding" => [
                                             [
                                                 "system" => "http://hl7.org/fhir/sid/icd-9-cm",
-                                                "code" => $isi->maapingprocedure['icd9'] ?? '-',
-                                                "display" => $isi->maapingprocedure['prosedur'] ?? '-',
-                                            ],
+                                                "code" => !empty($isi->maapingprocedure['icd9']) ? $isi->maapingprocedure['icd9'] : '89.07',
+                                                "display" => $isi->maapingprocedure['prosedur'] ?? ($isi->keterangan ?? 'General physical examination'),
+                                            ]
                                         ],
+                                        "text" => $isi->keterangan ?? ($isi->maapingprocedure['prosedur'] ?? 'Tindakan Medis')
                                     ],
                                     "subject" => [
                                         "reference" => "Patient/$pasien_uuid",
