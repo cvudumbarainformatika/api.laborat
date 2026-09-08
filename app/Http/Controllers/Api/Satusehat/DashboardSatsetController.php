@@ -14,6 +14,7 @@ use App\Models\Simrs\Ranap\Kunjunganranap;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -27,109 +28,113 @@ class DashboardSatsetController extends Controller
         $tglAwal = $request->input('tgl_awal', Carbon::today()->toDateString());
         $tglAkhir = $request->input('tgl_akhir', Carbon::today()->toDateString());
 
-        // 1. Total Kunjungan Selesai di SIMRS pada periode
-        $bukanPoli = ['POL014', 'PEN005', 'PEN004'];
+        $cacheKey = "satset_dash_summary_{$tglAwal}_{$tglAkhir}";
+        $data = Cache::store('file')->remember($cacheKey, 30, function () use ($tglAwal, $tglAkhir) {
+            $bukanPoli = ['POL014', 'PEN005', 'PEN004'];
 
-        // Rajal
-        $totalRajal = KunjunganPoli::whereNotIn('rs8', $bukanPoli)
-            ->where('rs19', '1')
-            ->whereBetween('rs3', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-            ->count();
+            // Rajal
+            $totalRajal = DB::table('rs17')->whereNotIn('rs8', $bukanPoli)
+                ->where('rs19', '1')
+                ->whereBetween('rs3', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->count();
 
-        // Ranap (semua pasien ranap masuk pada periode)
-        $totalRanap = Kunjunganranap::whereBetween('rs3', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-            ->count();
+            // Ranap
+            $totalRanap = DB::table('rs23')
+                ->whereBetween('rs3', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->count();
 
-        // IGD
-        $totalIgd = KunjunganPoli::where('rs8', 'POL014')
-            ->where('rs19', '1')
-            ->whereBetween('rs3', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-            ->count();
+            // IGD
+            $totalIgd = DB::table('rs17')->where('rs8', 'POL014')
+                ->where('rs19', '1')
+                ->whereBetween('rs3', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->count();
 
-        // HD (Hemodialisa)
-        $totalHd = KunjunganPoli::where('rs8', 'PEN005')
-            ->where('rs19', '1')
-            ->whereBetween('rs3', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-            ->count();
+            // HD (Hemodialisa)
+            $totalHd = DB::table('rs17')->where('rs8', 'PEN005')
+                ->where('rs19', '1')
+                ->whereBetween('rs3', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->count();
 
-        // 2. Terkirim Sukses (Tabel satsets)
-        $terkirimRajal = Satset::where('jenis', 'rajal')
-            ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-            ->count();
+            // Terkirim Sukses (Tabel satsets)
+            $terkirimRajal = DB::table('satsets')->where('jenis', 'rajal')
+                ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->count();
 
-        $terkirimRanap = Satset::where('jenis', 'ranap')
-            ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-            ->count();
+            $terkirimRanap = DB::table('satsets')->where('jenis', 'ranap')
+                ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->count();
 
-        $terkirimIgd = Satset::where('jenis', 'igd')
-            ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-            ->count();
+            $terkirimIgd = DB::table('satsets')->where('jenis', 'igd')
+                ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->count();
 
-        $terkirimHd = Satset::where('jenis', 'hd')
-            ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-            ->count();
+            $terkirimHd = DB::table('satsets')->where('jenis', 'hd')
+                ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->count();
 
-        // 3. Error Respon (Tabel satset_error_respon)
-        $errorRajal = SatsetErrorRespon::where('jenis', 'rajal')
-            ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-            ->count();
+            // Error Respon (Tabel satset_error_respon)
+            $errorRajal = DB::table('satset_error_respon')->where('jenis', 'rajal')
+                ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->count();
 
-        $errorRanap = SatsetErrorRespon::where('jenis', 'ranap')
-            ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-            ->count();
+            $errorRanap = DB::table('satset_error_respon')->where('jenis', 'ranap')
+                ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->count();
 
-        $errorIgd = SatsetErrorRespon::where('jenis', 'igd')
-            ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-            ->count();
+            $errorIgd = DB::table('satset_error_respon')->where('jenis', 'igd')
+                ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->count();
 
-        $errorHd = SatsetErrorRespon::where('jenis', 'hd')
-            ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-            ->count();
+            $errorHd = DB::table('satset_error_respon')->where('jenis', 'hd')
+                ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->count();
 
-        $totalKunjungan = $totalRajal + $totalRanap + $totalIgd + $totalHd;
-        $totalTerkirim = $terkirimRajal + $terkirimRanap + $terkirimIgd + $terkirimHd;
-        $totalError = $errorRajal + $errorRanap + $errorIgd + $errorHd;
-        $complianceRate = $totalKunjungan > 0 ? round(($totalTerkirim / $totalKunjungan) * 100, 2) : 0;
+            $totalKunjungan = $totalRajal + $totalRanap + $totalIgd + $totalHd;
+            $totalTerkirim = $terkirimRajal + $terkirimRanap + $terkirimIgd + $terkirimHd;
+            $totalError = $errorRajal + $errorRanap + $errorIgd + $errorHd;
+            $complianceRate = $totalKunjungan > 0 ? round(($totalTerkirim / $totalKunjungan) * 100, 2) : 0;
 
-        return response()->json([
-            'status' => 'success',
-            'periode' => [
-                'tgl_awal' => $tglAwal,
-                'tgl_akhir' => $tglAkhir
-            ],
-            'summary' => [
-                'total_kunjungan' => $totalKunjungan,
-                'total_terkirim' => $totalTerkirim,
-                'total_error' => $totalError,
-                'compliance_rate' => $complianceRate . '%',
-            ],
-            'detail_modul' => [
-                'rajal' => [
-                    'total_kunjungan' => $totalRajal,
-                    'terkirim' => $terkirimRajal,
-                    'error' => $errorRajal,
-                    'rate' => $totalRajal > 0 ? round(($terkirimRajal / $totalRajal) * 100, 2) . '%' : '0%'
+            return [
+                'periode' => [
+                    'tgl_awal' => $tglAwal,
+                    'tgl_akhir' => $tglAkhir
                 ],
-                'ranap' => [
-                    'total_kunjungan' => $totalRanap,
-                    'terkirim' => $terkirimRanap,
-                    'error' => $errorRanap,
-                    'rate' => $totalRanap > 0 ? round(($terkirimRanap / $totalRanap) * 100, 2) . '%' : '0%'
+                'summary' => [
+                    'total_kunjungan' => $totalKunjungan,
+                    'total_terkirim' => $totalTerkirim,
+                    'total_error' => $totalError,
+                    'compliance_rate' => $complianceRate . '%',
                 ],
-                'igd' => [
-                    'total_kunjungan' => $totalIgd,
-                    'terkirim' => $terkirimIgd,
-                    'error' => $errorIgd,
-                    'rate' => $totalIgd > 0 ? round(($terkirimIgd / $totalIgd) * 100, 2) . '%' : '0%'
-                ],
-                'hd' => [
-                    'total_kunjungan' => $totalHd,
-                    'terkirim' => $terkirimHd,
-                    'error' => $errorHd,
-                    'rate' => $totalHd > 0 ? round(($terkirimHd / $totalHd) * 100, 2) . '%' : '0%'
-                ],
-            ]
-        ]);
+                'detail_modul' => [
+                    'rajal' => [
+                        'total_kunjungan' => $totalRajal,
+                        'terkirim' => $terkirimRajal,
+                        'error' => $errorRajal,
+                        'rate' => $totalRajal > 0 ? round(($terkirimRajal / $totalRajal) * 100, 2) . '%' : '0%'
+                    ],
+                    'ranap' => [
+                        'total_kunjungan' => $totalRanap,
+                        'terkirim' => $terkirimRanap,
+                        'error' => $errorRanap,
+                        'rate' => $totalRanap > 0 ? round(($terkirimRanap / $totalRanap) * 100, 2) . '%' : '0%'
+                    ],
+                    'igd' => [
+                        'total_kunjungan' => $totalIgd,
+                        'terkirim' => $terkirimIgd,
+                        'error' => $errorIgd,
+                        'rate' => $totalIgd > 0 ? round(($terkirimIgd / $totalIgd) * 100, 2) . '%' : '0%'
+                    ],
+                    'hd' => [
+                        'total_kunjungan' => $totalHd,
+                        'terkirim' => $terkirimHd,
+                        'error' => $errorHd,
+                        'rate' => $totalHd > 0 ? round(($terkirimHd / $totalHd) * 100, 2) . '%' : '0%'
+                    ],
+                ]
+            ];
+        });
+
+        return response()->json(array_merge(['status' => 'success'], $data));
     }
 
     /**
@@ -141,39 +146,51 @@ class DashboardSatsetController extends Controller
         $tglAkhir = $request->input('tgl_akhir', Carbon::today()->toDateString());
         $jenis = $request->input('jenis', 'all');
 
-        $query = SatsetErrorRespon::select(
-            DB::raw("TRIM(SUBSTRING_INDEX(COALESCE(NULLIF(error_summary, ''), 'Respon Error Umum / Validasi Payload'), ';', 1)) as pesan_error"),
-            DB::raw('count(*) as total')
-        )
-            ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
+        $cacheKey = "satset_dash_error_stats_{$tglAwal}_{$tglAkhir}_{$jenis}";
+        $data = Cache::store('file')->remember($cacheKey, 30, function () use ($tglAwal, $tglAkhir, $jenis) {
+            $query = DB::table('satset_error_respon')->select(
+                DB::raw("TRIM(SUBSTRING_INDEX(COALESCE(NULLIF(error_summary, ''), 'Respon Error Umum / Validasi Payload'), ';', 1)) as pesan_error"),
+                DB::raw('count(*) as total')
+            )
+                ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
 
-        if ($jenis !== 'all') {
-            $query->where('jenis', $jenis);
-        }
+            if ($jenis !== 'all') {
+                $query->where('jenis', $jenis);
+            }
 
-        $topErrors = $query->groupBy('pesan_error')
-            ->orderBy('total', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function ($item) {
-                $human = self::humanizeErrorMessage($item->pesan_error);
-                return [
-                    'pesan_error' => $human['title'],
-                    'keterangan' => $human['description'],
-                    'raw_error' => $item->pesan_error,
-                    'total' => (int) $item->total,
-                ];
-            });
+            $topErrors = $query->groupBy('pesan_error')
+                ->orderBy('total', 'desc')
+                ->limit(5)
+                ->get()
+                ->map(function ($item) {
+                    $human = self::humanizeErrorMessage($item->pesan_error);
+                    return [
+                        'pesan_error' => $human['title'],
+                        'keterangan' => $human['description'],
+                        'raw_error' => $item->pesan_error,
+                        'total' => (int) $item->total,
+                    ];
+                });
 
-        return response()->json([
-            'status' => 'success',
-            'periode' => [
-                'tgl_awal' => $tglAwal,
-                'tgl_akhir' => $tglAkhir,
-                'jenis' => $jenis
-            ],
-            'top_errors' => $topErrors
-        ]);
+            $totalErrorPeriod = DB::table('satset_error_respon')
+                ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->when($jenis !== 'all', function ($q) use ($jenis) {
+                    return $q->where('jenis', $jenis);
+                })
+                ->count();
+
+            return [
+                'periode' => [
+                    'tgl_awal' => $tglAwal,
+                    'tgl_akhir' => $tglAkhir,
+                    'jenis' => $jenis
+                ],
+                'total_error_periode' => $totalErrorPeriod,
+                'top_errors' => $topErrors
+            ];
+        });
+
+        return response()->json(array_merge(['status' => 'success'], $data));
     }
 
     /**
@@ -514,79 +531,85 @@ class DashboardSatsetController extends Controller
         $tglAkhir = $request->input('tgl_akhir', Carbon::today()->toDateString());
         $jenis = $request->input('jenis', 'all');
 
-        $query = Satset::whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-            ->whereNotNull('response');
+        $cacheKey = "satset_dash_resource_stats_{$tglAwal}_{$tglAkhir}_{$jenis}";
+        $data = Cache::store('file')->remember($cacheKey, 30, function () use ($tglAwal, $tglAkhir, $jenis) {
+            $query = DB::table('satsets')
+                ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->whereNotNull('response');
 
-        if ($jenis !== 'all') {
-            $query->where('jenis', $jenis);
-        }
+            if ($jenis !== 'all') {
+                $query->where('jenis', $jenis);
+            }
 
-        $records = $query->select('response', 'jenis', 'resource')->get();
+            $records = $query->select('response')->get();
 
-        $standardGrid = [
-            'Encounter' => 0,
-            'Condition' => 0,
-            'Observation' => 0,
-            'Procedure' => 0,
-            'Composition' => 0,
-            'Medication' => 0,
-            'MedicationRequest' => 0,
-            'MedicationDispense' => 0,
-            'AllergyIntolerance' => 0,
-            'ImagingStudy' => 0,
-            'ServiceRequest' => 0,
-            'ClinicalImpression' => 0,
-            'Immunization' => 0,
-            'QuestionnaireResponse' => 0,
-            'MedicationStatement' => 0,
-            'CarePlan' => 0,
-            'Specimen' => 0,
-            'DiagnosticReport' => 0,
-            'EpisodeOfCare' => 0,
-        ];
+            $standardGrid = [
+                'Encounter' => 0,
+                'Condition' => 0,
+                'Observation' => 0,
+                'Procedure' => 0,
+                'Composition' => 0,
+                'Medication' => 0,
+                'MedicationRequest' => 0,
+                'MedicationDispense' => 0,
+                'AllergyIntolerance' => 0,
+                'ImagingStudy' => 0,
+                'ServiceRequest' => 0,
+                'ClinicalImpression' => 0,
+                'Immunization' => 0,
+                'QuestionnaireResponse' => 0,
+                'MedicationStatement' => 0,
+                'CarePlan' => 0,
+                'Specimen' => 0,
+                'DiagnosticReport' => 0,
+                'EpisodeOfCare' => 0,
+            ];
 
-        $resourceCounts = [];
-        $totalResourceCount = 0;
+            $resourceCounts = [];
+            $totalResourceCount = 0;
 
-        foreach ($records as $rec) {
-            $parsed = $this->parseResourceDetails($rec->response);
-            foreach ($parsed['breakdown'] as $resType => $count) {
-                if (!isset($resourceCounts[$resType])) {
-                    $resourceCounts[$resType] = 0;
-                }
-                $resourceCounts[$resType] += $count;
-                $totalResourceCount += $count;
+            foreach ($records as $rec) {
+                if (empty($rec->response)) continue;
+                $parsed = $this->parseResourceDetails($rec->response);
+                foreach ($parsed['breakdown'] as $resType => $count) {
+                    if (!isset($resourceCounts[$resType])) {
+                        $resourceCounts[$resType] = 0;
+                    }
+                    $resourceCounts[$resType] += $count;
+                    $totalResourceCount += $count;
 
-                if (isset($standardGrid[$resType])) {
-                    $standardGrid[$resType] += $count;
+                    if (isset($standardGrid[$resType])) {
+                        $standardGrid[$resType] += $count;
+                    }
                 }
             }
-        }
 
-        arsort($resourceCounts);
+            arsort($resourceCounts);
 
-        $breakdownList = [];
-        foreach ($resourceCounts as $resType => $count) {
-            $breakdownList[] = [
-                'resource_type' => $resType,
-                'total_terkirim' => $count,
-                'persentase' => $totalResourceCount > 0 ? round(($count / $totalResourceCount) * 100, 2) . '%' : '0%'
+            $breakdownList = [];
+            foreach ($resourceCounts as $resType => $count) {
+                $breakdownList[] = [
+                    'resource_type' => $resType,
+                    'total_terkirim' => $count,
+                    'persentase' => $totalResourceCount > 0 ? round(($count / $totalResourceCount) * 100, 2) . '%' : '0%'
+                ];
+            }
+
+            return [
+                'periode' => [
+                    'tgl_awal' => $tglAwal,
+                    'tgl_akhir' => $tglAkhir,
+                    'jenis' => $jenis
+                ],
+                'last_updated' => Carbon::now()->translatedFormat('d F Y, H:i') . ' WIB',
+                'total_transaksi_bundle' => $records->count(),
+                'total_resource_terkirim' => $totalResourceCount,
+                'card_grid' => $standardGrid,
+                'detail_resource' => $breakdownList
             ];
-        }
+        });
 
-        return response()->json([
-            'status' => 'success',
-            'periode' => [
-                'tgl_awal' => $tglAwal,
-                'tgl_akhir' => $tglAkhir,
-                'jenis' => $jenis
-            ],
-            'last_updated' => Carbon::now()->translatedFormat('d F Y, H:i') . ' WIB',
-            'total_transaksi_bundle' => $records->count(),
-            'total_resource_terkirim' => $totalResourceCount,
-            'card_grid' => $standardGrid,
-            'detail_resource' => $breakdownList
-        ]);
+        return response()->json(array_merge(['status' => 'success'], $data));
     }
 
     /**
