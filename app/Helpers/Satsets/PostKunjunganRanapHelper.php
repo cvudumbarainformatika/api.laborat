@@ -313,15 +313,15 @@ class PostKunjunganRanapHelper
                         ->orderBy('id', 'DESC');
                 }
             ])
-            ->whereIn('rs23.rs22', ['2', '3']); // Status sudah pulang
+            ->whereIn('rs23.rs22', ['2', '3']) // Status sudah pulang
+            ->has('diagnosa');
 
         if ($tgl) {
             $select->where('rs23.rs4', 'LIKE', $tgl . '%');
         } else {
             $tglAwal = Carbon::now()->subDays(60)->toDateString() . ' 00:00:00';
             $tglAkhir = Carbon::now()->subDays(1)->toDateString() . ' 23:59:59';
-            $select->whereBetween('rs23.rs4', [$tglAwal, $tglAkhir])
-                   ->has('diagnosa');
+            $select->whereBetween('rs23.rs4', [$tglAwal, $tglAkhir]);
         }
 
         $data = $select
@@ -682,6 +682,20 @@ class PostKunjunganRanapHelper
             ];
             SatsetErrorRespon::create($err);
             return ['message' => 'failed', 'data' => 'Pasien UUID / NIK Tidak Ditemukan'];
+        }
+
+        // Validasi Diagnosa: JANGAN KIRIM jika diagnosa di SIMRS belum diisi
+        if (empty($data->diagnosa) || count($data->diagnosa) === 0) {
+            $err = [
+                'method' => 'POST',
+                'url' => 'https://api-satusehat.kemkes.go.id/fhir-r4/v1',
+                'response' => ['message' => 'Diagnosa Dokter Belum Diisi di SIMRS (Pengiriman Dibatalkan)'],
+                'uuid' => $data->noreg,
+                'jenis' => 'ranap',
+                'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS',
+            ];
+            SatsetErrorRespon::create($err);
+            return ['message' => 'failed', 'data' => 'Diagnosa Dokter Belum Diisi di SIMRS'];
         }
 
         $send = self::form($data, $pasien_uuid);

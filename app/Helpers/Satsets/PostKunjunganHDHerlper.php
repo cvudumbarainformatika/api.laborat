@@ -53,11 +53,10 @@ class PostKunjunganHDHerlper
             ])
             ->doesntHave('satset')
             ->doesntHave('satset_error')
+            ->has('diagnosa')
             ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
             ->where('rs17.rs8', '=', 'PEN005')
             ->where('rs17.rs19', '=', '1') // kunjungan selesai
-            // ->whereNotNull('satsets.uuid')
-            // ->whereNotNull('satset_error_respon.uuid')
             ->orderBy('rs17.rs3', 'desc')
             ->limit(2)
             ->get();
@@ -341,6 +340,7 @@ class PostKunjunganHDHerlper
             // ->whereNotIn('rs17.rs8', $bukanPoli)
             ->where('rs17.rs8', '=', 'PEN005')
             ->where('rs17.rs19', '=', '1') // kunjungan selesai
+            ->has('diagnosa')
             ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
 
             // ->whereBetween('rs17.rs3', [$tgl, $tglx])
@@ -576,7 +576,19 @@ class PostKunjunganHDHerlper
             $practitioner_uuid = $getFromSatset['data']['uuid'];
         }
 
-
+        // Validasi Diagnosa: JANGAN KIRIM jika diagnosa di SIMRS belum diisi
+        if (empty($data->diagnosa) || count($data->diagnosa) === 0) {
+            $err = [
+                'method' => 'POST',
+                'url' => 'https://api-satusehat.kemkes.go.id/fhir-r4/v1',
+                'response' => ['message' => 'Diagnosa Dokter Belum Diisi di SIMRS (Pengiriman Dibatalkan)'],
+                'uuid' => $data->noreg,
+                'jenis' => 'hd',
+                'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS',
+            ];
+            SatsetErrorRespon::create($err);
+            return ['message' => 'failed', 'data' => 'Diagnosa Dokter Belum Diisi di SIMRS'];
+        }
 
         $send = self::form($data, $pasien_uuid, $practitioner_uuid);
         if ($send['message'] === 'success') {

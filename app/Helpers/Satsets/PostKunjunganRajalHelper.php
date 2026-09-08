@@ -89,11 +89,10 @@ class PostKunjunganRajalHelper
             ])
             ->doesntHave('satset')
             ->doesntHave('satset_error')
+            ->has('diagnosa')
             ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
             ->where('rs17.rs8', '!=', 'POL014')
             ->where('rs17.rs19', '=', '1') // kunjungan selesai
-            // ->whereNotNull('satsets.uuid')
-            // ->whereNotNull('satset_error_respon.uuid')
             ->orderBy('rs17.rs3', 'desc')
             ->limit(2)
             ->get();
@@ -407,15 +406,15 @@ class PostKunjunganRajalHelper
             ->whereNotIn('rs17.rs8', $bukanPoli)
             ->where('rs17.rs1', 'NOT LIKE', '%/X')
             ->where('rs17.rs1', 'NOT LIKE', '%/x')
-            ->where('rs17.rs19', '=', '1'); // kunjungan selesai
+            ->where('rs17.rs19', '=', '1') // kunjungan selesai
+            ->has('diagnosa');
 
         if ($tgl) {
             $query->where('rs17.rs3', 'LIKE', '%' . $tgl . '%');
         } else {
             $tglAwal = Carbon::now()->subDays(60)->toDateString() . ' 00:00:00';
             $tglAkhir = Carbon::now()->subDays(1)->toDateString() . ' 23:59:59';
-            $query->whereBetween('rs17.rs3', [$tglAwal, $tglAkhir])
-                  ->has('diagnosa');
+            $query->whereBetween('rs17.rs3', [$tglAwal, $tglAkhir]);
         }
 
         $data = $query
@@ -947,6 +946,20 @@ class PostKunjunganRajalHelper
             return ['message' => 'failed', 'data' => 'Practitioner UUID Dokter Tidak Ditemukan'];
         }
 
+        // Validasi Diagnosa: JANGAN KIRIM jika diagnosa di SIMRS belum diisi
+        if (empty($data->diagnosa) || count($data->diagnosa) === 0) {
+            $err = [
+                'method' => 'POST',
+                'url' => 'https://api-satusehat.kemkes.go.id/fhir-r4/v1',
+                'response' => ['message' => 'Diagnosa Dokter Belum Diisi di SIMRS (Pengiriman Dibatalkan)'],
+                'uuid' => $data->noreg,
+                'jenis' => 'rajal',
+                'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS',
+            ];
+            SatsetErrorRespon::create($err);
+            return ['message' => 'failed', 'data' => 'Diagnosa Dokter Belum Diisi di SIMRS'];
+        }
+
         // return $data;
         $send = self::form($data, $pasien_uuid, $practitioner_uuid);
         if ($send['message'] === 'success') {
@@ -1083,6 +1096,18 @@ class PostKunjunganRajalHelper
             return $send;
         }
 
+        if (empty($request->diagnosa) || count($request->diagnosa) === 0) {
+            SatsetErrorRespon::create([
+                'uuid' => $request->noreg,
+                'response' => 'Diagnosa dokter belum diisi di SIMRS',
+                'jenis' => 'rajal',
+                'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS'
+            ]);
+
+            $send['data'] = 'Diagnosa dokter belum diisi di SIMRS';
+            return $send;
+        }
+
         $antri = Carbon::parse($task3['created_at'])->toIso8601String();
 
         $start = isset($task4['created_at']) ? Carbon::parse($task4['created_at'])->toIso8601String() : Carbon::parse($task3['created_at'])->addMinutes(3)->toIso8601String();
@@ -1149,63 +1174,6 @@ class PostKunjunganRajalHelper
                 "rank" => $key + 1
             ];
         }
-
-
-        // $uuid_default = self::generateUuid();
-        // // 3. TAMBAHKAN INI: Jika diagnosa masih kosong, kasih diagnosa default (Observasi)
-        // if (count($diagnosa) == 0) {
-
-        //     $refference[] = [
-        //         "reference" => "$uuid_default",
-        //         'code' => 'Z00.0', // Kode ICD-10 Internasional untuk Pemeriksaan Umum
-        //         "display" => "Pemeriksaan Umum / Observasi",
-        //         "rank" => 1
-        //     ];
-        // } else {
-        //     $diagnosa[] = [
-        //         "condition" => [
-        //             "reference" => "urn:uuid:$uuid_default",
-        //             "display" => "Pemeriksaan Umum / Observasi"
-        //         ],
-        //         "use" => [
-        //             "coding" => [[
-        //                 "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
-        //                 "code" => "DD",
-        //                 "display" => "Discharge diagnosis"
-        //             ]]
-        //         ],
-        //         "rank" => 1
-        //     ];
-        // }
-
-        // 2. JARING PENGAMAN: Jika diagnosa masih kosong, paksa isi Z00.0
-        if (count($diagnosa) == 0) {
-            $uuid_default = self::generateUuid();
-            // Masukkan ke array Diagnosa (Wajib untuk Encounter)
-            $diagnosa[] = [
-                "condition" => [
-                    "reference" => "urn:uuid:$uuid_default",
-                    "display" => "Pemeriksaan Umum / Observasi"
-                ],
-                "use" => [
-                    "coding" => [[
-                        "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
-                        "code" => "DD",
-                        "display" => "Discharge diagnosis"
-                    ]]
-                ],
-                "rank" => 1
-            ];
-            // Masukkan ke array Reference (Wajib untuk resource Condition)
-            $refference[] = [
-                "reference" => "$uuid_default",
-                'code' => 'Z00.0',
-                "display" => "General medical examination",
-                "displayInd" => "Pemeriksaan Umum / Observasi",
-                "rank" => 1
-            ];
-        }
-
 
         // return $antri;
         #Bundle #1
@@ -1352,110 +1320,56 @@ class PostKunjunganRajalHelper
 
         //  PUSH CONDITION
         $condition_entries = [];
-        if (count($request->diagnosa) == 0) {
-            foreach ($refference as $key => $value) {
-                $cond = [
-                    "fullUrl" => "urn:uuid:" . $value['reference'],
-                    "resource" => [
-                        "resourceType" => "Condition",
-                        "clinicalStatus" => [
-                            "coding" => [
-                                [
-                                    "system" => "http://terminology.hl7.org/CodeSystem/condition-clinical",
-                                    "code" => "active",
-                                    "display" => "Active"
-                                ]
-                            ]
-                        ],
-                        "category" => [
+        foreach ($request->diagnosa as $key => $value) {
+            $cond = [
+                "fullUrl" => $diagnosa[$key]['condition']['reference'],
+                "resource" => [
+                    "resourceType" => "Condition",
+                    "clinicalStatus" => [
+                        "coding" => [
                             [
-                                "coding" => [
-                                    [
-                                        "system" => "http://terminology.hl7.org/CodeSystem/condition-category",
-                                        "code" => "encounter-diagnosis",
-                                        "display" => "Encounter Diagnosis"
-                                    ]
-                                ]
+                                "system" => "http://terminology.hl7.org/CodeSystem/condition-clinical",
+                                "code" => "active",
+                                "display" => "Active"
                             ]
-                        ],
-                        "code" => [
-                            "coding" => [
-                                [
-                                    "system" => "http://hl7.org/fhir/sid/icd-10",
-                                    "code" => $value['code'] ?? 'Z00.0',
-                                    "display" => $value['display'] ?? 'General medical examination'
-                                ]
-                            ]
-                        ],
-                        "subject" => [
-                            "reference" => "Patient/$pasien_uuid",
-                            "display" => $request->nama
-                        ],
-                        "encounter" => [
-                            "reference" => "urn:uuid:$encounter",
-                            "display" => "Kunjungan $request->nama di hari $tgl_kunjungan"
                         ]
                     ],
-                    "request" => [
-                        "method" => "POST",
-                        "url" => "Condition"
-                    ]
-                ];
-                $condition_entries[] = $cond;
-                array_push($body['entry'], $cond);
-            }
-        } else {
-            foreach ($request->diagnosa as $key => $value) {
-                $cond = [
-                    "fullUrl" => $diagnosa[$key]['condition']['reference'],
-                    "resource" => [
-                        "resourceType" => "Condition",
-                        "clinicalStatus" => [
+                    "category" => [
+                        [
                             "coding" => [
                                 [
-                                    "system" => "http://terminology.hl7.org/CodeSystem/condition-clinical",
-                                    "code" => "active",
-                                    "display" => "Active"
+                                    "system" => "http://terminology.hl7.org/CodeSystem/condition-category",
+                                    "code" => "encounter-diagnosis",
+                                    "display" => "Encounter Diagnosis"
                                 ]
                             ]
-                        ],
-                        "category" => [
-                            [
-                                "coding" => [
-                                    [
-                                        "system" => "http://terminology.hl7.org/CodeSystem/condition-category",
-                                        "code" => "encounter-diagnosis",
-                                        "display" => "Encounter Diagnosis"
-                                    ]
-                                ]
-                            ]
-                        ],
-                        "code" => [
-                            "coding" => [
-                                [
-                                    "system" => "http://hl7.org/fhir/sid/icd-10",
-                                    "code" => (strlen(trim($value['rs3'])) > 3 && !str_contains($value['rs3'], '.')) ? (substr(trim($value['rs3']), 0, 3) . '.' . substr(trim($value['rs3']), 3)) : trim($value['rs3']),
-                                    "display" => $value['masterdiagnosa']['rs4'] ?? $value['masterdiagnosa']['rs3'] ?? 'Diagnosis'
-                                ]
-                            ]
-                        ],
-                        "subject" => [
-                            "reference" => "Patient/$pasien_uuid",
-                            "display" => $request->nama
-                        ],
-                        "encounter" => [
-                            "reference" => "urn:uuid:$encounter",
-                            "display" => "Kunjungan $request->nama di hari $tgl_kunjungan"
                         ]
                     ],
-                    "request" => [
-                        "method" => "POST",
-                        "url" => "Condition"
+                    "code" => [
+                        "coding" => [
+                            [
+                                "system" => "http://hl7.org/fhir/sid/icd-10",
+                                "code" => (strlen(trim($value['rs3'])) > 3 && !str_contains($value['rs3'], '.')) ? (substr(trim($value['rs3']), 0, 3) . '.' . substr(trim($value['rs3']), 3)) : trim($value['rs3']),
+                                "display" => $value['masterdiagnosa']['rs4'] ?? $value['masterdiagnosa']['rs3'] ?? 'Diagnosis'
+                            ]
+                        ]
+                    ],
+                    "subject" => [
+                        "reference" => "Patient/$pasien_uuid",
+                        "display" => $request->nama
+                    ],
+                    "encounter" => [
+                        "reference" => "urn:uuid:$encounter",
+                        "display" => "Kunjungan $request->nama di hari $tgl_kunjungan"
                     ]
-                ];
-                $condition_entries[] = $cond;
-                array_push($body['entry'], $cond);
-            }
+                ],
+                "request" => [
+                    "method" => "POST",
+                    "url" => "Condition"
+                ]
+            ];
+            $condition_entries[] = $cond;
+            array_push($body['entry'], $cond);
         }
 
 

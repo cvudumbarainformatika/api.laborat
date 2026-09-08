@@ -64,15 +64,15 @@ class PostKunjunganIgdHelper
                   ->orWhere('rs17.rs1', 'LIKE', '%/X')
                   ->orWhere('rs17.rs1', 'LIKE', '%/x');
             })
-            ->where('rs17.rs19', '=', '1');
+            ->where('rs17.rs19', '=', '1')
+            ->has('diagnosa');
 
         if ($tgl) {
             $query->where('rs17.rs3', 'LIKE', '%' . $tgl . '%');
         } else {
             $tglAwal = Carbon::now()->subDays(60)->toDateString() . ' 00:00:00';
             $tglAkhir = Carbon::now()->subDays(1)->toDateString() . ' 23:59:59';
-            $query->whereBetween('rs17.rs3', [$tglAwal, $tglAkhir])
-                  ->has('diagnosa');
+            $query->whereBetween('rs17.rs3', [$tglAwal, $tglAkhir]);
         }
 
         $data = $query
@@ -806,6 +806,20 @@ class PostKunjunganIgdHelper
             ];
             SatsetErrorRespon::create($err);
             return ['message' => 'failed', 'data' => 'Dokter IGD Belum Terkoneksi Ke Satu Sehat'];
+        }
+
+        // Validasi Diagnosa: JANGAN KIRIM jika diagnosa di SIMRS belum diisi
+        if (empty($data->diagnosa) || count($data->diagnosa) === 0) {
+            $err = [
+                'method' => 'POST',
+                'url' => 'https://api-satusehat.kemkes.go.id/fhir-r4/v1',
+                'response' => ['message' => 'Diagnosa Dokter Belum Diisi di SIMRS (Pengiriman Dibatalkan)'],
+                'uuid' => $data->noreg,
+                'jenis' => 'igd',
+                'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS',
+            ];
+            SatsetErrorRespon::create($err);
+            return ['message' => 'failed', 'data' => 'Diagnosa Dokter Belum Diisi di SIMRS'];
         }
 
         $send = self::form($data, $pasien_uuid, $practitioner);
