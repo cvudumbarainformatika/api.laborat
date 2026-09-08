@@ -816,9 +816,11 @@ class PostKunjunganIgdHelper
 
         // 1. Waktu IGD
         $waktu = $request->taskid;
-        $antri = count($waktu) > 0 ? Carbon::parse($waktu[0]->waktu)->toIso8601String() : Carbon::parse($tgl_kunjungan)->toIso8601String();
-        $start = count($waktu) > 1 ? Carbon::parse($waktu[1]->waktu)->toIso8601String() : Carbon::parse($tgl_kunjungan)->addMinutes(5)->toIso8601String();
-        $end = count($waktu) > 4 ? Carbon::parse($waktu[4]->waktu)->toIso8601String() : Carbon::parse($tgl_kunjungan)->addHours(2)->toIso8601String();
+        $tglBase = Carbon::parse($tgl_kunjungan);
+        $antri = count($waktu) > 0 ? Carbon::parse($waktu[0]->waktu)->toIso8601String() : $tglBase->toIso8601String();
+        $triase_start = count($waktu) > 0 ? Carbon::parse($waktu[0]->waktu)->addMinute()->toIso8601String() : $tglBase->addMinute()->toIso8601String();
+        $start = count($waktu) > 1 ? Carbon::parse($waktu[1]->waktu)->toIso8601String() : $tglBase->addMinutes(10)->toIso8601String();
+        $end = count($waktu) > 4 ? Carbon::parse($waktu[4]->waktu)->toIso8601String() : $tglBase->addHours(2)->toIso8601String();
 
         // 2. Ruangan IGD
         $relmasterRuang = $request->relmpoli ? $request->relmpoli['ruang'] : null;
@@ -827,23 +829,64 @@ class PostKunjunganIgdHelper
         $lantai = !$relmasterRuang ? '1' : ($relmasterRuang['lantai'] ?? '1');
         $gedung = !$relmasterRuang ? 'Utama' : ($relmasterRuang['gedung'] ?? 'Utama');
 
+        // Location ServiceClass extension
+        $locationExtension = [
+            [
+                "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/ServiceClass",
+                "extension" => [
+                    [
+                        "url" => "value",
+                        "valueCodeableConcept" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://terminology.kemkes.go.id/CodeSystem/locationServiceClass-Outpatient",
+                                    "code" => "reguler",
+                                    "display" => "Kelas Reguler"
+                                ]
+                            ]
+                        ]
+                    ],
+                    [
+                        "url" => "upgradeClassIndicator",
+                        "valueCodeableConcept" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://terminology.kemkes.go.id/CodeSystem/locationUpgradeClass",
+                                    "code" => "kelas-tetap",
+                                    "display" => "Kelas Tetap Perawatan"
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
         // 3. Diagnosis & Condition
         $diagnosa_entries = [];
         $condition_entries = [];
         $conds = $request->diagnosa ?? [];
+        $condAwalUuid = null;
+
         foreach ($conds as $key => $d) {
             $cond_uuid = self::generateUuid();
+            if ($key === 0) {
+                $condAwalUuid = $cond_uuid;
+            }
+            $isPrimer = ($d['rs4'] === 'Primer' || $key === 0);
+            $diagName = $d['masterdiagnosa'] ? ($d['masterdiagnosa']['rs4'] ?? $d['masterdiagnosa']['rs3'] ?? 'Diagnosis') : 'Diagnosis';
+
             $diagnosa_entries[] = [
                 "condition" => [
                     "reference" => "urn:uuid:$cond_uuid",
-                    "display" => $d['masterdiagnosa'] ? ($d['masterdiagnosa']['rs4'] ?? $d['masterdiagnosa']['rs3'] ?? 'Diagnosis') : 'Diagnosis',
+                    "display" => $diagName,
                 ],
                 "use" => [
                     "coding" => [
                         [
                             "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
-                            "code" => $d['rs4'] === 'Primer' ? 'AD' : 'DD',
-                            "display" => $d['rs4'] === 'Primer' ? 'Admission diagnosis' : 'Discharge diagnosis',
+                            "code" => $isPrimer ? 'AD' : 'DD',
+                            "display" => $isPrimer ? 'Admission diagnosis' : 'Discharge diagnosis',
                         ]
                     ]
                 ],
@@ -879,13 +922,20 @@ class PostKunjunganIgdHelper
                             [
                                 "system" => "http://hl7.org/fhir/sid/icd-10",
                                 "code" => $d['rs3'],
-                                "display" => $d['masterdiagnosa'] ? ($d['masterdiagnosa']['rs4'] ?? $d['masterdiagnosa']['rs3'] ?? 'Diagnosis') : 'Diagnosis',
+                                "display" => $diagName,
                             ]
                         ]
                     ],
                     "subject" => ["reference" => "Patient/$pasien_uuid", "display" => $request->nama],
                     "encounter" => ["reference" => "urn:uuid:$encounter"],
+                    "onsetDateTime" => $start,
+                    "recordedDate" => $start,
                     "recorder" => ["reference" => "Practitioner/$practitioner"],
+                    "note" => [
+                        [
+                            "text" => "Diagnosis pasien " . $request->nama . ": " . $diagName
+                        ]
+                    ]
                 ],
                 "request" => ["method" => "POST", "url" => "Condition"],
             ];
@@ -895,91 +945,110 @@ class PostKunjunganIgdHelper
             return ['message' => 'failed', 'data' => 'Diagnosa Pasien IGD Belum Terisi'];
         }
 
-        // Sub-resources
-        $refference = [];
-        $anamnesis = PostKunjunganRajalHelper::anamnesis($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
-        $observation = PostKunjunganRajalHelper::observation($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
-        $carePlan = PostKunjunganRajalHelper::carePlan($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
-        $procedure = PostKunjunganRajalHelper::procedure($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
-        $plann = PostKunjunganRajalHelper::planning($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $refference);
-        $alergyIntoleran = PostKunjunganRajalHelper::allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
-        $apotek = PostKunjunganRajalHelper::apotek($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
-        $laborats = PostKunjunganRajalHelper::laborats($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $specimenSnomeds);
-        $radiologis = PostKunjunganRajalHelper::radiologi($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        // 4. Hospitalization / Discharge Disposition
+        $hasRanapPlan = !empty($request->planning[0]['spri']) || !empty($request->planning[0]['ranap']);
+        $dischargeCode = $hasRanapPlan ? 'oth' : 'home';
+        $dischargeDisplay = $hasRanapPlan ? 'Other' : 'Home';
+        $dischargeText = $hasRanapPlan ? 'Pasien dipindahkan dari IGD ke rawat inap.' : 'Pasien dipulangkan dari Instalasi Gawat Darurat.';
+
+        $hospitalization = [
+            "dischargeDisposition" => [
+                "coding" => [
+                    [
+                        "system" => "http://terminology.hl7.org/CodeSystem/discharge-disposition",
+                        "code" => $dischargeCode,
+                        "display" => $dischargeDisplay
+                    ]
+                ],
+                "text" => $dischargeText
+            ]
+        ];
+
+        // 5. Encounter
+        $encounter_resource = [
+            "resourceType" => "Encounter",
+            "identifier" => [
+                [
+                    "system" => "http://sys-ids.kemkes.go.id/encounter/" . $organization_id,
+                    "value" => $request->noreg ?? $request->rs1
+                ]
+            ],
+            "status" => "finished",
+            "class" => [
+                "system" => "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code" => "EMER",
+                "display" => "emergency"
+            ],
+            "subject" => [
+                "reference" => "Patient/$pasien_uuid",
+                "display" => $request->nama
+            ],
+            "participant" => [
+                [
+                    "type" => [
+                        [
+                            "coding" => [
+                                [
+                                    "system" => "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                                    "code" => "ATND",
+                                    "display" => "attender"
+                                ]
+                            ]
+                        ]
+                    ],
+                    "individual" => [
+                        "reference" => "Practitioner/$practitioner",
+                        "display" => $request->datasimpeg['nama'] ?? '-'
+                    ]
+                ]
+            ],
+            "period" => [
+                "start" => $antri,
+                "end" => $end
+            ],
+            "location" => [
+                [
+                    "location" => [
+                        "reference" => "Location/" . $ruangId,
+                        "display" => "Ruang IGD, RSUD Mohamad Saleh, Lantai " . $lantai . ", Gedung " . $gedung
+                    ],
+                    "period" => [
+                        "start" => $antri,
+                        "end" => $end
+                    ],
+                    "extension" => $locationExtension
+                ]
+            ],
+            "diagnosis" => $diagnosa_entries,
+            "statusHistory" => [
+                [
+                    "status" => "arrived",
+                    "period" => ["start" => $antri, "end" => $triase_start]
+                ],
+                [
+                    "status" => "triaged",
+                    "period" => ["start" => $triase_start, "end" => $start]
+                ],
+                [
+                    "status" => "in-progress",
+                    "period" => ["start" => $start, "end" => $end]
+                ],
+                [
+                    "status" => "finished",
+                    "period" => ["start" => $end, "end" => $end]
+                ]
+            ],
+            "hospitalization" => $hospitalization,
+            "serviceProvider" => ["reference" => "Organization/$organization_id"],
+        ];
 
         $body = [
             "resourceType" => "Bundle",
             "type" => "transaction",
             "entry" => [
-                // 1. Encounter (EMER)
                 [
                     "fullUrl" => "urn:uuid:$encounter",
-                    "resource" => [
-                        "resourceType" => "Encounter",
-                        "identifier" => [
-                            [
-                                "system" => "http://sys-ids.kemkes.go.id/encounter/" . $organization_id,
-                                "value" => $request->noreg ?? $request->rs1
-                            ]
-                        ],
-                        "status" => "finished",
-                        "class" => [
-                            "system" => "http://terminology.hl7.org/CodeSystem/v3-ActCode",
-                            "code" => "EMER",
-                            "display" => "emergency"
-                        ],
-                        "subject" => [
-                            "reference" => "Patient/$pasien_uuid",
-                            "display" => $request->nama
-                        ],
-                        "participant" => [
-                            [
-                                "type" => [
-                                    [
-                                        "coding" => [
-                                            [
-                                                "system" => "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
-                                                "code" => "ATND",
-                                                "display" => "attender"
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                                "individual" => [
-                                    "reference" => "Practitioner/$practitioner",
-                                    "display" => $request->datasimpeg['nama'] ?? '-'
-                                ]
-                            ]
-                        ],
-                        "period" => [
-                            "start" => $antri,
-                            "end" => $end
-                        ],
-                        "location" => [
-                            [
-                                "location" => [
-                                    "reference" => "Location/" . $ruangId,
-                                    "display" => "Ruang IGD, RSUD Mohamad Saleh, Lantai " . $lantai . ", Gedung " . $gedung
-                                ]
-                            ]
-                        ],
-                        "diagnosis" => $diagnosa_entries,
-                        "statusHistory" => [
-                            [
-                                "status" => "arrived",
-                                "period" => ["start" => $antri, "end" => $start]
-                            ],
-                            [
-                                "status" => "in-progress",
-                                "period" => ["start" => $start, "end" => $end]
-                            ],
-                            [
-                                "status" => "finished",
-                                "period" => ["start" => $end, "end" => $end]
-                            ]
-                        ],
-                        "serviceProvider" => ["reference" => "Organization/$organization_id"],
-                    ],
+                    "resource" => $encounter_resource,
                     "request" => ["method" => "POST", "url" => "Encounter"]
                 ]
             ]
@@ -990,12 +1059,25 @@ class PostKunjunganIgdHelper
             $body['entry'][] = $cond;
         }
 
+        // Sub-resources
+        $refference = [];
+        $anamnesis = PostKunjunganRajalHelper::anamnesis($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $observation = self::observationIgd($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $carePlan = self::carePlanIgd($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $procedure = self::procedureIgd($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $plann = PostKunjunganRajalHelper::planning($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $refference);
+        $alergyIntoleran = PostKunjunganRajalHelper::allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $apotek = PostKunjunganRajalHelper::apotek($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $laborats = PostKunjunganRajalHelper::laborats($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $specimenSnomeds);
+        $radiologis = PostKunjunganRajalHelper::radiologi($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $telaah = PostKunjunganRajalHelper::telaah($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+
         // Push Anamnesis
         if (!empty($anamnesis['keluhanUtama'])) {
             $body['entry'][] = $anamnesis['keluhanUtama'];
         }
 
-        // Push Observation (TTV, Kesadaran, Fisik)
+        // Push Observation (TTV, Kesadaran, Risiko Jatuh, Rencana Pulang)
         if (!empty($observation)) {
             $observations = collect($observation)->unique('fullUrl')->all();
             foreach ($observations as $obs) {
@@ -1011,7 +1093,7 @@ class PostKunjunganIgdHelper
             }
         }
 
-        // Push Procedure (Tindakan)
+        // Push Procedure (Tindakan Emergensi, Pra-Lab, Pra-Rad)
         if (!empty($procedure)) {
             foreach ($procedure as $proc) {
                 if ($proc !== null) $body['entry'][] = $proc;
@@ -1044,6 +1126,11 @@ class PostKunjunganIgdHelper
             }
         }
 
+        // Push Telaah Resep (QuestionnaireResponse)
+        if (!empty($telaah)) {
+            $body['entry'][] = $telaah;
+        }
+
         // Push Laborat
         if (!empty($laborats)) {
             foreach ($laborats as $lab) {
@@ -1066,4 +1153,344 @@ class PostKunjunganIgdHelper
 
         return $send;
     }
+
+    public static function observationIgd($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
+    {
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama'] : '-';
+        $obsBase = PostKunjunganRajalHelper::observation($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid);
+        $form = is_array($obsBase) ? $obsBase : [];
+
+        $organization_id = BridgingSatsetHelper::organization_id();
+        $tglEff = Carbon::parse($tgl_kunjungan)->toIso8601String();
+
+        // 1. Observation Risiko Jatuh (Morse Fall Scale)
+        $morseScore = 30; // Default risiko sedang jika ada asesmen risiko jatuh
+        $interpretationCode = 'OI000027';
+        $interpretationText = '25 - 44 (Risiko sedang)';
+
+        if (count($request->pemeriksaanfisik) > 0 && isset($request->pemeriksaanfisik[0]['risikojatuh'])) {
+            $morseScore = (int)$request->pemeriksaanfisik[0]['risikojatuh'];
+            if ($morseScore < 25) {
+                $interpretationCode = 'OI000026';
+                $interpretationText = '0 - 24 (Risiko rendah)';
+            } elseif ($morseScore >= 45) {
+                $interpretationCode = 'OI000028';
+                $interpretationText = '>= 45 (Risiko tinggi)';
+            }
+        }
+
+        $formRisikoJatuh = [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "Observation",
+                "status" => "final",
+                "identifier" => [
+                    [
+                        "system" => "http://sys-ids.kemkes.go.id/observation/" . $organization_id,
+                        "value" => ($request->noreg ?? $request->rs1) . "-FALL"
+                    ]
+                ],
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code" => "exam",
+                                "display" => "Exam"
+                            ]
+                        ]
+                    ]
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "59461-4",
+                            "display" => "Fall risk level [Morse Fall Scale]"
+                        ]
+                    ]
+                ],
+                "subject" => [
+                    "reference" => "Patient/$pasien_uuid",
+                    "display" => $request->nama
+                ],
+                "encounter" => ["reference" => "urn:uuid:$encounter"],
+                "effectiveDateTime" => $tglEff,
+                "issued" => $tglEff,
+                "performer" => [
+                    [
+                        "reference" => "Practitioner/$practitioner_uuid"
+                    ]
+                ],
+                "valueQuantity" => [
+                    "value" => $morseScore,
+                    "unit" => "{score}",
+                    "system" => "http://unitsofmeasure.org",
+                    "code" => "{score}"
+                ],
+                "interpretation" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                                "code" => $interpretationCode,
+                                "display" => $interpretationText
+                            ]
+                        ],
+                        "text" => str_contains($interpretationText, 'sedang') ? 'Risiko sedang' : (str_contains($interpretationText, 'tinggi') ? 'Risiko tinggi' : 'Risiko rendah')
+                    ]
+                ]
+            ],
+            "request" => ["method" => "POST", "url" => "Observation"]
+        ];
+
+        $form['risikoJatuh'] = $formRisikoJatuh;
+
+        // 2. Observation Kriteria Rencana Pemulangan
+        $formRencanaPulang = [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "Observation",
+                "status" => "final",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code" => "survey",
+                                "display" => "Survey"
+                            ]
+                        ]
+                    ]
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                            "code" => "OC000055",
+                            "display" => "Kriteria Pasien yang dilakukan Rencana Pemulangan"
+                        ]
+                    ]
+                ],
+                "subject" => [
+                    "reference" => "Patient/$pasien_uuid"
+                ],
+                "encounter" => ["reference" => "urn:uuid:$encounter"],
+                "effectiveDateTime" => $tglEff,
+                "issued" => $tglEff,
+                "performer" => [
+                    [
+                        "reference" => "Practitioner/$practitioner_uuid"
+                    ]
+                ],
+                "valueCodeableConcept" => [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                            "code" => "OV000072",
+                            "display" => "Pasien dengan perawatan berkelanjutan atau panjang"
+                        ]
+                    ]
+                ]
+            ],
+            "request" => ["method" => "POST", "url" => "Observation"]
+        ];
+
+        $form['rencanaPulang'] = $formRencanaPulang;
+
+        return $form;
+    }
+
+    public static function carePlanIgd($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
+    {
+        $carePlans = PostKunjunganRajalHelper::carePlan($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid);
+        $tglCreated = Carbon::parse($tgl_kunjungan)->addMinutes(15)->toIso8601String();
+
+        // 1. CarePlan Rencana Rawat IGD (Emergency health care plan agreed)
+        $descRawat = "Rencana rawat IGD: observasi dan penanganan kegawatdaruratan, tindakan stabilisasi, pemeriksaan penunjang diagnostik, dan tata laksana medis berkelanjutan.";
+        if (count($request->pemeriksaanfisik) > 0 && !empty($request->pemeriksaanfisik[0]['planning'])) {
+            $descRawat = $request->pemeriksaanfisik[0]['planning'];
+        }
+
+        $carePlanRencanaRawat = [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "CarePlan",
+                "title" => "Rencana Rawat",
+                "status" => "active",
+                "intent" => "plan",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://snomed.info/sct",
+                                "code" => "702779007",
+                                "display" => "Emergency health care plan agreed"
+                            ]
+                        ]
+                    ]
+                ],
+                "description" => $descRawat,
+                "subject" => [
+                    "reference" => "Patient/$pasien_uuid",
+                    "display" => $request->nama
+                ],
+                "encounter" => ["reference" => "urn:uuid:$encounter"],
+                "created" => $tglCreated,
+                "author" => [
+                    "reference" => "Practitioner/$practitioner_uuid"
+                ]
+            ],
+            "request" => ["method" => "POST", "url" => "CarePlan"]
+        ];
+
+        // 2. CarePlan Instruksi Medik dan Keperawatan
+        $descInstruksi = "Instruksi medik dan keperawatan: monitoring tanda-tanda vital secara berkala, pemberian terapi cairan dan medikasi emergensi sesuai advis DPJP.";
+        if (count($request->pemeriksaanfisik) > 0 && !empty($request->pemeriksaanfisik[0]['instruksidokter'])) {
+            $descInstruksi = $request->pemeriksaanfisik[0]['instruksidokter'];
+        }
+
+        $carePlanInstruksi = [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "CarePlan",
+                "title" => "Instruksi Medik dan Keperawatan",
+                "status" => "active",
+                "intent" => "plan",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://snomed.info/sct",
+                                "code" => "702779007",
+                                "display" => "Emergency health care plan agreed"
+                            ]
+                        ]
+                    ]
+                ],
+                "description" => $descInstruksi,
+                "subject" => [
+                    "reference" => "Patient/$pasien_uuid",
+                    "display" => $request->nama
+                ],
+                "encounter" => ["reference" => "urn:uuid:$encounter"],
+                "created" => $tglCreated,
+                "author" => [
+                    "reference" => "Practitioner/$practitioner_uuid"
+                ]
+            ],
+            "request" => ["method" => "POST", "url" => "CarePlan"]
+        ];
+
+        // 3. CarePlan Perencanaan Pemulangan Pasien (Discharge care plan)
+        $descPulang = "Rencana pemulangan pasien: kontrol kembali ke fasilitas pelayanan kesehatan / dokter spesialis sesuai jadwal.";
+        if (!empty($request->planning[0]['spri'])) {
+            $descPulang = "Perawatan lanjutan dipindahkan ke rawat inap.";
+        } elseif (!empty($request->planning[0]['kontrol'])) {
+            $descPulang = "Kontrol ulang sesuai rencana pada surat kontrol.";
+        }
+
+        $carePlanDischarge = [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "CarePlan",
+                "title" => "Perencanaan Pemulangan Pasien",
+                "status" => "active",
+                "intent" => "plan",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://snomed.info/sct",
+                                "code" => "736372004",
+                                "display" => "Discharge care plan"
+                            ]
+                        ]
+                    ]
+                ],
+                "description" => $descPulang,
+                "subject" => [
+                    "reference" => "Patient/$pasien_uuid",
+                    "display" => $request->nama
+                ],
+                "encounter" => ["reference" => "urn:uuid:$encounter"],
+                "created" => $tglCreated,
+                "author" => [
+                    "reference" => "Practitioner/$practitioner_uuid"
+                ]
+            ],
+            "request" => ["method" => "POST", "url" => "CarePlan"]
+        ];
+
+        $results = is_array($carePlans) ? $carePlans : [];
+        $results[] = $carePlanRencanaRawat;
+        $results[] = $carePlanInstruksi;
+        $results[] = $carePlanDischarge;
+
+        return $results;
+    }
+
+    public static function procedureIgd($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
+    {
+        $procedures = PostKunjunganRajalHelper::procedure($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid);
+        $results = is_array($procedures) ? $procedures : [];
+
+        $tglStart = Carbon::parse($tgl_kunjungan)->addMinutes(10)->toIso8601String();
+        $tglEnd = Carbon::parse($tgl_kunjungan)->addMinutes(10)->toIso8601String();
+
+        // Prosedur Pra-Lab / Pra-Rad (Fasting / Non-fasting)
+        $hasLab = count($request->laborats ?? []) > 0;
+        $hasRad = count($request->radiologi ?? []) > 0;
+
+        if ($hasLab || $hasRad) {
+            $praProc = [
+                "fullUrl" => "urn:uuid:" . self::generateUuid(),
+                "resource" => [
+                    "resourceType" => "Procedure",
+                    "status" => "not-done",
+                    "category" => [
+                        "coding" => [
+                            [
+                                "system" => "http://snomed.info/sct",
+                                "code" => "103693007",
+                                "display" => "Diagnostic procedure"
+                            ]
+                        ]
+                    ],
+                    "code" => [
+                        "coding" => [
+                            [
+                                "system" => "http://snomed.info/sct",
+                                "code" => "792805006",
+                                "display" => "Fasting"
+                            ]
+                        ]
+                    ],
+                    "subject" => [
+                        "reference" => "Patient/$pasien_uuid",
+                        "display" => $request->nama
+                    ],
+                    "encounter" => ["reference" => "urn:uuid:$encounter"],
+                    "performedPeriod" => [
+                        "start" => $tglStart,
+                        "end" => $tglEnd
+                    ],
+                    "performer" => [
+                        [
+                            "actor" => [
+                                "reference" => "Practitioner/$practitioner_uuid",
+                                "display" => $request->datasimpeg['nama'] ?? '-'
+                            ]
+                        ]
+                    ]
+                ],
+                "request" => ["method" => "POST", "url" => "Procedure"]
+            ];
+
+            $results[] = $praProc;
+        }
+
+        return $results;
+    }
 }
+
