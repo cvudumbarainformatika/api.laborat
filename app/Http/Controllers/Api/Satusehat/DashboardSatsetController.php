@@ -796,6 +796,29 @@ class DashboardSatsetController extends Controller
 
         $list = $query->orderBy('created_at', 'DESC')->paginate($perPage);
 
+        // Attach Status Pengiriman SatuSehat & IHS UUID
+        $noregs = collect($list->items())->pluck('noreg')->filter()->unique()->values()->all();
+        $satsets = !empty($noregs) ? Satset::whereIn('uuid', $noregs)->get()->keyBy('uuid') : collect();
+        $satsetErrors = !empty($noregs) ? SatsetErrorRespon::whereIn('uuid', $noregs)->get()->keyBy('uuid') : collect();
+
+        $norms = collect($list->items())->where('kategori', 'PASIEN_MISMATCH_BPJS')->pluck('ref_id')->filter()->unique()->values()->all();
+        $pasiens = !empty($norms) ? DB::table('rs15')->whereIn('rs1', $norms)->get(['rs1', 'satset_uuid'])->keyBy('rs1') : collect();
+
+        foreach ($list->items() as $item) {
+            $noreg = $item->noreg;
+            $refId = $item->ref_id;
+            $isSent = !empty($noreg) && isset($satsets[$noreg]);
+            $isError = !empty($noreg) && isset($satsetErrors[$noreg]);
+
+            $satsetUuid = isset($pasiens[$refId]) ? $pasiens[$refId]->satset_uuid : null;
+
+            $item->satset_terkirim = $isSent;
+            $item->satset_error = $isError && !$isSent;
+            $item->satset_id = $isSent ? $satsets[$noreg]->id : null;
+            $item->satset_ihs_uuid = $satsetUuid;
+            $item->satset_waktu_kirim = $isSent ? $satsets[$noreg]->created_at : null;
+        }
+
         return response()->json([
             'status' => 'success',
             'data' => $list
