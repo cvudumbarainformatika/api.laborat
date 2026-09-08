@@ -46,6 +46,12 @@ class DashboardSatsetController extends Controller
             ->whereBetween('rs3', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
             ->count();
 
+        // HD (Hemodialisa)
+        $totalHd = KunjunganPoli::where('rs8', 'PEN005')
+            ->where('rs19', '1')
+            ->whereBetween('rs3', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+            ->count();
+
         // 2. Terkirim Sukses (Tabel satsets)
         $terkirimRajal = Satset::where('jenis', 'rajal')
             ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
@@ -56,6 +62,10 @@ class DashboardSatsetController extends Controller
             ->count();
 
         $terkirimIgd = Satset::where('jenis', 'igd')
+            ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+            ->count();
+
+        $terkirimHd = Satset::where('jenis', 'hd')
             ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
             ->count();
 
@@ -72,9 +82,13 @@ class DashboardSatsetController extends Controller
             ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
             ->count();
 
-        $totalKunjungan = $totalRajal + $totalRanap + $totalIgd;
-        $totalTerkirim = $terkirimRajal + $terkirimRanap + $terkirimIgd;
-        $totalError = $errorRajal + $errorRanap + $errorIgd;
+        $errorHd = SatsetErrorRespon::where('jenis', 'hd')
+            ->whereBetween('created_at', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+            ->count();
+
+        $totalKunjungan = $totalRajal + $totalRanap + $totalIgd + $totalHd;
+        $totalTerkirim = $terkirimRajal + $terkirimRanap + $terkirimIgd + $terkirimHd;
+        $totalError = $errorRajal + $errorRanap + $errorIgd + $errorHd;
         $complianceRate = $totalKunjungan > 0 ? round(($totalTerkirim / $totalKunjungan) * 100, 2) : 0;
 
         return response()->json([
@@ -107,6 +121,12 @@ class DashboardSatsetController extends Controller
                     'terkirim' => $terkirimIgd,
                     'error' => $errorIgd,
                     'rate' => $totalIgd > 0 ? round(($terkirimIgd / $totalIgd) * 100, 2) . '%' : '0%'
+                ],
+                'hd' => [
+                    'total_kunjungan' => $totalHd,
+                    'terkirim' => $terkirimHd,
+                    'error' => $errorHd,
+                    'rate' => $totalHd > 0 ? round(($terkirimHd / $totalHd) * 100, 2) . '%' : '0%'
                 ],
             ]
         ]);
@@ -317,7 +337,6 @@ class DashboardSatsetController extends Controller
                 return $this->formatKunjunganItem($item);
             });
         } else {
-            $bukanPoli = ['PEN005', 'PEN004'];
             $rajalQuery = KunjunganPoli::select(
                 'rs17.rs1 as noreg',
                 'rs17.rs2 as norm',
@@ -326,19 +345,22 @@ class DashboardSatsetController extends Controller
                 'rs15.rs49 as nik',
                 'rs19.rs2 as unit_layanan',
                 'rs21.rs2 as dokter_dpjp',
-                DB::raw("IF(rs17.rs8 = 'POL014', 'igd', 'rajal') as jenis")
+                DB::raw("IF(rs17.rs8 = 'POL014', 'igd', IF(rs17.rs8 = 'PEN005', 'hd', 'rajal')) as jenis")
             )
                 ->leftJoin('rs15', 'rs15.rs1', '=', 'rs17.rs2')
                 ->leftJoin('rs19', 'rs19.rs1', '=', 'rs17.rs8')
                 ->leftJoin('rs21', 'rs21.rs1', '=', 'rs17.rs9')
                 ->where('rs17.rs19', '1')
-                ->whereNotIn('rs17.rs8', $bukanPoli)
                 ->whereBetween('rs17.rs3', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
 
             if ($jenis === 'igd') {
                 $rajalQuery->where('rs17.rs8', '=', 'POL014');
+            } elseif ($jenis === 'hd') {
+                $rajalQuery->where('rs17.rs8', '=', 'PEN005');
             } elseif ($jenis === 'rajal') {
-                $rajalQuery->where('rs17.rs8', '!=', 'POL014');
+                $rajalQuery->whereNotIn('rs17.rs8', ['POL014', 'PEN005', 'PEN004']);
+            } else {
+                $rajalQuery->whereNotIn('rs17.rs8', ['PEN004']);
             }
 
             if (!empty($q)) {
@@ -707,6 +729,8 @@ class DashboardSatsetController extends Controller
             $res = PostKunjunganRanapHelper::cobaRanap($noreg);
         } elseif ($jenis === 'igd') {
             $res = PostKunjunganIgdHelper::cobaIgd($noreg);
+        } elseif ($jenis === 'hd') {
+            $res = \App\Helpers\Satsets\PostKunjunganHDHerlper::cobarajal($noreg);
         } else {
             $res = PostKunjunganRajalHelper::cobaRajal($noreg);
         }

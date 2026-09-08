@@ -299,8 +299,8 @@ class PostKunjunganHDHerlper
             ->orderby('rs17.rs3', 'ASC')
             ->first();
 
-        return $data;
-        // return self::kirimKunjungan($data);
+        // return $data;
+        return self::kirimKunjungan($data);
         // return self::rajal($data);
     }
 
@@ -581,7 +581,7 @@ class PostKunjunganHDHerlper
         $send = self::form($data, $pasien_uuid, $practitioner_uuid);
         if ($send['message'] === 'success') {
             $token = AuthSatsetHelper::accessToken();
-            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg, 'rajal');
+            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg, 'hd');
         }
         return $send;
     }
@@ -608,6 +608,8 @@ class PostKunjunganHDHerlper
         } else {
             SatsetErrorRespon::create([
                 'uuid' => $pasien->noreg,
+                'jenis' => 'hd',
+                'error_summary' => 'Gagal Ambil Patient UUID SatuSehat',
                 'response' => $send
             ]);
         }
@@ -630,6 +632,8 @@ class PostKunjunganHDHerlper
         } else {
             SatsetErrorRespon::create([
                 'uuid' => $pasien->noreg,
+                'jenis' => 'hd',
+                'error_summary' => 'Gagal Ambil Practitioner UUID SatuSehat',
                 'response' => $send
             ]);
         }
@@ -672,6 +676,8 @@ class PostKunjunganHDHerlper
 
             SatsetErrorRespon::create([
                 'uuid' => $request->noreg,
+                'jenis' => 'hd',
+                'error_summary' => 'Task ID Antrean BPJS / SIMRS Tidak Lengkap (Task 3 / 5)',
                 'response' => 'TASK iD Tdk lengkap',
             ]);
 

@@ -30,10 +30,8 @@ class KunjunganController extends Controller
         $jenis_kunjungan = request('jenis');
 
         if ($jenis_kunjungan === 'hd') {
-
-            return PostKunjunganHDHerlper::cobarajal('110752/01/2025/J');
-            // return CobaPostKunjunganRajalHelper::cekKunjungan('74740/09/2024/J');
-            // return self::cekKunjunganRajal('74748/09/2024/J');
+            $noreg = request('noreg') ?: '110752/01/2025/J';
+            return PostKunjunganHDHerlper::cobarajal($noreg);
         }
         if ($jenis_kunjungan === 'rajal') {
 
