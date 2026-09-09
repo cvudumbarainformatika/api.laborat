@@ -1146,13 +1146,26 @@ class PostKunjunganIgdHelper
             }
         }
 
-        // Push Planning (SPRI, Konsul, Kontrol)
+        // Push Planning (SPRI, Konsul, Kontrol, ClinicalImpression Prognosis jika ada)
         if (!empty($plann['spri'])) $body['entry'][] = $plann['spri'];
         if (!empty($plann['konsul'])) $body['entry'][] = $plann['konsul'];
         if (!empty($plann['kontrol'])) $body['entry'][] = $plann['kontrol'];
+        if (!empty($plann['prognosis'])) $body['entry'][] = $plann['prognosis'];
 
         // Push Allergy Intolerance
         if (!empty($alergyIntoleran)) $body['entry'][] = $alergyIntoleran;
+
+        // Push MedicationStatement (Riwayat Obat yang Pernah Ditebus Pasien)
+        try {
+            $medicationStatements = PostKunjunganRajalHelper::medicationStatement($request, $pasien_uuid, $encounter);
+            if (!empty($medicationStatements) && is_array($medicationStatements)) {
+                foreach ($medicationStatements as $medStatement) {
+                    if (!empty($medStatement)) {
+                        $body['entry'][] = $medStatement;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
 
         // Push Farmasi (Medication, Request, Dispense)
         if (!empty($apotek['nonracikan'])) {

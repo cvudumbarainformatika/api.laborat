@@ -1164,7 +1164,27 @@ class PostKunjunganRanapHelper
             $form['entry'][] = $imunization;
         }
 
-        // 11. Composition (Ringkasan Pulang Pasien Rawat Inap / Discharge Summary)
+        // 11. AllergyIntolerance (Riwayat Alergi Pasien Rawat Inap)
+        if (isset($request->anamnesis) && count($request->anamnesis) > 0) {
+            $alergyIntoleran = PostKunjunganRajalHelper::allergyIntoleran($request, $encounter_uuid, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id);
+            if (!empty($alergyIntoleran)) {
+                $form['entry'][] = $alergyIntoleran;
+            }
+        }
+
+        // 12. MedicationStatement (Riwayat Obat yang Pernah Ditebus Pasien)
+        try {
+            $medicationStatements = PostKunjunganRajalHelper::medicationStatement($request, $pasien_uuid, $encounter_uuid);
+            if (!empty($medicationStatements) && is_array($medicationStatements)) {
+                foreach ($medicationStatements as $medStatement) {
+                    if (!empty($medStatement)) {
+                        $form['entry'][] = $medStatement;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        // 13. Composition (Ringkasan Pulang Pasien Rawat Inap / Discharge Summary)
         $composition = self::compositionRanap($request, $encounter_uuid, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $condPrimerUuid, $diagPrimer, $res_ec['condition'] ?? [], $procedures ?? []);
         if (!empty($composition)) {
             $form['entry'][] = $composition;
