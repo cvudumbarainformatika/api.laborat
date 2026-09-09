@@ -46,10 +46,11 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->between('02:00', '05:50');
 
-        // Uji coba Retry data error kunjungan SatuSehat setiap 5 menit
-        $schedule->command('satset:retry-error --limit=20 --cooldown=1')
+        // Retry data error kunjungan SatuSehat setiap 5 menit (50 data) dari jam 21:00 s/d 23:55 malam
+        $schedule->command('satset:retry-error --limit=50 --cooldown=6')
             ->everyFiveMinutes()
-            ->withoutOverlapping();
+            ->withoutOverlapping()
+            ->between('21:00', '23:55');
 
 
         $schedule->command('cache:clear')
