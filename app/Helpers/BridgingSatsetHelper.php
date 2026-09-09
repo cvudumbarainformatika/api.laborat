@@ -385,7 +385,7 @@ class BridgingSatsetHelper
                     'jenis' => $jenis,
                     'error_summary' => substr($errorSummary, 0, 255),
                 ];
-                $resp = SatsetErrorRespon::create($err);
+                $resp = SatsetErrorRespon::updateOrCreate(['uuid' => $noreg], $err);
 
                 return [
                     'message' => 'failed',
@@ -406,6 +406,9 @@ class BridgingSatsetHelper
                 'resource' => $data['resourceType'] ?? 'Bundle',
                 'uuid' => $noreg
             ], $success);
+
+            // Jika sukses, bersihkan dari tabel satset_error_respon
+            SatsetErrorRespon::where('uuid', $noreg)->delete();
 
             $send = [
                 'message' => 'success',

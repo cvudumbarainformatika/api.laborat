@@ -785,7 +785,7 @@ class PostKunjunganIgdHelper
                 'jenis' => 'igd',
                 'error_summary' => 'Pasien UUID / NIK Tidak Ditemukan di SatuSehat',
             ];
-            SatsetErrorRespon::create($err);
+            SatsetErrorRespon::updateOrCreate(['uuid' => $data->noreg], $err);
             return ['message' => 'failed', 'data' => 'Pasien Belum Terkoneksi Ke Satu Sehat'];
         }
 
@@ -804,7 +804,7 @@ class PostKunjunganIgdHelper
                 'jenis' => 'igd',
                 'error_summary' => 'IHS Dokter IGD Tidak Ditemukan',
             ];
-            SatsetErrorRespon::create($err);
+            SatsetErrorRespon::updateOrCreate(['uuid' => $data->noreg], $err);
             return ['message' => 'failed', 'data' => 'Dokter IGD Belum Terkoneksi Ke Satu Sehat'];
         }
 
@@ -818,7 +818,7 @@ class PostKunjunganIgdHelper
                 'jenis' => 'igd',
                 'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS',
             ];
-            SatsetErrorRespon::create($err);
+            SatsetErrorRespon::updateOrCreate(['uuid' => $data->noreg], $err);
             return ['message' => 'failed', 'data' => 'Diagnosa Dokter Belum Diisi di SIMRS'];
         }
 

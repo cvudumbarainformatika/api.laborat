@@ -106,6 +106,13 @@ class RetrySatsetErrorHelper
             ];
         }
 
+        // Bersihkan duplikasi error lama untuk uuid yang sama (hanya sisakan 1 baris)
+        $duplicates = SatsetErrorRespon::where('uuid', $uuid)->orderBy('id', 'desc')->pluck('id');
+        if ($duplicates->count() > 1) {
+            $keepId = $duplicates->first();
+            SatsetErrorRespon::where('uuid', $uuid)->where('id', '!=', $keepId)->delete();
+        }
+
         // 2. Deteksi jenis jika belum ada
         if (!$jenis) {
             $jenis = self::detectJenis($uuid);

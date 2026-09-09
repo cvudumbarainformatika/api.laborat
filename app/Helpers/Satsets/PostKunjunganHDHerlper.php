@@ -586,7 +586,7 @@ class PostKunjunganHDHerlper
                 'jenis' => 'hd',
                 'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS',
             ];
-            SatsetErrorRespon::create($err);
+            SatsetErrorRespon::updateOrCreate(['uuid' => $data->noreg], $err);
             return ['message' => 'failed', 'data' => 'Diagnosa Dokter Belum Diisi di SIMRS'];
         }
 

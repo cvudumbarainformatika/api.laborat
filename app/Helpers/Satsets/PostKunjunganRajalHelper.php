@@ -924,7 +924,7 @@ class PostKunjunganRajalHelper
                 'jenis' => 'rajal',
                 'error_summary' => 'Pasien UUID / NIK Tidak Ditemukan',
             ];
-            SatsetErrorRespon::create($err);
+            SatsetErrorRespon::updateOrCreate(['uuid' => $data->noreg], $err);
             return ['message' => 'failed', 'data' => 'Pasien UUID / NIK Tidak Ditemukan'];
         }
 
@@ -942,7 +942,7 @@ class PostKunjunganRajalHelper
                 'jenis' => 'rajal',
                 'error_summary' => 'Practitioner Dokter Tidak Ditemukan',
             ];
-            SatsetErrorRespon::create($err);
+            SatsetErrorRespon::updateOrCreate(['uuid' => $data->noreg], $err);
             return ['message' => 'failed', 'data' => 'Practitioner UUID Dokter Tidak Ditemukan'];
         }
 
@@ -956,7 +956,7 @@ class PostKunjunganRajalHelper
                 'jenis' => 'rajal',
                 'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS',
             ];
-            SatsetErrorRespon::create($err);
+            SatsetErrorRespon::updateOrCreate(['uuid' => $data->noreg], $err);
             return ['message' => 'failed', 'data' => 'Diagnosa Dokter Belum Diisi di SIMRS'];
         }
 
