@@ -668,55 +668,27 @@ class PostKunjunganHDHerlper
 
         $practitioner = $practitioner_uuid;
 
-        $taskid = collect($request->taskid);
-        if (count($taskid) === 0) {
-            $send['data'] = 'data taskid dari request kosong';
-            return $send;
-        }
+        $tglDasar = Carbon::parse($request->tgl_kunjungan ?? now());
+        $taskid = collect($request->taskid ?? []);
+        $task3 = $taskid->filter(fn($item) => $item['taskid'] === '3')->first();
+        $task4 = $taskid->filter(fn($item) => $item['taskid'] === '4')->first();
+        $task5 = $taskid->filter(fn($item) => $item['taskid'] === '5')->first();
 
-        $task3 = $taskid->filter(function ($item) {
-            return $item['taskid'] === '3';
-        })->first();
-        $task4 = $taskid->filter(function ($item) {
-            return $item['taskid'] === '4';
-        })->first();
-        $task5 = $taskid->filter(function ($item) {
-            return $item['taskid'] === '5';
-        })->first();
-
-        if (!$task3 || !$task5) {
-
-            SatsetErrorRespon::create([
-                'uuid' => $request->noreg,
-                'jenis' => 'hd',
-                'error_summary' => 'Task ID Antrean BPJS / SIMRS Tidak Lengkap (Task 3 / 5)',
-                'response' => 'TASK iD Tdk lengkap',
-            ]);
-
-            $send['data'] = 'TASK iD Tdk lengkap';
-            return $send;
-        }
-
-        $antri = Carbon::parse($task3['created_at'])->toIso8601String();
-
-        $start = isset($task4['created_at']) ? Carbon::parse($task4['created_at'])->toIso8601String() : Carbon::parse($task3['created_at'])->addMinutes(3)->toIso8601String();
-        $end = Carbon::parse($task5['created_at'])->toIso8601String();
+        $antri = $task3 ? Carbon::parse($task3['created_at'])->toIso8601String() : $tglDasar->toIso8601String();
+        $start = $task4 ? Carbon::parse($task4['created_at'])->toIso8601String() : ($task3 ? Carbon::parse($task3['created_at'])->addMinutes(5)->toIso8601String() : (clone $tglDasar)->addMinutes(5)->toIso8601String());
+        $end = $task5 ? Carbon::parse($task5['created_at'])->toIso8601String() : (clone $tglDasar)->addHours(4)->addMinutes(30)->toIso8601String();
 
         setlocale(LC_ALL, 'IND');
         $dt = Carbon::parse($request->tgl_kunjungan)->locale('id');
         $dt->settings(['formatFunction' => 'translatedFormat']);
         $tgl_kunjungan = $dt->format('l, j F Y');
-        // $tgl_kunjungan = $dt->format('l, j F Y ; h:i a');
 
         $rajal_org = '4b8fb632-6435-4fc1-8ea0-7aacc39974d6';
         $organization_id = BridgingSatsetHelper::organization_id();
 
-
-        $specimenSnomeds =  Msnomed::whereNotNull('spesimen')->get();
-
+        $specimenSnomeds = Msnomed::whereNotNull('spesimen')->get();
 
         // DIAGNOSA
-
         $diagnosa = [];
         $refference = [];
         foreach ($request->diagnosa as $key => $value) {
@@ -724,7 +696,7 @@ class PostKunjunganHDHerlper
             $data = [
                 "condition" => [
                     "reference" => "urn:uuid:$uuid",
-                    "display" => $value['masterdiagnosa']['rs4']
+                    "display" => $value['masterdiagnosa']['rs4'] ?? $value['masterdiagnosa']['rs3'] ?? $value['rs4'] ?? 'Diagnosis Klinis'
                 ],
                 "use" => [
                     "coding" => [
@@ -1021,6 +993,12 @@ class PostKunjunganHDHerlper
             }
         }
 
+        // Push EpisodeOfCare untuk Pasien Hemodialisa
+        $firstConditionUuid = !empty($diagnosa[0]['condition']['reference']) ? $diagnosa[0]['condition']['reference'] : null;
+        $episodeOfCare = self::episodeOfCare($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $firstConditionUuid);
+        if ($episodeOfCare !== null) {
+            array_push($body['entry'], $episodeOfCare);
+        }
 
         $send['message'] = 'success';
         $send['data'] = $body;
@@ -1028,7 +1006,86 @@ class PostKunjunganHDHerlper
         return $send;
     }
 
-    public function anamnesis($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
+    public static function episodeOfCare($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $firstConditionUuid = null)
+    {
+        $eocUuid = "urn:uuid:" . self::generateUuid();
+        $tglMulai = Carbon::parse($request->tgl_kunjungan ?? now())->toIso8601String();
+        $namaPractitioner = $request->datasimpeg['nama'] ?? 'Dokter Penanggung Jawab';
+
+        $diag = [];
+        if ($firstConditionUuid) {
+            $diag[] = [
+                "condition" => [
+                    "reference" => $firstConditionUuid,
+                    "display" => "Chronic kidney disease, stage 5"
+                ],
+                "role" => [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
+                            "code" => "CC",
+                            "display" => "Chief complaint"
+                        ]
+                    ]
+                ],
+                "rank" => 1
+            ];
+        }
+
+        return [
+            "fullUrl" => $eocUuid,
+            "resource" => [
+                "resourceType" => "EpisodeOfCare",
+                "identifier" => [
+                    [
+                        "system" => "http://sys-ids.kemkes.go.id/episode-of-care/" . $organization_id,
+                        "value" => "EOC-HD-" . ($request->noreg ?? $request->rs1)
+                    ]
+                ],
+                "status" => "active",
+                "statusHistory" => [
+                    [
+                        "status" => "active",
+                        "period" => [
+                            "start" => $tglMulai
+                        ]
+                    ]
+                ],
+                "type" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.kemkes.go.id/CodeSystem/episodeofcare-type",
+                                "code" => "CKD",
+                                "display" => "Chronic Kidney Disease"
+                            ]
+                        ]
+                    ]
+                ],
+                "diagnosis" => $diag,
+                "patient" => [
+                    "reference" => "Patient/" . $pasien_uuid,
+                    "display" => $request->nama
+                ],
+                "managingOrganization" => [
+                    "reference" => "Organization/" . $organization_id
+                ],
+                "period" => [
+                    "start" => $tglMulai
+                ],
+                "careManager" => [
+                    "reference" => "Practitioner/" . $practitioner_uuid,
+                    "display" => $namaPractitioner
+                ]
+            ],
+            "request" => [
+                "method" => "POST",
+                "url" => "EpisodeOfCare"
+            ]
+        ];
+    }
+
+    public static function anamnesis($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
     {
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama'] : '-';
         $data = $request->anamnesis[0] ?? '';
@@ -2364,12 +2421,16 @@ class PostKunjunganHDHerlper
 
         $anamnesis = $request->anamnesis;
         if (count($anamnesis) > 0) {
+            $rawAlergi = $anamnesis[0]['riwayatalergi'] ?? '';
+            if (is_array($rawAlergi)) {
+                $rawAlergi = implode(', ', array_filter($rawAlergi));
+            }
+            $rawAlergi = trim((string)$rawAlergi);
 
-            if ($anamnesis[0]['riwayatalergi'] === null || $anamnesis[0]['riwayatalergi'] === '' || $anamnesis[0]['riwayatalergi'] === 'Tidak ada Alergi' || $anamnesis[0]['riwayatalergi'] === 'Tidak Ada Alergi,') {
+            if ($rawAlergi === '' || $rawAlergi === 'Tidak ada Alergi' || $rawAlergi === 'Tidak Ada Alergi,' || $rawAlergi === 'Tidak Ada Alergi') {
                 $allergy = null;
             } else {
-
-                $anamnesisAllergi = preg_replace("/[^a-zA-Z0-9]/", ",", $anamnesis[0]['riwayatalergi']);
+                $anamnesisAllergi = preg_replace("/[^a-zA-Z0-9]/", ",", $rawAlergi);
                 $cek = Allergy::where('nama', 'like', '%' . $anamnesisAllergi . '%')->first();
 
                 if ($cek) {

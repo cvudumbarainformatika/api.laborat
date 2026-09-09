@@ -1464,6 +1464,12 @@ class PostKunjunganRajalHelper
             array_push($body['entry'], $composition);
         }
 
+        // PUSH EPISODEOFCARE (Program Kasus Kronis / TB / CAD / CKD / Kanker)
+        $episodeOfCare = self::episodeOfCare($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $refference);
+        if ($episodeOfCare !== null) {
+            array_push($body['entry'], $episodeOfCare);
+        }
+
         $send['message'] = 'success';
         $send['data'] = $body;
 
@@ -4709,5 +4715,129 @@ class PostKunjunganRajalHelper
     static function medicationStatement($request, $pasien_uuid, $encounter_uuid)
     {
         return self::riwayatPengobatan($request, $encounter_uuid, null, null, $pasien_uuid);
+    }
+
+    public static function episodeOfCare($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $refference = [])
+    {
+        $namaPractitioner = $request->datasimpeg ? $request->datasimpeg['nama'] : ($request->dokter ?? '-');
+        $eocUuid = "urn:uuid:" . self::generateUuid();
+        $tglMulai = Carbon::parse($request->tgl_kunjungan ?? now())->toIso8601String();
+
+        // Cari apakah ada diagnosa yang cocok untuk EpisodeOfCare (TB, Kanker, Jantung CAD, Ginjal CKD)
+        $selectedType = null;
+        $matchedCondition = null;
+
+        if (!empty($refference) && is_array($refference)) {
+            foreach ($refference as $ref) {
+                $code = strtoupper(trim($ref['code'] ?? ''));
+                if (empty($code)) continue;
+
+                if (Str::startsWith($code, ['A15', 'A16', 'A17', 'A18', 'A19'])) {
+                    $selectedType = [
+                        "code" => "TB-SO",
+                        "display" => "Tuberkulosis Sensitif Obat"
+                    ];
+                    $matchedCondition = $ref;
+                    break;
+                } elseif (Str::startsWith($code, ['N18'])) {
+                    $selectedType = [
+                        "code" => "CKD",
+                        "display" => "Chronic Kidney Disease"
+                    ];
+                    $matchedCondition = $ref;
+                    break;
+                } elseif (Str::startsWith($code, ['I20', 'I21', 'I22', 'I23', 'I24', 'I25'])) {
+                    $selectedType = [
+                        "code" => "CAD",
+                        "display" => "Coronary Arterial Disease Management Care"
+                    ];
+                    $matchedCondition = $ref;
+                    break;
+                } elseif (Str::startsWith($code, ['C', 'D0', 'D1', 'D2', 'D3', 'D4'])) {
+                    $selectedType = [
+                        "code" => "CNC",
+                        "display" => "Cancer Management Care"
+                    ];
+                    $matchedCondition = $ref;
+                    break;
+                }
+            }
+        }
+
+        if (!$selectedType) {
+            return null;
+        }
+
+        $diag = [];
+        if ($matchedCondition) {
+            $diag[] = [
+                "condition" => [
+                    "reference" => "urn:uuid:" . $matchedCondition['reference'],
+                    "display" => $matchedCondition['display'] ?? $matchedCondition['displayInd'] ?? 'Diagnosis'
+                ],
+                "role" => [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
+                            "code" => "CC",
+                            "display" => "Chief complaint"
+                        ]
+                    ]
+                ],
+                "rank" => 1
+            ];
+        }
+
+        return [
+            "fullUrl" => $eocUuid,
+            "resource" => [
+                "resourceType" => "EpisodeOfCare",
+                "identifier" => [
+                    [
+                        "system" => "http://sys-ids.kemkes.go.id/episode-of-care/" . $organization_id,
+                        "value" => "EOC-" . ($request->noreg ?? $request->rs1)
+                    ]
+                ],
+                "status" => "active",
+                "statusHistory" => [
+                    [
+                        "status" => "active",
+                        "period" => [
+                            "start" => $tglMulai
+                        ]
+                    ]
+                ],
+                "type" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.kemkes.go.id/CodeSystem/episodeofcare-type",
+                                "code" => $selectedType['code'],
+                                "display" => $selectedType['display']
+                            ]
+                        ]
+                    ]
+                ],
+                "diagnosis" => $diag,
+                "patient" => [
+                    "reference" => "Patient/" . $pasien_uuid,
+                    "display" => $request->nama
+                ],
+                "managingOrganization" => [
+                    "reference" => "Organization/" . $organization_id
+                ],
+                "period" => [
+                    "start" => $tglMulai
+                ],
+                "careManager" => [
+                    "reference" => "Practitioner/" . $practitioner_uuid,
+                    "display" => $namaPractitioner
+                ]
+            ],
+            "request" => [
+                "method" => "POST",
+                "url" => "EpisodeOfCare"
+            ]
+        ];
     }
 }
