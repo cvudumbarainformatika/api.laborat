@@ -4705,4 +4705,9 @@ class PostKunjunganRajalHelper
 
         return $data;
     }
+
+    static function medicationStatement($request, $pasien_uuid, $encounter_uuid)
+    {
+        return self::riwayatPengobatan($request, $encounter_uuid, null, null, $pasien_uuid);
+    }
 }
