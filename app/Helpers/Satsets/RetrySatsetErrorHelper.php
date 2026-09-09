@@ -191,9 +191,16 @@ class RetrySatsetErrorHelper
         $to = $options['to'] ?? null;
         $cooldownHours = isset($options['cooldown_hours']) ? (int)$options['cooldown_hours'] : 1;
 
+        $year = $options['year'] ?? date('Y'); // Default tahun berjalan (misal 2026)
+
         $query = SatsetErrorRespon::query()
             ->whereNotNull('uuid')
             ->where('uuid', '!=', '');
+
+        // Filter tahun nomor registrasi (misal %/2026/%)
+        if (!empty($year) && $year !== 'all') {
+            $query->where('uuid', 'LIKE', '%/' . $year . '/%');
+        }
 
         // Filter jenis modul jika dispesifikasikan
         if (!empty($jenisFilter)) {

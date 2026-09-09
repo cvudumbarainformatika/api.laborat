@@ -14,6 +14,7 @@ class RetrySatsetErrorCommand extends Command
      */
     protected $signature = 'satset:retry-error 
                             {--limit=10 : Jumlah kunjungan yang akan di-retry per eksekusi}
+                            {--year=2026 : Filter tahun nomor registrasi (contoh: 2026, atau all)}
                             {--jenis= : Filter jenis modul (rajal, ranap, igd, hd)}
                             {--from= : Tanggal awal error (YYYY-MM-DD)}
                             {--to= : Tanggal akhir error (YYYY-MM-DD)}
@@ -43,16 +44,18 @@ class RetrySatsetErrorCommand extends Command
         }
 
         $limit = (int) $this->option('limit');
+        $year = $this->option('year');
         $jenis = $this->option('jenis');
         $from = $this->option('from');
         $to = $this->option('to');
         $cooldown = (int) $this->option('cooldown');
 
         $this->info("=== Memulai Retry Kunjungan Error SatuSehat ===");
-        $this->info("Limit: {$limit} | Jenis: " . ($jenis ?: 'Semua') . " | From: " . ($from ?: 'Semua') . " | To: " . ($to ?: 'Semua') . " | Cooldown: {$cooldown} Jam");
+        $this->info("Tahun Kunjungan: {$year} | Limit: {$limit} | Jenis: " . ($jenis ?: 'Semua') . " | Cooldown: {$cooldown} Jam");
 
         $result = RetrySatsetErrorHelper::retryBatch([
             'limit' => $limit,
+            'year' => $year,
             'jenis' => $jenis,
             'from' => $from,
             'to' => $to,
