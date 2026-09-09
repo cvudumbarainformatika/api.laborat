@@ -4297,7 +4297,7 @@ class PostKunjunganHDHerlper
                             // "effectiveDateTime" => "2023-01-23T18:00:00+00:00",
                             // "dateAsserted" => "2023-06-04T05:40:00+00:00",
                             "informationSource" => ["reference" => "Patient/" . $pasien_uuid, "display" => $request->nama],
-                            "context" => ["reference" => "Encounter/" . $encounter],
+                            "context" => ["reference" => str_starts_with($encounter, 'urn:uuid:') ? $encounter : (str_starts_with($encounter, 'Encounter/') ? $encounter : "Encounter/" . $encounter)],
                         ],
                         "request" => ["method" => "POST", "url" => "MedicationStatement"],
                     ];
