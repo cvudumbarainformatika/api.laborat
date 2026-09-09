@@ -146,10 +146,9 @@ class RadiologimetaController extends Controller
             }
 
 
-            // hapus billing jika ada
-            Transradiologi::where('rs1',$request->noreg)
-                ->where('rs2',$simpanpermintaanradiologi->rs2)
-                ->delete();
+            // hapus billing jika ada (baik sementara maupun final)
+            DB::table('rs48_sem')->where('rs2', $simpanpermintaanradiologi->rs2)->delete();
+            Transradiologi::where('rs2', $simpanpermintaanradiologi->rs2)->delete();
 
             // HasilRadiologi::where
 
