@@ -2259,8 +2259,8 @@ class PostKunjunganRajalHelper
 
 
 
-                $petugas_uuid = $isi->spri['petugas'] ? $isi->spri['petugas']['satset_uuid'] : '-';
-                $petugas_nama = $isi->spri['petugas'] ? $isi->spri['petugas']['nama'] : '-';
+                $petugas_uuid = !empty($isi->spri['petugas']['satset_uuid']) && $isi->spri['petugas']['satset_uuid'] !== '-' ? $isi->spri['petugas']['satset_uuid'] : $practitioner_uuid;
+                $petugas_nama = !empty($isi->spri['petugas']['nama']) && $isi->spri['petugas']['nama'] !== '-' ? $isi->spri['petugas']['nama'] : $nama_practitioner;
 
                 $spri =
                     [
@@ -4265,29 +4265,38 @@ class PostKunjunganRajalHelper
         // return $telaah['petugas']['satset_uuid'];
         $data = null;
         if ($telaah) {
-            if (!$telaah['petugas']) {
-                $data = null;
+            $authorUuid = !empty($telaah['petugas']['satset_uuid']) && $telaah['petugas']['satset_uuid'] !== '-'
+                ? $telaah['petugas']['satset_uuid']
+                : $practitioner_uuid;
+            $authorNama = !empty($telaah['petugas']['nama']) && $telaah['petugas']['nama'] !== '-'
+                ? $telaah['petugas']['nama']
+                : ($request->dokter->nama ?? 'Petugas Farmasi');
+
+            if (empty($authorUuid) || $authorUuid === '-') {
+                return null;
             }
 
             $items = [];
 
-            foreach ($telaah['administrasi'] as $key => $value) {
-                $det =
-                    [
-                        "linkId" => $value['kode'],
-                        "text" => $value['question'],
-                        "answer" => [
-                            [
-                                "valueCoding" => [
-                                    "system" =>
-                                    "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                    "code" => "OV000052",
-                                    "display" => $value['value'],
+            if (!empty($telaah['administrasi']) && is_array($telaah['administrasi'])) {
+                foreach ($telaah['administrasi'] as $key => $value) {
+                    $det =
+                        [
+                            "linkId" => $value['kode'],
+                            "text" => $value['question'],
+                            "answer" => [
+                                [
+                                    "valueCoding" => [
+                                        "system" =>
+                                        "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                                        "code" => "OV000052",
+                                        "display" => $value['value'],
+                                    ],
                                 ],
                             ],
-                        ],
-                    ];
-                array_push($items, $det);
+                        ];
+                    array_push($items, $det);
+                }
             }
 
             $data =
@@ -4300,10 +4309,10 @@ class PostKunjunganRajalHelper
                         "status" => "completed",
                         "subject" => ["reference" => "Patient/" . $pasien_uuid, "display" => $request->nama],
                         "encounter" => ["reference" => "urn:uuid:" . $encounter],
-                        "authored" => Carbon::parse($telaah['created_at'])->toIso8601String(),
+                        "authored" => Carbon::parse($telaah['created_at'] ?? now())->toIso8601String(),
                         "author" => [
-                            "reference" => "Practitioner/" . $telaah['petugas']['satset_uuid'],
-                            "display" => $telaah['petugas']['nama'],
+                            "reference" => "Practitioner/" . $authorUuid,
+                            "display" => $authorNama,
                         ],
                         "source" => ["reference" => "Patient/" . $pasien_uuid],
                         "item" => [
