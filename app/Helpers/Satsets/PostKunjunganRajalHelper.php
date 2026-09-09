@@ -361,7 +361,22 @@ class PostKunjunganRajalHelper
             ->orderby('rs17.rs3', 'ASC')
             ->first();
 
-        // return $data;
+        if (!$data) {
+            return ['message' => 'failed', 'data' => 'Data Kunjungan Tidak Ditemukan'];
+        }
+
+        if (empty($data->diagnosa) || count($data->diagnosa) === 0) {
+            SatsetErrorRespon::updateOrCreate(
+                ['uuid' => $noreg],
+                [
+                    'response' => ['message' => 'Diagnosa Dokter Belum Diisi di SIMRS (Pengiriman Dibatalkan)'],
+                    'jenis' => 'rajal',
+                    'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS'
+                ]
+            );
+            return ['message' => 'failed', 'data' => 'Diagnosa Dokter Belum Diisi di SIMRS'];
+        }
+
         return self::kirimKunjungan($data);
     }
 
@@ -1067,56 +1082,39 @@ class PostKunjunganRajalHelper
 
         $practitioner = $practitioner_uuid;
 
-        $taskid = Bpjsrespontime::where('noreg', $request->noreg)->get();
-        if (count($taskid) === 0) {
-            $send['data'] = 'data taskid dari request kosong';
-            return $send;
-        }
-
-        $task3 = $taskid->filter(function ($item) {
-            return $item['taskid'] === '3';
-        })->first();
-        $task4 = $taskid->filter(function ($item) {
-            return $item['taskid'] === '4';
-        })->first();
-        $task5 = $taskid->filter(function ($item) {
-            return $item['taskid'] === '5';
-        })->first();
-
-        if (!$task3 || !$task5) {
-
-            SatsetErrorRespon::create([
-                'uuid' => $request->noreg,
-                'response' => 'TASK iD Tdk lengkap',
-                'jenis' => 'rajal',
-                'error_summary' => 'Task ID Antrean BPJS / SIMRS Tidak Lengkap (Task 3 / 5)'
-            ]);
-
-            $send['data'] = 'TASK iD Tdk lengkap';
-            return $send;
-        }
-
+        // 1. Validasi Diagnosa Medis: Wajib ada sebelum memproses Encounter
         if (empty($request->diagnosa) || count($request->diagnosa) === 0) {
-            SatsetErrorRespon::create([
-                'uuid' => $request->noreg,
-                'response' => 'Diagnosa dokter belum diisi di SIMRS',
-                'jenis' => 'rajal',
-                'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS'
-            ]);
+            SatsetErrorRespon::updateOrCreate(
+                ['uuid' => $request->noreg],
+                [
+                    'response' => ['message' => 'Diagnosa Dokter Belum Diisi di SIMRS (Pengiriman Dibatalkan)'],
+                    'jenis' => 'rajal',
+                    'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS'
+                ]
+            );
 
+            $send['message'] = 'failed';
             $send['data'] = 'Diagnosa dokter belum diisi di SIMRS';
             return $send;
         }
 
-        $antri = Carbon::parse($task3['created_at'])->toIso8601String();
+        // 2. Waktu Pelayanan Antrean / Task ID dengan Fallback Kronologis Berbasis Waktu Kunjungan
+        $taskid = Bpjsrespontime::where('noreg', $request->noreg)->get();
+        $task3 = $taskid->firstWhere('taskid', '3');
+        $task4 = $taskid->firstWhere('taskid', '4');
+        $task5 = $taskid->firstWhere('taskid', '5');
 
-        $start = isset($task4['created_at']) ? Carbon::parse($task4['created_at'])->toIso8601String() : Carbon::parse($task3['created_at'])->addMinutes(3)->toIso8601String();
+        if ($task3 && $task5) {
+            $antri = Carbon::parse($task3['created_at'])->toIso8601String();
+            $start = isset($task4['created_at']) ? Carbon::parse($task4['created_at'])->toIso8601String() : Carbon::parse($task3['created_at'])->addMinutes(3)->toIso8601String();
+            $end = Carbon::parse($task5['created_at'])->toIso8601String();
+        } else {
+            $tglMasuk = Carbon::parse($request->tgl_kunjungan ?? now());
+            $antri = $tglMasuk->toIso8601String();
+            $start = $tglMasuk->copy()->addMinutes(5)->toIso8601String();
+            $end = $tglMasuk->copy()->addMinutes(25)->toIso8601String();
+        }
 
-
-        $end = Carbon::parse($task5['created_at'])->toIso8601String();
-
-
-        // --- TAMBAHKAN 2 BARIS INI PAK ---
         if ($antri > $start) {
             $antri = $start;
         }
@@ -1349,7 +1347,7 @@ class PostKunjunganRajalHelper
                         "coding" => [
                             [
                                 "system" => "http://hl7.org/fhir/sid/icd-10",
-                                "code" => (strlen(trim($value['rs3'])) > 3 && !str_contains($value['rs3'], '.')) ? (substr(trim($value['rs3']), 0, 3) . '.' . substr(trim($value['rs3']), 3)) : trim($value['rs3']),
+                                "code" => strtoupper((strlen(trim($value['rs3'])) > 3 && !str_contains($value['rs3'], '.')) ? (substr(trim($value['rs3']), 0, 3) . '.' . substr(trim($value['rs3']), 3)) : trim($value['rs3'])),
                                 "display" => $value['masterdiagnosa']['rs4'] ?? $value['masterdiagnosa']['rs3'] ?? 'Diagnosis'
                             ]
                         ]
@@ -2059,28 +2057,49 @@ class PostKunjunganRajalHelper
 
     static function carePlan($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
     {
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama'] : ($request->dokter ?? '-');
+        $created = count($request->pemeriksaanfisik ?? []) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String() : Carbon::parse($request->tgl_kunjungan ?? now())->addMinutes(14)->toIso8601String();
 
-        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama'] : '-';
-        $created = count($request->pemeriksaanfisik) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String() : Carbon::parse($request->tgl_kunjungan)->addMinutes(14)->toIso8601String();
-
-        $diagnosaKeperawatan = $request->diagnosakeperawatan;
-
+        $diagnosaKeperawatan = $request->diagnosakeperawatan ?? [];
         $carePlan = [];
 
         if (count($diagnosaKeperawatan) > 0) {
-            $intervensis = $diagnosaKeperawatan[0]['intervensi'];
+            $rawIntervensis = $diagnosaKeperawatan[0]['intervensi'] ?? [];
+            // Deduplikasi intervensi agar tidak ada teks nama intervensi kembar dalam 1 berkas
+            $intervensis = collect($rawIntervensis)
+                ->filter(function ($iv) {
+                    return !empty($iv['masterintervensi']['nama']);
+                })
+                ->unique(function ($iv) {
+                    return trim($iv['masterintervensi']['nama']);
+                })
+                ->values()
+                ->all();
+
             if (count($intervensis) > 0) {
+                $title = "RENCANA RAWAT PASIEN " . ($diagnosaKeperawatan[0]['nama'] ?? 'UMUM');
 
-
-
-                $title = "RENCANA RAWAT PASIEN " . $diagnosaKeperawatan[0]['nama'];
-
-                // $terapeutik = $terapeutik ? $terapeutik->masterintervensi['nama'] : 'Rencana Rawat Pasien';
+                $authorUuid = !empty($diagnosaKeperawatan[0]['petugas']['satset_uuid'])
+                    ? $diagnosaKeperawatan[0]['petugas']['satset_uuid']
+                    : $practitioner_uuid;
+                $authorNama = !empty($diagnosaKeperawatan[0]['petugas']['nama'])
+                    ? $diagnosaKeperawatan[0]['petugas']['nama']
+                    : $nama_practitioner;
 
                 for ($i = 0; $i < count($intervensis); $i++) {
+                    $authorData = [];
+                    if (!empty($authorUuid)) {
+                        $authorData = [
+                            "author" => [
+                                "reference" => "Practitioner/" . $authorUuid,
+                                "display" => $authorNama,
+                            ]
+                        ];
+                    }
+
                     $plan = [
                         "fullUrl" => "urn:uuid:" . self::generateUuid(),
-                        "resource" => [
+                        "resource" => array_merge([
                             "resourceType" => "CarePlan",
                             "status" => "active",
                             "intent" => "plan",
@@ -2096,28 +2115,20 @@ class PostKunjunganRajalHelper
                                 ],
                             ],
                             "title" => $title,
-                            "description" => $intervensis[$i]['masterintervensi']['nama'],
+                            "description" => trim($intervensis[$i]['masterintervensi']['nama']),
                             "subject" => [
                                 "reference" => "Patient/$pasien_uuid",
                                 "display" => "$request->nama",
                             ],
                             "encounter" => ["reference" => "urn:uuid:$encounter"],
                             "created" => $created,
-                            "author" => [
-                                "reference" => "Practitioner/" . $diagnosaKeperawatan[0]['petugas']['satset_uuid'],
-                                "display" => $diagnosaKeperawatan[0]['petugas']['nama'],
-                            ],
-                        ],
+                        ], $authorData),
                         "request" => ["method" => "POST", "url" => "CarePlan"],
                     ];
 
                     $carePlan[] = $plan;
                 }
-            } else {
-                $carePlan = [];
             }
-        } else {
-            $carePlan = [];
         }
 
         return $carePlan;
@@ -2140,9 +2151,11 @@ class PostKunjunganRajalHelper
                     $dt->settings(['formatFunction' => 'translatedFormat']);
                     $waktuPerform = $dt->format('l, j F Y');
 
-                    $petugas_id = $isi->petugas['satset_uuid'] ?? null;
+                    $petugas_id = !empty($isi->petugas['satset_uuid']) ? $isi->petugas['satset_uuid'] : $practitioner_uuid;
+                    $petugas_nama = !empty($isi->petugas['nama']) ? $isi->petugas['nama'] : ($request->datasimpeg['nama'] ?? ($request->dokter ?? '-'));
+
                     $procedure = null;
-                    if ($petugas_id != null) {
+                    if (!empty($petugas_id)) {
                         $procedure =
                             [
                                 "fullUrl" => "urn:uuid:" . self::generateUuid(),
@@ -2184,8 +2197,8 @@ class PostKunjunganRajalHelper
                                     "performer" => [
                                         [
                                             "actor" => [
-                                                "reference" => "Practitioner/" . $isi->petugas['satset_uuid'],
-                                                "display" => $isi->petugas['nama'],
+                                                "reference" => "Practitioner/" . $petugas_id,
+                                                "display" => $petugas_nama,
                                             ],
                                         ],
                                     ],
@@ -3888,7 +3901,7 @@ class PostKunjunganRajalHelper
                                                     "patientInstruction" => $nonRacikan[$j]['aturan'] . " " . $nonRacikan[$j]['keterangan'],
                                                     "timing" => [
                                                         "repeat" => [
-                                                            "frequency" => $nonRacikan[$j]['konsumsi_perhari'] ?? 1,
+                                                            "frequency" => max(1, (int)round((float)($nonRacikan[$j]['konsumsi_perhari'] ?? 1))),
                                                             "period" => 1,
                                                             "periodUnit" => "d",
                                                         ],
@@ -3906,7 +3919,7 @@ class PostKunjunganRajalHelper
                                             ],
                                             "dispenseRequest" => [
                                                 "dispenseInterval" => [
-                                                    "value" => $nonRacikan[$j]['konsumsi_perhari'] ?? 1,
+                                                    "value" => max(1, (int)round((float)($nonRacikan[$j]['konsumsi_perhari'] ?? 1))),
                                                     "unit" => "days",
                                                     "system" => "http://unitsofmeasure.org",
                                                     "code" => "d",
@@ -4052,26 +4065,26 @@ class PostKunjunganRajalHelper
                                                 ],
                                             ],
                                             "daysSupply" => [
-                                                "value" => $nonRacikan[$j]['konsumsi_perhari'] ?? 1,
-                                                "unit" => "Day",
-                                                "system" => "http://unitsofmeasure.org",
-                                                "code" => "d",
-                                            ],
-                                            "whenPrepared" => Carbon::parse($tgl_kirim)->toIso8601String(), // ini otw tgl diterima
-                                            "whenHandedOver" => Carbon::parse($tgl_selesai)->toIso8601String(),
-                                            "dosageInstruction" => [
-                                                [
-                                                    "sequence" => 1,
-                                                    "patientInstruction" => $nonRacikan[$j]['aturan'] . " " . $nonRacikan[$j]['keterangan'],
-                                                    "timing" => [
-                                                        "repeat" => [
-                                                            "frequency" => $nonRacikan[$j]['konsumsi_perhari'] ?? 1,
-                                                            "period" => 1,
-                                                            "periodUnit" => "d",
-                                                        ],
-                                                    ],
-                                                ],
-                                            ],
+                                                 "value" => max(1, (int)round((float)($nonRacikan[$j]['konsumsi_perhari'] ?? 1))),
+                                                 "unit" => "Day",
+                                                 "system" => "http://unitsofmeasure.org",
+                                                 "code" => "d",
+                                             ],
+                                             "whenPrepared" => Carbon::parse($tgl_kirim)->toIso8601String(), // ini otw tgl diterima
+                                             "whenHandedOver" => Carbon::parse($tgl_selesai)->toIso8601String(),
+                                             "dosageInstruction" => [
+                                                 [
+                                                     "sequence" => 1,
+                                                     "patientInstruction" => $nonRacikan[$j]['aturan'] . " " . $nonRacikan[$j]['keterangan'],
+                                                     "timing" => [
+                                                         "repeat" => [
+                                                             "frequency" => max(1, (int)round((float)($nonRacikan[$j]['konsumsi_perhari'] ?? 1))),
+                                                             "period" => 1,
+                                                             "periodUnit" => "d",
+                                                         ],
+                                                     ],
+                                                 ],
+                                             ],
                                         ],
                                         "request" => ["method" => "POST", "url" => "MedicationDispense"],
                                     ];
@@ -4766,6 +4779,33 @@ class PostKunjunganRajalHelper
 
         if (!$selectedType) {
             return null;
+        }
+
+        // Cek apakah pasien sudah memiliki riwayat EpisodeOfCare aktif untuk program penyakit ini dari kunjungan sebelumnya
+        $norm = $request->norm ?? $request->rs2;
+        if (!empty($norm)) {
+            $hasPreviousActiveEoc = KunjunganPoli::where('rs17.rs2', $norm)
+                ->where('rs17.rs1', '!=', $request->noreg ?? $request->rs1)
+                ->where('rs17.rs3', '<', $request->tgl_kunjungan)
+                ->has('satset')
+                ->whereHas('diagnosa.masterdiagnosa', function ($q) use ($selectedType) {
+                    if ($selectedType['code'] === 'TB-SO') {
+                        $q->where('rs1', 'LIKE', 'A15%')->orWhere('rs1', 'LIKE', 'A16%')->orWhere('rs1', 'LIKE', 'A17%')->orWhere('rs1', 'LIKE', 'A18%')->orWhere('rs1', 'LIKE', 'A19%');
+                    } elseif ($selectedType['code'] === 'CKD') {
+                        $q->where('rs1', 'LIKE', 'N18%');
+                    } elseif ($selectedType['code'] === 'CAD') {
+                        $q->where('rs1', 'LIKE', 'I20%')->orWhere('rs1', 'LIKE', 'I21%')->orWhere('rs1', 'LIKE', 'I22%')->orWhere('rs1', 'LIKE', 'I23%')->orWhere('rs1', 'LIKE', 'I24%')->orWhere('rs1', 'LIKE', 'I25%');
+                    } elseif ($selectedType['code'] === 'CNC') {
+                        $q->where('rs1', 'LIKE', 'C%')->orWhere('rs1', 'LIKE', 'D0%')->orWhere('rs1', 'LIKE', 'D1%')->orWhere('rs1', 'LIKE', 'D2%')->orWhere('rs1', 'LIKE', 'D3%')->orWhere('rs1', 'LIKE', 'D4%');
+                    }
+                })
+                ->exists();
+
+            if ($hasPreviousActiveEoc) {
+                // Pasien sudah memiliki EpisodeOfCare aktif pada kunjungan sebelumnya.
+                // Sesuai kaidah FHIR Kemenkes, pada kunjungan kontrol lanjutan tidak membuat POST EpisodeOfCare baru lagi.
+                return null;
+            }
         }
 
         $diag = [];
