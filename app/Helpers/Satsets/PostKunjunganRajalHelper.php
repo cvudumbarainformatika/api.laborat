@@ -1149,7 +1149,7 @@ class PostKunjunganRajalHelper
             $data = [
                 "condition" => [
                     "reference" => "urn:uuid:$uuid",
-                    "display" => $value['masterdiagnosa']['rs4']
+                    "display" => $value['masterdiagnosa']['rs4'] ?? $value['masterdiagnosa']['rs3'] ?? $value['rs4'] ?? 'Diagnosis Klinis'
                 ],
                 "use" => [
                     "coding" => [
