@@ -63,6 +63,7 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekranapracikanrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Gizi\AsuhanGizi;
+use App\Models\Simrs\Penunjang\Gizi\PagtGizi;
 use App\Models\Simrs\Penunjang\Hemodialisa\Intradialitik;
 use App\Models\Simrs\Penunjang\Hemodialisa\PengkajianHemodialisa;
 use App\Models\Simrs\Penunjang\Kamarjenazah\KamarjenazahPermintaan;
@@ -195,6 +196,11 @@ class Kunjunganranap extends Model
     public function asuhangizi()
     {
         return $this->hasMany(AsuhanGizi::class, 'rs1', 'rs1');
+    }
+
+    public function pagt()
+    {
+        return $this->hasMany(PagtGizi::class, 'noreg', 'rs1')->with('petugas');
     }
 
     public function makanpasien()

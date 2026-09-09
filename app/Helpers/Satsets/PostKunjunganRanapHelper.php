@@ -239,6 +239,7 @@ class PostKunjunganRanapHelper
                 },
                 'dischargeplanning',
                 'planningdokter',
+                'pagt',
                 'apotek' => function ($apot) {
                     $apot->whereIn('flag', ['3', '4'])->with([
                         'rincian' => function ($ri) {
@@ -550,6 +551,7 @@ class PostKunjunganRanapHelper
                 },
                 'dischargeplanning',
                 'planningdokter',
+                'pagt',
                 'apotek' => function ($apot) {
                     $apot->whereIn('flag', ['3', '4'])->with([
                         'rincian' => function ($ri) {
@@ -2548,6 +2550,49 @@ class PostKunjunganRanapHelper
                     "entry" => $procRefs
                 ];
             }
+        }
+
+        // Section 3: Diet dan Asuhan Gizi (PAGT) jika ada
+        if (!empty($request->pagt) && count($request->pagt) > 0) {
+            $pagt = $request->pagt[0];
+            $dietDetails = [];
+            if (!empty($pagt->energi)) {
+                $dietDetails[] = "Kebutuhan Energi: " . $pagt->energi;
+            }
+            if (!empty($pagt->status_gizi)) {
+                $dietDetails[] = "Status Gizi: " . trim(str_replace(["\r\n", "\r", "\n"], ", ", $pagt->status_gizi));
+            }
+            if (!empty($pagt->nafsu_makan_ket)) {
+                $dietDetails[] = "Asupan Makanan: " . $pagt->nafsu_makan_ket;
+            }
+            if (!empty($pagt->klinis_ket)) {
+                $dietDetails[] = "Kondisi Klinis: " . $pagt->klinis_ket;
+            }
+            if (!empty($pagt->rw_peny_dhl) && is_array($pagt->rw_peny_dhl)) {
+                $dietDetails[] = "Diet Penyakit: " . implode(', ', $pagt->rw_peny_dhl);
+            }
+            if (!empty($pagt->alergi_makanan_ket)) {
+                $dietDetails[] = "Alergi Makanan: " . $pagt->alergi_makanan_ket;
+            }
+
+            $divDiet = !empty($dietDetails) ? implode('; ', $dietDetails) : 'Asuhan Gizi Terstandar';
+
+            $sections[] = [
+                "title" => "Instruksi Diet dan Asuhan Gizi",
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "42344-2",
+                            "display" => "Discharge diet (narrative)"
+                        ]
+                    ]
+                ],
+                "text" => [
+                    "status" => "additional",
+                    "div" => $divDiet
+                ]
+            ];
         }
 
         return [
