@@ -14,7 +14,7 @@ class RetrySatsetErrorCommand extends Command
      */
     protected $signature = 'satset:retry-error 
                             {--limit=10 : Jumlah kunjungan yang akan di-retry per eksekusi}
-                            {--year=2026 : Filter tahun nomor registrasi (contoh: 2026, atau all)}
+                            {--year= : Filter tahun nomor registrasi (default: tahun berjalan, atau all)}
                             {--jenis= : Filter jenis modul (rajal, ranap, igd, hd)}
                             {--from= : Tanggal awal error (YYYY-MM-DD)}
                             {--to= : Tanggal akhir error (YYYY-MM-DD)}
@@ -44,7 +44,7 @@ class RetrySatsetErrorCommand extends Command
         }
 
         $limit = (int) $this->option('limit');
-        $year = $this->option('year');
+        $year = $this->option('year') ?: date('Y'); // Dinamis otomatis mengikuti tahun saat ini (2026, 2027, 2028, dst)
         $jenis = $this->option('jenis');
         $from = $this->option('from');
         $to = $this->option('to');
