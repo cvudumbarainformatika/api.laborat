@@ -280,13 +280,25 @@ class RadiologimetaController extends Controller
             return new JsonResponse(['message' => 'Maaf, Data telah dikunci'], 500);
         }
 
-        $hapus = $cari->delete();
-        if (!$hapus) {
-            return new JsonResponse(['message' => 'gagal dihapus'], 500);
-        }
+        $notatrans = $cari->rs2;
 
-        $nota = Transpermintaanradiologi::select('rs2 as nota')->where('rs1', $request->noreg)
-            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
-        return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
+        DB::beginTransaction();
+        try {
+            if (!empty($notatrans)) {
+                DB::table('rs48_sem')->where('rs2', $notatrans)->delete();
+                Transradiologi::where('rs2', $notatrans)->delete();
+            }
+
+            $cari->delete();
+
+            DB::commit();
+
+            $nota = Transpermintaanradiologi::select('rs2 as nota')->where('rs1', $request->noreg)
+                ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+            return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse(['message' => 'gagal dihapus: ' . $e->getMessage()], 500);
+        }
     }
 }
