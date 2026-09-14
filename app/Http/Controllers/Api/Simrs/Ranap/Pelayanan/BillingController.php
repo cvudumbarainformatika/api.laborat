@@ -9,8 +9,9 @@ use Illuminate\Support\Facades\DB;
 
 class BillingController extends Controller
 {
-    /**
+/**
      * Get Rekap Billing Rawat Inap
+     * Mengadopsi 100% logika billing.php legacy
      */
     public function getRekapBilling(Request $request)
     {
@@ -74,6 +75,12 @@ class BillingController extends Controller
             } else {
                 $umurStr = $diff->d . ' hari';
             }
+        }
+
+        $tglmasukIgd = null;
+        $cekIgd = DB::table('rs17')->where('rs1', $noreg)->select('rs3')->first();
+        if ($cekIgd) {
+            $tglmasukIgd = $cekIgd->rs3;
         }
 
         $tarifKamarPerHari = 0;
@@ -150,36 +157,26 @@ class BillingController extends Controller
         $rs35xFirst = DB::table('rs35x')
             ->where('rs1', $noreg)
             ->where('rs3', 'K1#')
-            ->orderBy('rs4', 'asc')
+            ->orderBy('rs4', 'desc')
             ->select('rs8 as kodesistembayar', 'rs17 as kelas')
             ->first();
 
-        if ($rs35xFirst && $flagruangan && $rs35xFirst->kodesistembayar == $flagruangan) {
+        if ($rs35xFirst) {
             $tarifA1 = DB::table('rs30tarif')->where('rs3', 'A1#')->first();
             if ($tarifA1) {
-                switch ($rs35xFirst->kelas) {
-                    case '3':
-                        $administrasi = (float)$tarifA1->rs6 + (float)$tarifA1->rs7;
-                        break;
-                    case '2':
-                        $administrasi = (float)$tarifA1->rs8 + (float)$tarifA1->rs9;
-                        break;
-                    case '1':
-                    case 'IC':
-                    case 'ICC':
-                    case 'NICU':
-                    case 'IN':
-                        $administrasi = (float)$tarifA1->rs10 + (float)$tarifA1->rs11;
-                        break;
-                    case 'Utama':
-                        $administrasi = (float)$tarifA1->rs12 + (float)$tarifA1->rs13;
-                        break;
-                    case 'VIP':
-                        $administrasi = (float)$tarifA1->rs14 + (float)$tarifA1->rs15;
-                        break;
-                    case 'VVIP':
-                        $administrasi = (float)$tarifA1->rs16 + (float)$tarifA1->rs17;
-                        break;
+                $k = $rs35xFirst->kelas;
+                if ($k == '3') {
+                    $administrasi = (float)$tarifA1->rs6 + (float)$tarifA1->rs7;
+                } elseif ($k == '2') {
+                    $administrasi = (float)$tarifA1->rs8 + (float)$tarifA1->rs9;
+                } elseif (in_array($k, ['1', 'IC', 'ICC', 'NICU', 'IN', 'HCU'])) {
+                    $administrasi = (float)$tarifA1->rs10 + (float)$tarifA1->rs11;
+                } elseif ($k == 'Utama') {
+                    $administrasi = (float)$tarifA1->rs12 + (float)$tarifA1->rs13;
+                } elseif ($k == 'VIP') {
+                    $administrasi = (float)$tarifA1->rs14 + (float)$tarifA1->rs15;
+                } elseif ($k == 'VVIP') {
+                    $administrasi = (float)$tarifA1->rs16 + (float)$tarifA1->rs17;
                 }
             }
         }
@@ -198,9 +195,11 @@ class BillingController extends Controller
                     WHEN 'IN' THEN 'Kelas Intermediate'  
                     WHEN '2' THEN 'Kelas II' 
                     WHEN '1' THEN 'Kelas I'         
+                    WHEN 'HCU' THEN 'HCU'
                     WHEN 'Utama' THEN 'Utama'          
                     WHEN 'VIP' THEN 'VIP'      
                     WHEN 'VVIP' THEN 'VVIP' 
+                    WHEN 'PS' THEN 'Kelas Presidential Suite'
                     ELSE rs17
                 END as kelas")
             )
@@ -217,167 +216,166 @@ class BillingController extends Controller
         $akomodasiList = $akomodasiQuery->groupBy('rs17', 'rs7', 'rs14')->get();
         $akomodasiTotal = (float)$akomodasiList->sum('subtotal');
 
-        // 3. Jasa Dokter
-        $tindakanDokterQuery = DB::table('rs73')
-            ->join('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-            ->join('rs21', 'rs21.rs1', '=', DB::raw("SUBSTRING_INDEX(rs73.rs8, ';', 1)"))
-            ->where('rs21.rs13', '1')
-            ->where('rs73.rs1', $noreg)
-            ->where('rs73.rs22', '<>', 'POL014');
+        // 3. Biaya Pembuatan Dokumen dan Materai
+        $materaiRow = DB::select("select sum(rs5) as subtotal from rsjr where rs1 = ? and rs7 <> 'IRD'", [$noreg]);
+        $materai = $materaiRow ? (float)($materaiRow[0]->subtotal ?? 0) : 0;
 
-        if ($flagruangan) {
-            $tindakanDokterQuery->where('rs73.rs22', $flagruangan);
-        }
-        $tindakanDokterSubtotal = (float)$tindakanDokterQuery->sum(DB::raw('(rs73.rs7 + rs73.rs13) * rs73.rs5'));
+        // 4. Jasa / Tindakan Dokter
+        $tindakanDokterRow = DB::select("
+            select sum((rs73.rs7+rs73.rs13)*rs73.rs5) as subtotal
+            from rs73,rs30,rs21 
+            where rs30.rs1=rs73.rs4 and rs21.rs1=SUBSTRING_INDEX(rs73.rs8,';',1)
+              and rs21.rs13='1' and rs73.rs1 = ?
+              and rs73.rs22!='POL014' and rs73.rs22!='OPERASI'
+        ", [$noreg]);
+        $tindakanDokterSubtotal = $tindakanDokterRow ? (float)($tindakanDokterRow[0]->subtotal ?? 0) : 0;
 
-        // 4. Visite
-        $visiteQuery = DB::table('rs140')
-            ->join('rs21', 'rs21.rs1', '=', 'rs140.rs3')
-            ->join('rs30tarif', 'rs30tarif.rs3', '=', 'rs140.rs6')
-            ->where('rs140.rs1', $noreg);
+        // 5. Visite / Konsultasi / Oncall Dokter
+        $visiteRow = DB::select("
+            select sum(rs140.rs4+rs140.rs5) as subtotal 
+            from rs140,rs21,rs30tarif
+            where rs21.rs1=rs140.rs3 and rs30tarif.rs3=rs140.rs6 and rs140.rs1 = ?
+        ", [$noreg]);
+        $visiteDokterSubtotal = $visiteRow ? (float)($visiteRow[0]->subtotal ?? 0) : 0;
 
-        if ($flagruangan) {
-            $visiteQuery->where('rs140.rs8', $flagruangan);
-        }
-        $visiteDokterSubtotal = (float)$visiteQuery->sum(DB::raw('rs140.rs4 + rs140.rs5'));
+        // 6. Tindakan Keperawatan
+        $tindakanPerawatRow = DB::select("
+            select sum((rs73.rs7+rs73.rs13)*rs73.rs5) as subtotal
+            from rs73,rs30,rs21 
+            where rs30.rs1=rs73.rs4 and rs21.rs1=SUBSTRING_INDEX(rs73.rs8,';',1)
+              and (rs21.rs13='2' or rs21.rs13='3') and rs73.rs1 = ?
+              and rs73.rs22!='POL014' and rs73.rs22!='OPERASI'
+        ", [$noreg]);
+        $tindakanPerawatSubtotal = $tindakanPerawatRow ? (float)($tindakanPerawatRow[0]->subtotal ?? 0) : 0;
 
-        // 5. Tindakan Perawat
-        $tindakanPerawatQuery = DB::table('rs73')
-            ->join('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-            ->join('rs21', 'rs21.rs1', '=', DB::raw("SUBSTRING_INDEX(rs73.rs8, ';', 1)"))
-            ->whereIn('rs21.rs13', ['2', '3'])
-            ->where('rs73.rs1', $noreg)
-            ->where('rs73.rs22', '<>', 'POL014');
+        // 7. Asuhan Gizi
+        $asuhanGiziRow = DB::select("
+            select sum(rs202.rs4+rs202.rs5) as subtotal 
+            from rs202,rs30tarif
+            where rs30tarif.rs1=rs202.rs3 and rs202.rs1 = ? and rs30tarif.rs1='K00013'
+        ", [$noreg]);
+        $asuhanGiziSubtotal = $asuhanGiziRow ? (float)($asuhanGiziRow[0]->subtotal ?? 0) : 0;
 
-        if ($flagruangan) {
-            $tindakanPerawatQuery->where('rs73.rs22', $flagruangan);
-        }
-        $tindakanPerawatSubtotal = (float)$tindakanPerawatQuery->sum(DB::raw('(rs73.rs7 + rs73.rs13) * rs73.rs5'));
+        // 8. Makan Pasien
+        $makanPasienRow = DB::select("
+            select sum(rs202.rs4+rs202.rs5) as subtotal 
+            from rs202,rs30tarif
+            where rs30tarif.rs1=rs202.rs3 and rs202.rs1 = ? and (rs30tarif.rs1='K00004' or rs30tarif.rs1='K00003')
+        ", [$noreg]);
+        $makanPasienSubtotal = $makanPasienRow ? (float)($makanPasienRow[0]->subtotal ?? 0) : 0;
 
-        // 6. Asuhan Gizi
-        $giziQuery = DB::table('rs202')
-            ->join('rs30tarif', 'rs30tarif.rs1', '=', 'rs202.rs3')
-            ->where('rs202.rs1', $noreg)
-            ->where('rs30tarif.rs1', 'K00013');
+        // 9. Biaya Oksigen
+        $oksigenRow = DB::select("
+            select sum((rs205.rs4+rs205.rs5)*rs205.rs6) as subtotal 
+            from rs205,rs30tarif
+            where rs30tarif.rs1=rs205.rs3 and rs205.rs1 = ?
+        ", [$noreg]);
+        $oksigenSubtotal = $oksigenRow ? (float)($oksigenRow[0]->subtotal ?? 0) : 0;
 
-        if ($flagruangan) {
-            $giziQuery->where('rs202.rs8', $flagruangan);
-        }
-        $asuhanGiziSubtotal = (float)$giziQuery->sum(DB::raw('rs202.rs4 + rs202.rs5'));
+        // 10. Jasa Keperawatan
+        $jasaKepRow = DB::select("
+            select sum(rs203.rs4+rs203.rs5) as subtotal 
+            from rs203,rs30tarif
+            where rs30tarif.rs1=rs203.rs3 and rs203.rs1 = ?
+        ", [$noreg]);
+        $jasaKeperawatanSubtotal = $jasaKepRow ? (float)($jasaKepRow[0]->subtotal ?? 0) : 0;
 
-        // 7. Makan Pasien
-        $makanQuery = DB::table('rs202')
-            ->join('rs30tarif', 'rs30tarif.rs1', '=', 'rs202.rs3')
-            ->where('rs202.rs1', $noreg)
-            ->whereIn('rs30tarif.rs1', ['K00004', 'K00003']);
+        // 11. Pelayanan Penunjang
+        // Laboratorium
+        $labRow = DB::select("
+            select sum(subtotalx) as subtotal from(
+                select '' as flag,rs51.rs2 as nota,rs51.rs3 as tgl,rs51.rs4 as kode,rs51.rs8 as kodedokter,rs49.rs2 as keterangan,(rs51.rs6+rs51.rs13) as biaya,
+                rs51.rs5 as jml,sum((rs51.rs6+rs51.rs13)*rs51.rs5) as subtotalx 
+                from rs49,rs51 
+                where rs49.rs1=rs51.rs4 and rs49.rs21='' and rs51.rs1 = ? and rs51.rs18<>'' and rs51.rs23!='POL014' 
+                group by rs51.rs2
+                union all
+                select 'x' as flag,rs51.rs2 as nota,rs51.rs3 as tgl,rs51.rs4 as kode,rs51.rs8 as kodedokter,rs49.rs21 as keterangan,(rs51.rs6+rs51.rs13) as biaya,
+                rs51.rs5 as jml,((rs51.rs6+rs51.rs13)*rs51.rs5) as subtotalx 
+                from rs49,rs51 
+                where rs49.rs1=rs51.rs4 and rs49.rs21<>'' and rs51.rs1 = ? and rs51.rs18<>'' and rs51.rs23!='POL014' 
+                group by rs51.rs2,rs49.rs21
+            ) as vx
+        ", [$noreg, $noreg]);
+        $lab1 = $labRow ? (float)($labRow[0]->subtotal ?? 0) : 0;
 
-        if ($flagruangan) {
-            $makanQuery->where('rs202.rs8', $flagruangan);
-        }
-        $makanPasienSubtotal = (float)$makanQuery->sum(DB::raw('rs202.rs4 + rs202.rs5'));
-
-        // 8. Oksigen
-        $oksigenQuery = DB::table('rs205')
-            ->join('rs30tarif', 'rs30tarif.rs1', '=', 'rs205.rs3')
-            ->where('rs205.rs1', $noreg);
-
-        if ($flagruangan) {
-            $oksigenQuery->where('rs205.rs8', $flagruangan);
-        }
-        $oksigenSubtotal = (float)$oksigenQuery->sum(DB::raw('(rs205.rs4 + rs205.rs5) * rs205.rs6'));
-
-        // 9. Jasa Keperawatan
-        $jasaKepQuery = DB::table('rs203')
-            ->join('rs30tarif', 'rs30tarif.rs1', '=', 'rs203.rs3')
-            ->where('rs203.rs1', $noreg);
-
-        if ($flagruangan) {
-            $jasaKepQuery->where('rs203.rs8', $flagruangan);
-        }
-        $jasaKeperawatanSubtotal = (float)$jasaKepQuery->sum(DB::raw('rs203.rs4 + rs203.rs5'));
-
-        // 10. Penunjang
-        $labPemeriksaanQuery = DB::table('rs51')
-            ->join('rs49', 'rs49.rs1', '=', 'rs51.rs4')
-            ->where('rs51.rs1', $noreg)
-            ->where('rs51.lunas', '<>', '1')
-            ->where('rs51.rs23', '<>', 'POL014')
-            ->where('rs51.rs21', '<>', '');
-
-        if ($flagruangan) {
-            $labPemeriksaanQuery->where('rs51.rs23', $flagruangan);
-        }
-        $lab1 = (float)$labPemeriksaanQuery->sum(DB::raw('(rs51.rs6 + rs51.rs13) * rs51.rs5'));
-
-        $lab2Query = DB::table('rs73')
-            ->join('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-            ->where('rs73.rs1', $noreg)
-            ->where('rs73.rs22', 'LAB');
-        if ($flagruangan) {
-            $lab2Query->where('rs73.rs22', $flagruangan);
-        }
-        $lab2 = (float)$lab2Query->sum(DB::raw('(rs73.rs7 + rs73.rs13) * rs73.rs5'));
+        $lab2Row = DB::select("
+            select sum((rs73.rs7+rs73.rs13)*rs73.rs5) as subtotal
+            from rs73,rs30 
+            where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and rs73.rs22='LAB'
+        ", [$noreg]);
+        $lab2 = $lab2Row ? (float)($lab2Row[0]->subtotal ?? 0) : 0;
         $laboratoriumTotal = $lab1 + $lab2;
 
-        $radQuery = DB::table('rs48')
-            ->join('rs47', 'rs47.rs1', '=', 'rs48.rs4')
-            ->where('rs48.rs1', $noreg)
-            ->where('rs48.rs26', '<>', 'POL014');
-        if ($flagruangan) {
-            $radQuery->where('rs48.rs26', $flagruangan);
-        }
-        $radiologiTotal = (float)$radQuery->sum(DB::raw('(rs48.rs6 + rs48.rs8) * rs48.rs24'));
+        // Radiologi
+        $radRow = DB::select("
+            select sum((rs48.rs6+rs48.rs8)*rs48.rs24) as subtotal 
+            from rs48,rs47 
+            where rs47.rs1=rs48.rs4 and rs48.rs1 = ? and rs48.rs26!='POL014'
+        ", [$noreg]);
+        $radiologiTotal = $radRow ? (float)($radRow[0]->subtotal ?? 0) : 0;
 
-        $op1Query = DB::table('rs54')
-            ->join('rs53', 'rs53.rs1', '=', 'rs54.rs4')
-            ->where('rs54.rs1', $noreg)
-            ->where('rs54.rs15', '<>', 'POL014');
-        if ($flagruangan) {
-            $op1Query->where('rs54.rs15', $flagruangan);
-        }
-        $operasi1 = (float)$op1Query->sum(DB::raw('(rs54.rs5 + rs54.rs6 + rs54.rs7) * rs54.rs8'));
+        // Endoscope
+        $endoRow = DB::select("
+            select sum(subtotal) as subtotal from (
+                select sum(rs5) as subtotal from rs246 where rs1 = ?
+                union all
+                select sum((rs73.rs7+rs73.rs13)*rs73.rs5) as subtotal
+                from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and (rs73.rs22='POL031')
+            ) as vendoscope
+        ", [$noreg, $noreg]);
+        $endoscopyTotal = $endoRow ? (float)($endoRow[0]->subtotal ?? 0) : 0;
 
-        $op2Query = DB::table('rs73')
-            ->join('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-            ->where('rs73.rs1', $noreg)
-            ->where('rs73.rs22', 'OPERASI');
-        if ($flagruangan) {
-            $op2Query->where('rs73.rs22', $flagruangan);
-        }
-        $operasi2 = (float)$op2Query->sum(DB::raw('(rs73.rs7 + rs73.rs13) * rs73.rs5'));
-        $operasiTotal = $operasi1 + $operasi2;
+        // Operasi
+        $operasiRow = DB::select("
+            select sum(subtotal) as subtotal from (
+                select sum((rs54.rs5+rs54.rs6+rs54.rs7)*rs54.rs8) as subtotal
+                from rs54,rs53 where rs53.rs1=rs54.rs4 and rs54.rs1 = ?
+                and (rs54.rs15 in ('BG','BR','DA','FA','IC','ICC','MA','ME','WK','WKUT','WKVVIP','WKKB','KA','ISHK','TR','SKR','ASK','TLP'))
+                union all
+                select sum((rs226.rs5+rs226.rs6+rs226.rs7)*rs226.rs8) as subtotal
+                from rs226,rs53 where rs53.rs1=rs226.rs4 and rs226.rs1 = ?
+                and (rs226.rs15 in ('BG','BR','DA','FA','IC','ICC','MA','ME','WK','WKUT','WKVVIP','WKKB','KA','ISHK','TR','SKR','ASK','TLP'))
+            ) as v_operasi
+        ", [$noreg, $noreg]);
+        $operasiTotal = $operasiRow ? (float)($operasiRow[0]->subtotal ?? 0) : 0;
 
-        $fisioQuery = DB::table('rs73')
-            ->join('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-            ->where('rs73.rs1', $noreg)
-            ->where('rs73.rs22', 'FISIO');
-        if ($flagruangan) {
-            $fisioQuery->where('rs73.rs22', $flagruangan);
-        }
-        $fisioterapiTotal = (float)$fisioQuery->sum(DB::raw('(rs73.rs7 + rs73.rs13) * rs73.rs5'));
+        // Ruang RR
+        $operasi2Row = DB::select("
+            select sum(subtotal) as subtotal from (
+                select sum((rs73.rs7+rs73.rs13)*rs73.rs5) as subtotal
+                from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and rs73.rs22='OPERASI'
+                union all
+                select sum((rs73.rs7+rs73.rs13)*rs73.rs5) as subtotal
+                from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and rs73.rs22='OPERASIIRD'
+            ) as v_tindakan
+        ", [$noreg, $noreg]);
+        $ruangRrTotal = $operasi2Row ? (float)($operasi2Row[0]->subtotal ?? 0) : 0;
 
-        $hdQuery = DB::table('rs73')
-            ->join('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-            ->where('rs73.rs1', $noreg)
-            ->whereIn('rs73.rs22', ['POL024', 'POL026', 'PEN005']);
-        if ($flagruangan) {
-            $hdQuery->where('rs73.rs22', $flagruangan);
-        }
-        $hdCardioEegTotal = (float)$hdQuery->sum(DB::raw('(rs73.rs7 + rs73.rs13) * rs73.rs5'));
+        // Fisioterapi
+        $fisioRow = DB::select("
+            select sum(if((rs73.rs25<>'POL014' and rs73.rs25<>'') or rs73.rs25='',((rs73.rs7+rs73.rs13)*rs73.rs5),0)) as subtotal
+            from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and rs73.rs22='FISIO'
+        ", [$noreg]);
+        $fisioterapiTotal = $fisioRow ? (float)($fisioRow[0]->subtotal ?? 0) : 0;
 
+        // Hemodialisa
+        $hdRow = DB::select("
+            select sum(if((rs73.rs25<>'POL014' and rs73.rs25<>'') or rs73.rs25='',((rs73.rs7+rs73.rs13)*rs73.rs5),0)) as subtotal
+            from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and rs73.rs22='PEN005'
+        ", [$noreg]);
+        $hemodialisaTotal = $hdRow ? (float)($hdRow[0]->subtotal ?? 0) : 0;
+
+        // Penunjang Lain Dinamis
         $penunjangLainList = [];
-        $masterPenunjangLain = DB::table('rs19')->where('penunjang_lain', '1')->get();
         $totalPenunjangLainDinamis = 0;
+        $masterPenunjangLain = DB::table('rs19')->where('penunjang_lain', '1')->get();
         foreach ($masterPenunjangLain as $mpl) {
-            $subMplQuery = DB::table('rs73')
-                ->join('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-                ->where('rs73.rs1', $noreg)
-                ->where('rs73.rs22', $mpl->rs1);
-            if ($flagruangan) {
-                $subMplQuery->where('rs73.rs22', $flagruangan);
-            }
-            $subMpl = (float)$subMplQuery->sum(DB::raw('(rs73.rs7 + rs73.rs13) * rs73.rs5'));
-            
+            $subMplRow = DB::select("
+                select sum(if((rs73.rs25<>'POL014' and rs73.rs25<>'') or rs73.rs25='',((rs73.rs7+rs73.rs13)*rs73.rs5),0)) as subtotal
+                from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and rs73.rs22 = ?
+            ", [$noreg, $mpl->rs1]);
+            $subMpl = $subMplRow ? (float)($subMplRow[0]->subtotal ?? 0) : 0;
             $penunjangLainList[] = [
                 'kode' => $mpl->rs1,
                 'nama' => $mpl->rs2,
@@ -386,103 +384,298 @@ class BillingController extends Controller
             $totalPenunjangLainDinamis += $subMpl;
         }
 
-        $darahQuery = DB::table('rs231')
-            ->where('rs1', $noreg)
-            ->where('rs14', '<>', 'POL014');
-        if ($flagruangan) {
-            $darahQuery->where('rs14', $flagruangan);
-        }
-        $darahTotal = (float)$darahQuery->sum(DB::raw('rs12 + rs13'));
+        // Cardio
+        $cardioRow = DB::select("
+            select sum((rs73.rs7+rs73.rs13)*rs73.rs5) as subtotal
+            from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and (rs73.rs22='POL026')
+        ", [$noreg]);
+        $cardioTotal = $cardioRow ? (float)($cardioRow[0]->subtotal ?? 0) : 0;
 
-        $totalPenunjang = $laboratoriumTotal + $radiologiTotal + $operasiTotal + $fisioterapiTotal + $hdCardioEegTotal + $totalPenunjangLainDinamis + $darahTotal;
+        // EEG
+        $eegRow = DB::select("
+            select sum((rs73.rs7+rs73.rs13)*rs73.rs5) as subtotal
+            from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and (rs73.rs22='POL024')
+        ", [$noreg]);
+        $eegTotal = $eegRow ? (float)($eegRow[0]->subtotal ?? 0) : 0;
 
-        // 11. Farmasi
-        $farmasiBindings = [$noreg, $noreg, $noreg, $noreg];
-        $farmasiSql = "
-            SELECT round(sum(subtotalx),0) as subtotal FROM (
-                SELECT sum((rs38.rs6*rs38.rs8)+rs38.rs10) as subtotalx 
-                FROM rs38, rs32, rs9 
-                WHERE rs32.rs1=rs38.rs4 AND rs38.rs1 = ? AND rs38.lunas <> '1' 
-                  AND rs9.rs1=rs38.rs21 AND rs38.rs25='CENTRAL'
-                UNION ALL
-                SELECT IF(rs39.rs8>1, sum((rs40.rs7*rs40.rs5)+rs39.rs8), sum((rs40.rs7*rs40.rs5))) as subtotalx 
-                FROM rs39, rs40, rs32, rs9 
-                WHERE rs39.rs1=rs40.rs1 AND rs32.rs1=rs40.rs4 AND rs39.rs1 = ? AND rs39.lunas <> '1' 
-                  AND rs9.rs1=rs39.rs16 AND rs39.rs19='CENTRAL'
-                UNION ALL					
-                SELECT sum((rs62.rs6*rs62.rs8)+rs62.rs10) as subtotalx 
-                FROM rs62, rs32, rs9 
-                WHERE rs32.rs1=rs62.rs4 AND rs62.rs1 = ? AND rs62.lunas <> '1' 
-                  AND rs9.rs1=rs62.rs21 AND rs62.rs25='CENTRAL'
-                UNION ALL
-                SELECT IF(rs63.rs8>1, sum((rs64.rs7*rs64.rs5)+rs63.rs8), sum((rs64.rs7*rs64.rs5))) as subtotalx 
-                FROM rs63, rs64, rs32, rs9 
-                WHERE rs63.rs1=rs64.rs1 AND rs32.rs1=rs64.rs4 AND rs63.rs1 = ? AND rs63.lunas <> '1' 
-                  AND rs9.rs1=rs63.rs16 AND rs63.rs19='CENTRAL'
+        // Psikologi
+        $psikologiRow = DB::select("
+            select sum((psikologi_trans.rs7+psikologi_trans.rs13)*psikologi_trans.rs5) as subtotal
+            from psikologi_trans,rs30 where rs30.rs1=psikologi_trans.rs4 and psikologi_trans.rs1 = ?
+        ", [$noreg]);
+        $psikologiTotal = $psikologiRow ? (float)($psikologiRow[0]->subtotal ?? 0) : 0;
+
+        // Biaya Penggunaan Darah
+        $darahRow = DB::select("
+            select sum(rs12+rs13+biayalain2) as subtotal 
+            from rs231 where rs1 = ? and rs14<>'POL014'
+        ", [$noreg]);
+        $darahTotal = $darahRow ? (float)($darahRow[0]->subtotal ?? 0) : 0;
+
+        // Perawatan Jenasah
+        $jenasahRow = DB::select("
+            select sum(subtotal) as subtotal from(
+                select sum(rs275.rs5+rs275.rs6) as subtotal from rs275 where rs275.rs1 = ? and rs275.rs7<>'POL014'
+                union all
+                select sum(rs273.rs6+rs273.rs7) as subtotal from rs273,rs30 where rs273.rs5=rs30.rs1 and rs273.rs1 = ? and rs273.rs14<>'POL014'
             ) as vx
-        ";
-        $farmasiRaw = DB::select($farmasiSql, $farmasiBindings);
-        $farmasiKotor = $farmasiRaw ? (float)($farmasiRaw[0]->subtotal ?? 0) : 0;
+        ", [$noreg, $noreg]);
+        $jenasahTotal = $jenasahRow ? (float)($jenasahRow[0]->subtotal ?? 0) : 0;
 
-        $returFarmasi = (float)DB::table('rs87')
-            ->join('rs88', 'rs88.rs1', '=', 'rs87.rs1')
-            ->join('rs32', 'rs32.rs1', '=', 'rs88.rs2')
-            ->where('rs87.rs7', $noreg)
-            ->sum(DB::raw('rs88.rs3 * rs88.rs4'));
+        // Biaya Ambulan
+        $ambulanRow = DB::select("
+            SELECT SUM(subtotal) AS subtotal FROM (
+                SELECT SUM(rs2 + rs15 + rs16 + rs17 + rs18 + rs23 + rs26 + rs30) AS subtotal
+                FROM rs283 WHERE rs1 = ? AND rs20 <> 'POL014'
+                UNION ALL
+                SELECT SUM(rs7 + rs11) AS subtotal FROM rs35 WHERE rs3 = 'AB#' AND rs1 = ?
+            ) AS v_ambulan
+        ", [$noreg, $noreg]);
+        $ambulanTotal = $ambulanRow ? (float)($ambulanRow[0]->subtotal ?? 0) : 0;
 
-        $farmasiTotal = max(0, $farmasiKotor - $returFarmasi);
+        // Biaya Apheresis
+        $apheresisRow = DB::select("
+            select sum(subtotalx) as subtotal from (
+                select round(sum(tapheresis.js+tapheresis.jp)) as subtotalx
+                from tpermintaanapheresis,tapheresis
+                where tpermintaanapheresis.noreg=tapheresis.noreg and tpermintaanapheresis.flag=1 and tpermintaanapheresis.noreg = ?
+                group by tpermintaanapheresis.nota_permintaan
+                union all
+                select round(sum(trans_darahApheresis.rs10+trans_darahApheresis.rs11)) as subtotalx
+                from tpermintaanapheresis,trans_darahApheresis
+                where tpermintaanapheresis.noreg=trans_darahApheresis.rs1 and tpermintaanapheresis.flag=1 and tpermintaanapheresis.noreg = ?
+                group by tpermintaanapheresis.nota_permintaan
+            ) as wew
+        ", [$noreg, $noreg]);
+        $apheresisTotal = $apheresisRow ? (float)($apheresisRow[0]->subtotal ?? 0) : 0;
 
-        // 12. IRD
-        $irdKarcis = 0;
-        $adaIrd = DB::table('rs17')
-            ->where('rs1', $noreg)
-            ->exists();
-        if ($adaIrd) {
-            $irdKarcis = 8000;
+        // Cathlab
+        $cathlabRow = DB::select("
+            select sum(cathlab.js+cathlab.jp) as subtotal
+            from cathlab_req
+            left join cathlab on cathlab_req.nota=cathlab.nota
+            where cathlab_req.noreg = ? and cathlab_req.kdruang !='POL014'
+        ", [$noreg]);
+        $cathlabTotal = $cathlabRow ? (float)($cathlabRow[0]->subtotal ?? 0) : 0;
+
+        // Penunjang Keluar
+        $penunjangKeluarRow = DB::select("
+            select sum((harga_sarana+harga_pelayanan)*jumlah) as subtotal
+            from lab_keluar
+            where noreg = ? and ruangan !='POL014'
+        ", [$noreg]);
+        $penunjangKeluarTotal = $penunjangKeluarRow ? (float)($penunjangKeluarRow[0]->subtotal ?? 0) : 0;
+
+        $totalPenunjang = $laboratoriumTotal + $radiologiTotal + $endoscopyTotal + $operasiTotal + $ruangRrTotal
+            + $fisioterapiTotal + $hemodialisaTotal + $totalPenunjangLainDinamis + $cardioTotal + $eegTotal
+            + $psikologiTotal + $darahTotal + $jenasahTotal + $ambulanTotal + $apheresisTotal + $cathlabTotal + $penunjangKeluarTotal;
+
+        // 13. Biaya Farmasi / Obat (Ranap)
+        $farmasiRsRow = DB::select("
+            select round(sum(subtotalx),0) as subtotal from(
+                select sum((round(rs38.rs6,0)*rs38.rs8)+rs38.rs10) as subtotalx from rs38,rs32,rs9 where rs32.rs1=rs38.rs4 and rs38.rs1 = ? and rs38.lunas<>'1' and rs9.rs1=rs38.rs21 and (rs38.rs25='CENTRAL') and rs38.rs24<>'IRD'
+                union all
+                select IF(rs39.rs8>1,sum((round(rs40.rs7,0)*rs40.rs5)),sum((round(rs40.rs7,0)*rs40.rs5))) as subtotalx from rs39,rs40,rs32,rs9 where rs39.rs2=rs40.rs2 and rs32.rs1=rs40.rs4 and rs39.rs1 = ? and rs39.lunas<>'1' and rs9.rs1=rs39.rs16 and (rs39.rs19='CENTRAL') and rs39.rs18<>'IRD'
+                union all
+                select sum((round(rs62.rs6,0)*rs62.rs8)+rs62.rs10) as subtotalx from rs62,rs32,rs9 where rs32.rs1=rs62.rs4 and rs62.rs1 = ? and rs62.lunas<>'1' and rs9.rs1=rs62.rs21 and (rs62.rs25='CENTRAL') and rs62.rs24<>'IRD'
+                union all
+                select IF(rs63.rs8>1,sum((round(rs64.rs7,0)*rs64.rs5)),sum((round(rs64.rs7,0)*rs64.rs5))) as subtotalx from rs63,rs64,rs32,rs9 where rs63.rs2=rs64.rs2 and rs32.rs1=rs64.rs4 and rs63.rs1 = ? and rs63.lunas<>'1' and rs9.rs1=rs63.rs16 and (rs63.rs19='CENTRAL') and rs63.rs18<>'IRD'
+                union all
+                select sum(rs8) as subtotalx from rs39 where rs1 = ? and rs18<>'IRD' and rs19='CENTRAL' and lunas<>'1'
+                union all
+                select sum(rs8) as subtotalx from rs63 where rs1 = ? and rs18<>'IRD' and rs19='CENTRAL' and lunas<>'1'
+            ) as vx
+        ", [$noreg, $noreg, $noreg, $noreg, $noreg, $noreg]);
+        $farmasiRs = $farmasiRsRow ? (float)($farmasiRsRow[0]->subtotal ?? 0) : 0;
+
+        $farmasiNewRow = DB::connection('farmasi')->select("
+            select sum(subtotal) as subtotal from (
+                select sum(round(resep_keluar_r.harga_jual*resep_keluar_r.jumlah+resep_keluar_r.nilai_r)) as subtotal 
+                from resep_keluar_h 
+                left join resep_keluar_r on resep_keluar_h.noresep=resep_keluar_r.noresep 
+                where resep_keluar_h.noreg = ? and resep_keluar_h.ruangan!='POL014' and (resep_keluar_h.depo='Gd-04010102' or resep_keluar_h.depo='Gd-04010103')
+                union all
+                select sum(round(resep_keluar_racikan_r.harga_jual*resep_keluar_racikan_r.jumlah)+(resep_keluar_racikan_r.nilai_r)) as subtotal 
+                from resep_keluar_h 
+                left join resep_keluar_racikan_r on resep_keluar_h.noresep=resep_keluar_racikan_r.noresep 
+                where resep_keluar_h.noreg = ? and resep_keluar_h.ruangan!='POL014' and (resep_keluar_h.depo='Gd-04010102' or resep_keluar_h.depo='Gd-04010103')
+            ) as wew
+        ", [$noreg, $noreg]);
+        $farmasiNew = $farmasiNewRow ? (float)($farmasiNewRow[0]->subtotal ?? 0) : 0;
+        $farmasiTotal = $farmasiRs + $farmasiNew;
+
+        // 14. Operasi Cito (OK Ranap)
+        $irdOperasiRow = DB::select("
+            select sum((rs54.rs5+rs54.rs6+rs54.rs7)*rs54.rs8) as subtotal
+            from rs54,rs53 where rs53.rs1=rs54.rs4 and rs54.rs1 = ? and rs54.rs15='POL014'
+        ", [$noreg]);
+        $irdOperasi1 = $irdOperasiRow ? (float)($irdOperasiRow[0]->subtotal ?? 0) : 0;
+
+        $irdOperasi2Row = DB::select("
+            select sum((rs73.rs7+rs73.rs13)*rs73.rs5) as subtotal
+            from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and rs73.rs22='OPERASI2'
+        ", [$noreg]);
+        $irdOperasi2 = $irdOperasi2Row ? (float)($irdOperasi2Row[0]->subtotal ?? 0) : 0;
+        $operasiCitoTotal = $irdOperasi1 + $irdOperasi2;
+
+        // 16. Biaya Farmasi / Obat (IRD)
+        $farmasiIrdRsRow = DB::select("
+            select round(sum(subtotalx),0) as subtotal from(
+                select sum((round(rs38.rs6,0)*rs38.rs8)+rs38.rs10) as subtotalx from rs38,rs32,rs9 where rs32.rs1=rs38.rs4 and rs38.rs1 = ? and rs38.lunas<>'1' and rs9.rs1=rs38.rs21 and (rs38.rs25='CENTRAL' or rs38.rs25='IGD') and rs38.rs24='IRD'
+                union all
+                select IF(rs39.rs8>1,sum((round(rs40.rs7,0)*rs40.rs5)),sum((round(rs40.rs7,0)*rs40.rs5))) as subtotalx from rs39,rs40,rs32,rs9 where rs39.rs2=rs40.rs2 and rs32.rs1=rs40.rs4 and rs39.rs1 = ? and rs39.lunas<>'1' and rs9.rs1=rs39.rs16 and (rs39.rs19='CENTRAL' or rs39.rs19='IGD') and rs39.rs18='IRD'
+                union all
+                select sum((round(rs62.rs6,0)*rs62.rs8)+rs62.rs10) as subtotalx from rs62,rs32,rs9 where rs32.rs1=rs62.rs4 and rs62.rs1 = ? and rs62.lunas<>'1' and rs9.rs1=rs62.rs21 and (rs62.rs25='CENTRAL' or rs62.rs25='IGD') and rs62.rs24='IRD'
+                union all
+                select IF(rs63.rs8>1,sum((round(rs64.rs7,0)*rs64.rs5)),sum((round(rs64.rs7,0)*rs64.rs5))) as subtotalx from rs63,rs64,rs32,rs9 where rs63.rs2=rs64.rs2 and rs32.rs1=rs64.rs4 and rs63.rs1 = ? and rs63.lunas<>'1' and rs9.rs1=rs63.rs16 and (rs63.rs19='CENTRAL' or rs63.rs19='IGD') and rs63.rs18='IRD'
+                union all
+                select sum(rs8) as subtotalx from rs39 where rs1 = ? and rs18='IRD' and (rs19='CENTRAL' or rs19='IGD')
+                union all
+                select sum(rs8) as subtotalx from rs63 where rs1 = ? and rs18='IRD' and (rs19='CENTRAL' or rs19='IGD')
+            ) as vx
+        ", [$noreg, $noreg, $noreg, $noreg, $noreg, $noreg]);
+        $farmasiIrdRs = $farmasiIrdRsRow ? (float)($farmasiIrdRsRow[0]->subtotal ?? 0) : 0;
+
+        $farmasiIrdNewRow = DB::connection('farmasi')->select("
+            select sum(subtotal) as subtotal from (
+                select round(sum(resep_keluar_r.harga_jual*resep_keluar_r.jumlah+resep_keluar_r.nilai_r)) as subtotal 
+                from resep_keluar_h 
+                left join resep_keluar_r on resep_keluar_h.noresep=resep_keluar_r.noresep 
+                where resep_keluar_h.noreg = ? and resep_keluar_h.ruangan='POL014' and (resep_keluar_h.depo='Gd-02010104' or resep_keluar_h.depo='Gd-04010103')
+                union all
+                select round(sum(resep_keluar_racikan_r.harga_jual*resep_keluar_racikan_r.jumlah)+(resep_keluar_racikan_r.nilai_r)) as subtotal 
+                from resep_keluar_h 
+                left join resep_keluar_racikan_r on resep_keluar_h.noresep=resep_keluar_racikan_r.noresep 
+                where resep_keluar_h.noreg = ? and resep_keluar_h.ruangan='POL014' and (resep_keluar_h.depo='Gd-02010104' or resep_keluar_h.depo='Gd-04010103')
+            ) as wew
+        ", [$noreg, $noreg]);
+        $farmasiIrdNew = $farmasiIrdNewRow ? (float)($farmasiIrdNewRow[0]->subtotal ?? 0) : 0;
+        $farmasiIrdTotal = $farmasiIrdRs + $farmasiIrdNew;
+
+        // 18. IRD
+        $ird = 0;
+        $irdAdmRow = DB::select("select rs7 as subtotal from rs35x where rs3='A2#' and rs1 = ?", [$noreg]);
+        $irdAdm = $irdAdmRow ? (float)($irdAdmRow[0]->subtotal ?? 0) : 0;
+        $ird += $irdAdm;
+
+        $irdTindakanRow = DB::select("
+            select sum((rs73.rs7+rs73.rs13)*rs73.rs5) as subtotal
+            from rs73,rs30,rs21 
+            where rs30.rs1=rs73.rs4 and rs21.rs1=SUBSTRING_INDEX(rs73.rs8,';',1)
+              and rs73.rs1 = ? and rs73.rs22='POL014'
+        ", [$noreg]);
+        $irdTindakan = $irdTindakanRow ? (float)($irdTindakanRow[0]->subtotal ?? 0) : 0;
+        $ird += $irdTindakan;
+
+        $irdLabRow = DB::select("
+            select sum(subtotalx) as subtotal from(
+                select ((rs51.rs6+rs51.rs13)*rs51.rs5) as subtotalx 
+                from rs49,rs51 
+                where rs49.rs1=rs51.rs4 and rs49.rs21='' and rs51.rs1 = ? and rs51.lunas<>'1' and rs51.rs18<>'' and rs51.rs23='POL014'
+                union all
+                select ((rs51.rs6+rs51.rs13)*rs51.rs5) as subtotalx 
+                from rs49,rs51 
+                where rs49.rs1=rs51.rs4 and rs49.rs21<>'' and rs51.rs1 = ? and rs51.lunas<>'1' and rs51.rs18<>'' and rs51.rs23='POL014' 
+                group by rs51.rs2,rs49.rs21
+            ) as vx
+        ", [$noreg, $noreg]);
+        $irdLab = $irdLabRow ? (float)($irdLabRow[0]->subtotal ?? 0) : 0;
+        $ird += $irdLab;
+
+        $irdLab2Row = DB::select("
+            select sum((rs73.rs7+rs73.rs13)*rs73.rs5) as subtotal
+            from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and rs73.rs22='LAB2'
+        ", [$noreg]);
+        $irdLab2 = $irdLab2Row ? (float)($irdLab2Row[0]->subtotal ?? 0) : 0;
+        $ird += $irdLab2;
+
+        $irdRadRow = DB::select("
+            select sum((rs48.rs6+rs48.rs8)*rs48.rs24) as subtotal 
+            from rs48,rs47 where rs47.rs1=rs48.rs4 and rs48.rs1 = ? and rs48.rs26='POL014'
+        ", [$noreg]);
+        $irdRad = $irdRadRow ? (float)($irdRadRow[0]->subtotal ?? 0) : 0;
+        $ird += $irdRad;
+
+        $irdOperasi2xRow = DB::select("
+            select sum((rs73.rs7+rs73.rs13)*rs73.rs5) as subtotal
+            from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and rs73.rs22='OPERASIIRD2'
+        ", [$noreg]);
+        $irdOperasi2x = $irdOperasi2xRow ? (float)($irdOperasi2xRow[0]->subtotal ?? 0) : 0;
+        $ird += $irdOperasi2x;
+
+        $okIrdRow = DB::select("
+            select sum((rs226.rs5+rs226.rs6+rs226.rs7)*rs226.rs8) as subtotal
+            from rs226,rs53 where rs53.rs1=rs226.rs4 and rs226.rs1 = ? and rs226.rs15='POL014'
+        ", [$noreg]);
+        $okIrd = $okIrdRow ? (float)($okIrdRow[0]->subtotal ?? 0) : 0;
+        $ird += $okIrd;
+
+        $darahIrdRow = DB::select("
+            select sum(rs12+rs13+biayalain2) as subtotal 
+            from rs231 where rs1 = ? and rs14='POL014'
+        ", [$noreg]);
+        $darahIrd = $darahIrdRow ? (float)($darahIrdRow[0]->subtotal ?? 0) : 0;
+        $ird += $darahIrd;
+
+        $materaiIrdRow = DB::select("
+            select sum(rs5) as subtotal from rsjr where rs1 = ? and rs7='IRD'
+        ", [$noreg]);
+        $materaiIrd = $materaiIrdRow ? (float)($materaiIrdRow[0]->subtotal ?? 0) : 0;
+        $ird += $materaiIrd;
+
+        $jenasahIrdRow = DB::select("
+            select sum(subtotal) as subtotal from(
+                select sum(rs275.rs5+rs275.rs6) as subtotal from rs275 where rs275.rs1 = ? and rs275.rs7='POL014'
+                union all
+                select sum(rs273.rs6+rs273.rs7) as subtotal from rs273,rs30 where rs273.rs5=rs30.rs1 and rs273.rs1 = ? and rs273.rs14='POL014'
+            ) as vx
+        ", [$noreg, $noreg]);
+        $jenasahIrd = $jenasahIrdRow ? (float)($jenasahIrdRow[0]->subtotal ?? 0) : 0;
+        $ird += $jenasahIrd;
+
+        $ambulanIrdRow = DB::select("
+            select sum(rs2+rs15+rs16+rs17+rs18+rs23+rs26) as subtotal 
+            from rs283 where rs1 = ? and rs20='POL014'
+        ", [$noreg]);
+        $ambulanIrd = $ambulanIrdRow ? (float)($ambulanIrdRow[0]->subtotal ?? 0) : 0;
+        $ird += $ambulanIrd;
+
+        $irdHdRow = DB::select("
+            select sum(if(rs73.rs25='POL014',((rs73.rs7+rs73.rs13)*rs73.rs5),0)) as subtotal
+            from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and rs73.rs22='PEN005'
+        ", [$noreg]);
+        $irdHd = $irdHdRow ? (float)($irdHdRow[0]->subtotal ?? 0) : 0;
+        $ird += $irdHd;
+
+        foreach ($masterPenunjangLain as $mpl) {
+            $mplIrdRow = DB::select("
+                select sum(if(rs73.rs25='POL014',((rs73.rs7+rs73.rs13)*rs73.rs5),0)) as subtotal
+                from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and rs73.rs22 = ?
+            ", [$noreg, $mpl->rs1]);
+            $ird += $mplIrdRow ? (float)($mplIrdRow[0]->subtotal ?? 0) : 0;
         }
 
-        $irdTindakan = (float)DB::table('rs73')
-            ->join('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-            ->join('rs21', 'rs21.rs1', '=', DB::raw("SUBSTRING_INDEX(rs73.rs8, ';', 1)"))
-            ->where('rs73.rs1', $noreg)
-            ->where('rs73.rs22', 'POL014')
-            ->sum(DB::raw('(rs73.rs7 + rs73.rs13) * rs73.rs5'));
+        $irdFisioRow = DB::select("
+            select sum(if(rs73.rs25='POL014',((rs73.rs7+rs73.rs13)*rs73.rs5),0)) as subtotal
+            from rs73,rs30 where rs30.rs1=rs73.rs4 and rs73.rs1 = ? and rs73.rs22='FISIO'
+        ", [$noreg]);
+        $irdFisio = $irdFisioRow ? (float)($irdFisioRow[0]->subtotal ?? 0) : 0;
+        $ird += $irdFisio;
 
-        $irdLab = (float)DB::table('rs51')
-            ->join('rs49', 'rs49.rs1', '=', 'rs51.rs4')
-            ->where('rs51.rs1', $noreg)
-            ->where('rs51.lunas', '<>', '1')
-            ->where('rs51.rs23', 'POL014')
-            ->sum(DB::raw('(rs51.rs6 + rs51.rs13) * rs51.rs5'));
+        $penunjangKeluarIrdRow = DB::select("
+            select sum((harga_sarana+harga_pelayanan)*jumlah) as subtotal
+            from lab_keluar
+            where noreg = ? and ruangan ='POL014'
+        ", [$noreg]);
+        $penunjangKeluarIrd = $penunjangKeluarIrdRow ? (float)($penunjangKeluarIrdRow[0]->subtotal ?? 0) : 0;
+        $ird += $penunjangKeluarIrd;
 
-        $irdLab2 = (float)DB::table('rs73')
-            ->join('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-            ->where('rs73.rs1', $noreg)
-            ->where('rs73.rs22', 'LAB2')
-            ->sum(DB::raw('(rs73.rs7 + rs73.rs13) * rs73.rs5'));
+        $irdTotal = $ird;
 
-        $irdRadiologi = (float)DB::table('rs48')
-            ->join('rs47', 'rs47.rs1', '=', 'rs48.rs4')
-            ->where('rs48.rs1', $noreg)
-            ->where('rs48.rs26', 'POL014')
-            ->sum(DB::raw('(rs48.rs6 + rs48.rs8) * rs48.rs24'));
-
-        $irdOperasi = (float)DB::table('rs54')
-            ->join('rs53', 'rs53.rs1', '=', 'rs54.rs4')
-            ->where('rs54.rs1', $noreg)
-            ->where('rs54.rs15', 'POL014')
-            ->sum(DB::raw('(rs54.rs5 + rs54.rs6 + rs54.rs7) * rs54.rs8'));
-
-        $irdOperasi2 = (float)DB::table('rs73')
-            ->join('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-            ->where('rs73.rs1', $noreg)
-            ->where('rs73.rs22', 'OPERASI2')
-            ->sum(DB::raw('(rs73.rs7 + rs73.rs13) * rs73.rs5'));
-
-        $irdTotal = $irdKarcis + $irdTindakan + $irdLab + $irdLab2 + $irdRadiologi + $irdOperasi + $irdOperasi2;
-
+        // GRAND TOTAL
         $grandTotal = $administrasi
             + $akomodasiTotal
+            + $materai
             + $tindakanDokterSubtotal
             + $visiteDokterSubtotal
             + $tindakanPerawatSubtotal
@@ -492,7 +685,98 @@ class BillingController extends Controller
             + $jasaKeperawatanSubtotal
             + $totalPenunjang
             + $farmasiTotal
+            + $operasiCitoTotal
+            + $farmasiIrdTotal
             + $irdTotal;
+
+        // PEMBAYARAN & POTONGAN
+        $panjer = (float)(DB::select("select sum(rs7+rs11) as subtotal from rs35 where rs3='UM#' and rs1 = ?", [$noreg])[0]->subtotal ?? 0);
+        $potongan = (float)(DB::select("select sum(rs7+rs11) as subtotal from rs35 where rs3='DS#' and rs1 = ?", [$noreg])[0]->subtotal ?? 0);
+        $potonganJasaRaharja = (float)(DB::select("select sum(rs7+rs11) as subtotal from rs35 where rs3='JS#' and rs1 = ?", [$noreg])[0]->subtotal ?? 0);
+        $keringanan = (float)(DB::select("select sum(rs7+rs11) as subtotal from rs35 where rs3='#KR' and rs1 = ?", [$noreg])[0]->subtotal ?? 0);
+        $telahdibayarpelunasaan = (float)(DB::select("select sum(rs7+rs11) as subtotal from rs35 where rs3='PL#' and rs1 = ?", [$noreg])[0]->subtotal ?? 0);
+
+        // Farmasi Telah Dibayar (IRD)
+        $telahdibayar = (float)(DB::select("
+            select sum(subtotalx) as subtotal from (
+                select sum((rs38.rs6*rs38.rs8)+rs38.rs10) as subtotalx from rs38,rs32,rs9 where rs32.rs1=rs38.rs4 and rs38.rs1 = ? and rs38.lunas='1' and rs9.rs1=rs38.rs21 and (rs38.rs25='CENTRAL' or rs38.rs25='IGD') and rs38.rs24='IRD'
+                union all
+                select IF(rs39.rs8>1,sum((rs40.rs7*rs40.rs5)+rs39.rs8),sum((rs40.rs7*rs40.rs5))) as subtotalx from rs39,rs40,rs32,rs9 where rs39.rs2=rs40.rs2 and rs32.rs1=rs40.rs4 and rs39.rs1 = ? and rs39.lunas='1' and rs9.rs1=rs39.rs16 and (rs39.rs19='CENTRAL' or rs39.rs19='IGD') and rs39.rs18='IRD'
+                union all
+                select sum((rs62.rs6*rs62.rs8)+rs62.rs10) as subtotalx from rs62,rs32,rs9 where rs32.rs1=rs62.rs4 and rs62.rs1 = ? and rs62.lunas='1' and rs9.rs1=rs62.rs21 and (rs62.rs25='CENTRAL' or rs62.rs25='IGD') and rs62.rs24='IRD'
+                union all
+                select IF(rs63.rs8>1,sum((rs64.rs7*rs64.rs5)+rs63.rs8),sum((rs64.rs7*rs64.rs5))) as subtotalx from rs63,rs64,rs32,rs9 where rs63.rs2=rs64.rs2 and rs32.rs1=rs64.rs4 and rs63.rs1 = ? and rs63.lunas='1' and rs9.rs1=rs63.rs16 and (rs63.rs19='CENTRAL' or rs63.rs19='IGD') and rs63.rs18='IRD'
+            ) as vx
+        ", [$noreg, $noreg, $noreg, $noreg])[0]->subtotal ?? 0);
+
+        // Farmasi Telah Dibayar (Ranap)
+        $telahdibayarx = (float)(DB::select("
+            select sum(subtotalx) as subtotal from(
+                select sum((rs38.rs6*rs38.rs8)+rs38.rs10) as subtotalx from rs38,rs32,rs9 where rs32.rs1=rs38.rs4 and rs38.rs1 = ? and rs38.lunas='1' and rs9.rs1=rs38.rs21 and (rs38.rs25='CENTRAL') and rs38.rs24<>'IRD'
+                union all
+                select IF(rs39.rs8>1,sum((rs40.rs7*rs40.rs5)+rs39.rs8),sum((rs40.rs7*rs40.rs5))) as subtotalx from rs39,rs40,rs32,rs9 where rs39.rs2=rs40.rs2 and rs32.rs1=rs40.rs4 and rs39.rs1 = ? and rs39.lunas='1' and rs9.rs1=rs39.rs16 and (rs39.rs19='CENTRAL') and rs39.rs18<>'IRD'
+                union all
+                select sum((rs62.rs6*rs62.rs8)+rs62.rs10) as subtotalx from rs62,rs32,rs9 where rs32.rs1=rs62.rs4 and rs62.rs1 = ? and rs62.lunas='1' and rs9.rs1=rs62.rs21 and (rs62.rs25='CENTRAL') and rs62.rs24<>'IRD'
+                union all
+                select IF(rs63.rs8>1,sum((rs64.rs7*rs64.rs5)+rs63.rs8),sum((rs64.rs7*rs64.rs5))) as subtotalx from rs63,rs64,rs32,rs9 where rs63.rs2=rs64.rs2 and rs32.rs1=rs64.rs4 and rs63.rs1 = ? and rs63.lunas='1' and rs9.rs1=rs63.rs16 and (rs63.rs19='CENTRAL') and rs63.rs18<>'IRD'
+            ) as vx
+        ", [$noreg, $noreg, $noreg, $noreg])[0]->subtotal ?? 0);
+
+        // Retur Farmasi
+        $farmasiretur = (float)(DB::select("
+            select sum(rs88.rs3*rs88.rs4) as subtotal 
+            from rs87,rs88,rs32 
+            where rs87.rs1=rs88.rs1 and rs32.rs1=rs88.rs2 and rs87.rs7 = ?
+        ", [$noreg])[0]->subtotal ?? 0);
+
+        // Potongan BPJS
+        $potonganbpjs = (float)(DB::select("select sum(rs7+rs11) as subtotal from rs35 where rs3='BP#' and rs1 = ?", [$noreg])[0]->subtotal ?? 0);
+
+        // Potongan Jasa
+        $potonganJasaDokter = (float)(DB::select("
+            select if(potongan_jasa.jenis_tarif='jp,',sum(rs73.rs13*rs73.rs5),0) as total 
+            from potongan_jasa,rs73,rs21
+            where potongan_jasa.id_trans=rs73.id and rs21.rs1=SUBSTRING_INDEX(rs73.rs8,';',1) and rs21.rs13='1'
+              and potongan_jasa.noreg = ? and potongan_jasa.jenis='tindakan_dokter' and rs73.rs22!='POL014' and rs73.rs22!='OPERASI'
+            group by potongan_jasa.noreg
+        ", [$noreg])[0]->total ?? 0);
+
+        $potonganJasaVisite = (float)(DB::select("
+            select if(potongan_jasa.jenis_tarif='jp,',sum(rs140.rs5),0) as total 
+            from potongan_jasa,rs140
+            where potongan_jasa.id_trans=rs140.id and potongan_jasa.noreg = ? and potongan_jasa.jenis='visite'
+            group by potongan_jasa.noreg
+        ", [$noreg])[0]->total ?? 0);
+
+        $potonganJasaPerawat = (float)(DB::select("
+            select if(potongan_jasa.jenis_tarif='jp,',sum(rs73.rs13*rs73.rs5),0) as total 
+            from potongan_jasa,rs73,rs21
+            where potongan_jasa.id_trans=rs73.id and rs21.rs1=SUBSTRING_INDEX(rs73.rs8,';',1) and (rs21.rs13='2' or rs21.rs13='3')
+              and potongan_jasa.noreg = ? and potongan_jasa.jenis='tindakan_keperawatan' and rs73.rs22!='POL014' and rs73.rs22!='OPERASI'
+            group by potongan_jasa.noreg
+        ", [$noreg])[0]->total ?? 0);
+
+        $potonganJasaKep = (float)(DB::select("
+            select if(potongan_jasa.jenis_tarif='jp,',sum(rs203.rs5),0) as total 
+            from potongan_jasa,rs203
+            where potongan_jasa.id_trans=rs203.id and potongan_jasa.noreg = ? and potongan_jasa.jenis='keperawatan'
+            group by potongan_jasa.noreg
+        ", [$noreg])[0]->total ?? 0);
+
+        $totalPotonganJasa = $potonganJasaDokter + $potonganJasaVisite + $potonganJasaPerawat + $potonganJasaKep;
+
+        $harusbayar = $grandTotal - $panjer - $telahdibayar - $telahdibayarx - $potongan - $potonganJasaRaharja - $potonganbpjs - $keringanan - $telahdibayarpelunasaan - $farmasiretur - $totalPotonganJasa;
+
+        $sharing3item = (float)(DB::select("select sum(rs228.rs9) as subtotal from rs228 where rs228.rs1 = ?", [$noreg])[0]->subtotal ?? 0);
+        if ($potonganbpjs >= $grandTotal) {
+            $kurangbayar = $sharing3item;
+        } else {
+            if ($potonganJasaRaharja > $grandTotal) {
+                $kurangbayar = 0;
+            } else {
+                $kurangbayar = $harusbayar;
+            }
+        }
 
         $response = [
             'header' => [
@@ -507,6 +791,7 @@ class BillingController extends Controller
                 'kelas' => $pasien->kelas,
                 'ongkos_per_hari' => $tarifKamarPerHari,
                 'tglmasuk' => $pasien->tglmasuk,
+                'tglmasuk_igd' => $tglmasukIgd,
                 'tglkeluar' => ($pasien->tglkeluar && $pasien->tglkeluar !== '0000-00-00 00:00:00') ? $pasien->tglkeluar : '0000-00-00 00:00:00',
                 'dokter' => $pasien->dokter ?? '',
                 'sistembayar' => $sistembayarNama,
@@ -524,6 +809,7 @@ class BillingController extends Controller
                     'total' => $akomodasiTotal,
                     'items' => $akomodasiList
                 ],
+                'materai' => $materai,
                 'tindakan_dokter' => $tindakanDokterSubtotal,
                 'visite_dokter' => $visiteDokterSubtotal,
                 'tindakan_perawat' => $tindakanPerawatSubtotal,
@@ -535,14 +821,39 @@ class BillingController extends Controller
                     'total' => $totalPenunjang,
                     'laboratorium' => $laboratoriumTotal,
                     'radiologi' => $radiologiTotal,
+                    'endoscope' => $endoscopyTotal,
                     'operasi' => $operasiTotal,
+                    'ruang_rr' => $ruangRrTotal,
                     'fisioterapi' => $fisioterapiTotal,
-                    'hemodialisa_cardio_eeg' => $hdCardioEegTotal,
+                    'hemodialisa' => $hemodialisaTotal,
+                    'cardio' => $cardioTotal,
+                    'eeg' => $eegTotal,
+                    'psikologi' => $psikologiTotal,
+                    'penggunaan_darah' => $darahTotal,
+                    'jenasah' => $jenasahTotal,
+                    'ambulan' => $ambulanTotal,
+                    'apheresis' => $apheresisTotal,
+                    'cathlab' => $cathlabTotal,
+                    'penunjang_keluar' => $penunjangKeluarTotal,
                     'penunjang_lain' => $penunjangLainList,
-                    'penggunaan_darah' => $darahTotal
                 ],
                 'farmasi' => $farmasiTotal,
+                'operasi_cito' => $operasiCitoTotal,
+                'farmasi_ird' => $farmasiIrdTotal,
                 'ird' => $irdTotal
+            ],
+            'pembayaran' => [
+                'telah_dibayar' => $panjer,
+                'potongan_jasa' => $totalPotonganJasa,
+                'farmasi_telah_dibayar_ranap' => $telahdibayarx,
+                'farmasi_telah_dibayar_ird' => $telahdibayar,
+                'retur_farmasi' => $farmasiretur,
+                'ird_telah_dibayar' => $telahdibayarpelunasaan,
+                'potongan' => $potongan,
+                'potongan_jasa_raharja' => $potonganJasaRaharja,
+                'keringanan' => $keringanan,
+                'potongan_bpjs' => $potonganbpjs,
+                'kurang_bayar' => $kurangbayar
             ],
             'grand_total' => $grandTotal
         ];
