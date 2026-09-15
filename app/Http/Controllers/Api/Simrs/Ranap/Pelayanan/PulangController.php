@@ -53,10 +53,11 @@ class PulangController extends Controller
 
     // Tanggal Pulang / Tanggal Keluar
     $tglKeluarVal = date('Y-m-d H:i:s');
+    $jamInput = !empty($request->jamKeluar) ? (strlen($request->jamKeluar) === 5 ? $request->jamKeluar . ':00' : $request->jamKeluar) : date('H:i:s');
     if (!empty($request->tglKeluar)) {
-      $tglKeluarVal = strlen($request->tglKeluar) === 10 ? $request->tglKeluar . ' ' . date('H:i:s') : $request->tglKeluar;
+      $tglKeluarVal = strlen($request->tglKeluar) === 10 ? $request->tglKeluar . ' ' . $jamInput : $request->tglKeluar;
     } elseif (!empty($request->tglPulang)) {
-      $tglKeluarVal = strlen($request->tglPulang) === 10 ? $request->tglPulang . ' ' . date('H:i:s') : $request->tglPulang;
+      $tglKeluarVal = strlen($request->tglPulang) === 10 ? $request->tglPulang . ' ' . $jamInput : $request->tglPulang;
     }
 
     // jika pasien sudah dipulangkan

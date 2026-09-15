@@ -3,16 +3,19 @@
 namespace App\Helpers\Satsets;
 
 use App\Helpers\AuthSatsetHelper;
+use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\BridgingLoincHelper;
 use App\Helpers\BridgingSatsetHelper;
 use App\Models\Pasien;
 use App\Models\Satset\Satset;
 use App\Models\Satset\SatsetErrorRespon;
+use App\Models\Satset\SatsetAuditDataLog;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Allergy;
 use App\Models\Simrs\Master\MkuSnomed;
 use App\Models\Simrs\Master\Msnomed;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +25,40 @@ use function PHPUnit\Framework\isEmpty;
 
 class PostKunjunganRajalHelper
 {
+    public static function sanitizeUcumUnit($satuan)
+    {
+        $satuan = trim((string)$satuan);
+        $map = [
+            'mIU/L' => 'm[IU]/L',
+            'mIU/mL' => 'm[IU]/mL',
+            'IU/L' => '[IU]/L',
+            'IU/mL' => '[IU]/mL',
+            'uIU/mL' => 'u[IU]/mL',
+            'uIU/L' => 'u[IU]/L',
+            'µIU/mL' => 'u[IU]/mL',
+            'copies/mL' => '{copies}/mL',
+            'copies/ml' => '{copies}/mL',
+            'sel/uL' => '/uL',
+            'sel/ul' => '/uL',
+            'cells/uL' => '/uL',
+            '/uL' => '/uL',
+            '/ul' => '/uL',
+            'pg/mL' => 'pg/mL',
+            'ng/mL' => 'ng/mL',
+            'ug/dL' => 'ug/dL',
+            'mg/dL' => 'mg/dL',
+            'g/dL' => 'g/dL',
+            'mmol/L' => 'mmol/L',
+            'umol/L' => 'umol/L',
+            '%' => '%',
+            '/min' => '/min',
+            'mm/jam' => 'mm/h',
+            'mm/h' => 'mm/h',
+            'detik' => 's',
+            'menit' => 'min',
+        ];
+        return $map[$satuan] ?? ($satuan ?: '1');
+    }
 
     public static function cekKunjungan()
     {
@@ -38,8 +75,7 @@ class PostKunjunganRajalHelper
         // }
         // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
 
-        $tgl = Carbon::now()->subDays(5)->toDateString();
-        return self::rajal($tgl);
+        return self::rajal();
     }
 
     public static function cekKunjunganRajal()
@@ -53,11 +89,10 @@ class PostKunjunganRajalHelper
             ])
             ->doesntHave('satset')
             ->doesntHave('satset_error')
+            ->has('diagnosa')
             ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
             ->where('rs17.rs8', '!=', 'POL014')
             ->where('rs17.rs19', '=', '1') // kunjungan selesai
-            // ->whereNotNull('satsets.uuid')
-            // ->whereNotNull('satset_error_respon.uuid')
             ->orderBy('rs17.rs3', 'desc')
             ->limit(2)
             ->get();
@@ -90,6 +125,16 @@ class PostKunjunganRajalHelper
             'rs9.groups as groups',
             'rs15.rs2 as nama',
             'rs15.rs49 as nik',
+            'rs15.rs46 as noka',
+            'rs15.rs16 as tgllahir',
+            'rs15.rs17 as kelamin',
+            'rs15.rs37 as templahir',
+            'rs15.rs4 as alamat',
+            'rs15.rs55 as nohp',
+            'rs15.kd_propinsi as satset_province',
+            'rs15.kd_kota as satset_city',
+            'rs15.kd_kec as satset_district',
+            'rs15.kd_kel as satset_village',
             'rs17.rs19 as status',
             'rs15.satset_uuid as pasien_uuid',
             // 'satsets.uuid as satset',
@@ -316,15 +361,30 @@ class PostKunjunganRajalHelper
             ->orderby('rs17.rs3', 'ASC')
             ->first();
 
-        // return $data;
+        if (!$data) {
+            return ['message' => 'failed', 'data' => 'Data Kunjungan Tidak Ditemukan'];
+        }
+
+        if (empty($data->diagnosa) || count($data->diagnosa) === 0) {
+            SatsetErrorRespon::updateOrCreate(
+                ['uuid' => $noreg],
+                [
+                    'response' => ['message' => 'Diagnosa Dokter Belum Diisi di SIMRS (Pengiriman Dibatalkan)'],
+                    'jenis' => 'rajal',
+                    'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS'
+                ]
+            );
+            return ['message' => 'failed', 'data' => 'Diagnosa Dokter Belum Diisi di SIMRS'];
+        }
+
         return self::kirimKunjungan($data);
     }
 
-    public static function rajal($tgl)
+    public static function rajal($tgl = null)
     {
         $bukanPoli = ['POL014', 'PEN005', 'PEN004'];
 
-        $data = KunjunganPoli::select(
+        $query = KunjunganPoli::select(
             'rs17.rs1',
             'rs17.rs9',
             'rs17.rs4',
@@ -341,22 +401,38 @@ class PostKunjunganRajalHelper
             'rs9.groups as groups',
             'rs15.rs2 as nama',
             'rs15.rs49 as nik',
+            'rs15.rs46 as noka',
+            'rs15.rs16 as tgllahir',
+            'rs15.rs17 as kelamin',
+            'rs15.rs37 as templahir',
+            'rs15.rs4 as alamat',
+            'rs15.rs55 as nohp',
+            'rs15.kd_propinsi as satset_province',
+            'rs15.kd_kota as satset_city',
+            'rs15.kd_kec as satset_district',
+            'rs15.kd_kel as satset_village',
             'rs17.rs19 as status',
             'rs15.satset_uuid as pasien_uuid',
-            // 'satsets.uuid as satset',
-            // 'satset_error_respon.uuid as satset_error',
         )
             ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
-            // ->leftjoin('satsets', 'satsets.uuid', '=', 'rs17.rs1') //satset
-            // ->leftjoin('satset_error_respon', 'satset_error_respon.uuid', '=', 'rs17.rs1') //satset error
-
-            // ->where('rs17.rs1', $noreg)
             ->whereNotIn('rs17.rs8', $bukanPoli)
+            ->where('rs17.rs1', 'NOT LIKE', '%/X')
+            ->where('rs17.rs1', 'NOT LIKE', '%/x')
             ->where('rs17.rs19', '=', '1') // kunjungan selesai
-            ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
+            ->has('diagnosa');
+
+        if ($tgl) {
+            $query->where('rs17.rs3', 'LIKE', '%' . $tgl . '%');
+        } else {
+            $tglAwal = Carbon::now()->subDays(60)->toDateString() . ' 00:00:00';
+            $tglAkhir = Carbon::now()->subDays(1)->toDateString() . ' 23:59:59';
+            $query->whereBetween('rs17.rs3', [$tglAwal, $tglAkhir]);
+        }
+
+        $data = $query
 
             // ->whereBetween('rs17.rs3', [$tgl, $tglx])
             // ->where('rs17.rs8', $user->kdruangansim ?? '')
@@ -591,23 +667,313 @@ class PostKunjunganRajalHelper
         return self::kirimKunjungan($data);
     }
 
+    public static function fetchBpjsPeserta($pasien, $unit = 'rajal')
+    {
+        $nik = trim((string)($pasien->nik ?? $pasien->rs49 ?? ''));
+        $noka = trim((string)($pasien->noka ?? $pasien->rs46 ?? ''));
+        $tglSep = date('Y-m-d');
+        $bpjsPeserta = null;
+
+        // 1. Coba by NIK jika valid 16 digit dan bukan dummy
+        if (!empty($nik) && strlen($nik) === 16 && !str_starts_with($nik, '8888') && !str_starts_with($nik, '9999') && !str_starts_with($nik, '0000')) {
+            try {
+                $res = BridgingbpjsHelper::get_url('vclaim', 'Peserta/nik/' . $nik . '/tglSEP/' . $tglSep);
+                if (isset($res['result']->peserta) && !empty($res['result']->peserta->nik)) {
+                    $bpjsPeserta = $res['result']->peserta;
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        // 2. Coba by NOKA jika belum dapat atau NIK dummy/kosong
+        if (!$bpjsPeserta && !empty($noka) && strlen($noka) >= 10) {
+            try {
+                $res = BridgingbpjsHelper::get_url('vclaim', 'Peserta/nokartu/' . $noka . '/tglSEP/' . $tglSep);
+                if (isset($res['result']->peserta) && !empty($res['result']->peserta->nik)) {
+                    $bpjsPeserta = $res['result']->peserta;
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        // Audit Log jika terdeteksi ketidaksesuaian data input SIMRS vs BPJS
+        if ($bpjsPeserta) {
+            $norm = trim((string)($pasien->norm ?? $pasien->rs1 ?? ''));
+            $noreg = $pasien->noreg ?? ($pasien->rs1 ?? null);
+            $namaSimrs = trim((string)(!empty($pasien->nama) ? $pasien->nama : (!empty($pasien->rs2) ? $pasien->rs2 : '')));
+            $tglLahirSimrs = $pasien->tgllahir ?? $pasien->rs16 ?? null;
+
+            $nikBpjs = trim((string)$bpjsPeserta->nik);
+            $namaBpjs = trim((string)$bpjsPeserta->nama);
+            $tglLahirBpjs = trim((string)$bpjsPeserta->tglLahir);
+
+            $diffNik = empty($nik) || $nik !== $nikBpjs || str_starts_with($nik, '8888') || str_starts_with($nik, '9999') || strlen($nik) < 16;
+            $diffNama = !empty($namaSimrs) && strtolower($namaSimrs) !== strtolower($namaBpjs);
+            $diffTgl = !empty($tglLahirSimrs) && trim((string)$tglLahirSimrs) !== $tglLahirBpjs;
+
+            if ($diffNik || $diffNama || $diffTgl) {
+                $alasan = [];
+                if ($diffNik) $alasan[] = "NIK SIMRS ('" . ($nik ?: 'KOSONG') . "') berbeda dg BPJS ('" . $nikBpjs . "')";
+                if ($diffNama) $alasan[] = "Nama SIMRS ('$namaSimrs') berbeda dg BPJS ('$namaBpjs')";
+                if ($diffTgl) $alasan[] = "Tgl Lahir SIMRS ('$tglLahirSimrs') berbeda dg BPJS ('$tglLahirBpjs')";
+
+                SatsetAuditDataLog::recordAudit([
+                    'kategori' => 'PASIEN_MISMATCH_BPJS',
+                    'unit' => $unit,
+                    'ref_id' => $norm ?: ($noreg ?: '-'),
+                    'noreg' => $noreg,
+                    'nama' => $namaSimrs ?: $namaBpjs,
+                    'nik_simrs' => $nik ?: null,
+                    'nik_valid' => $nikBpjs,
+                    'data_simrs' => [
+                        'nama' => $namaSimrs,
+                        'nik' => $nik,
+                        'tgllahir' => $tglLahirSimrs,
+                        'noka' => $noka,
+                    ],
+                    'data_pembanding' => [
+                        'nama' => $namaBpjs,
+                        'nik' => $nikBpjs,
+                        'tglLahir' => $tglLahirBpjs,
+                        'noKartu' => $bpjsPeserta->noKartu ?? null,
+                        'sex' => $bpjsPeserta->sex ?? null,
+                    ],
+                    'keterangan' => implode('; ', $alasan),
+                ]);
+            }
+        }
+
+        return $bpjsPeserta;
+    }
+
+    public static function createPatientSatset($pasien)
+    {
+        try {
+            $token = AuthSatsetHelper::accessToken();
+
+            // 1. Prioritaskan ambil data valid dari BPJS (terintegrasi Dukcapil)
+            $bpjs = self::fetchBpjsPeserta($pasien);
+
+            $nik = $bpjs ? trim((string)$bpjs->nik) : trim((string)($pasien->nik ?? $pasien->rs49 ?? ''));
+            $norm = trim((string)($pasien->norm ?? $pasien->rs1 ?? ''));
+
+            if (empty($nik) || strlen($nik) < 16) {
+                return [
+                    'message' => 'failed',
+                    'data' => 'NIK Pasien kosong atau kurang dari 16 digit (baik di SIMRS maupun BPJS)'
+                ];
+            }
+
+            $tgllahir = $bpjs ? trim((string)$bpjs->tglLahir) : ($pasien->tgllahir ?? $pasien->rs16 ?? null);
+
+            $isBayi = false;
+            if (!empty($tgllahir)) {
+                $isBayi = Carbon::parse($tgllahir)->diffInYears(now()) < 1;
+            }
+
+            $genderRaw = $bpjs ? trim((string)$bpjs->sex) : trim((string)($pasien->kelamin ?? $pasien->rs17 ?? ''));
+            $genderLower = strtolower($genderRaw);
+            $gender = ($genderLower === 'l' || str_starts_with($genderLower, 'laki') || $genderLower === 'male') ? 'male' : 'female';
+
+            $namaPasien = $bpjs ? trim((string)$bpjs->nama) : (!empty($pasien->nama) ? $pasien->nama : (!empty($pasien->rs2) ? $pasien->rs2 : ($pasien->nama_panggil ?? '-')));
+            $templahir = $pasien->templahir ?? $pasien->rs37 ?? 'PROBOLINGGO';
+            $alamat = $pasien->alamat ?? $pasien->rs4 ?? ($pasien->alamatbarcode ?? 'Jl. Suroyo No. 1');
+            $nohp = ($bpjs && !empty($bpjs->mr->noTelepon)) ? trim((string)$bpjs->mr->noTelepon) : ($pasien->nohp ?? $pasien->rs55 ?? '-');
+
+            $rawProv = trim((string)($pasien?->satset_province ?? $pasien?->kd_propinsi ?? '35'));
+            $prov = (strlen($rawProv) === 2 && $rawProv !== '00') ? $rawProv : '35';
+
+            $rawCity = trim((string)($pasien?->satset_city ?? $pasien?->kd_kota ?? '74'));
+            $cityCode = (strlen($rawCity) >= 4) ? $rawCity : ((strlen($rawCity) > 0 && $rawCity !== '00') ? ($prov . str_pad($rawCity, 2, '0', STR_PAD_LEFT)) : ($prov === '35' ? '3574' : $prov . '01'));
+
+            $rawDist = trim((string)($pasien?->satset_district ?? $pasien?->kd_kec ?? '04'));
+            $distCode = (strlen($rawDist) >= 6) ? $rawDist : ((strlen($rawDist) > 0 && $rawDist !== '00') ? ($cityCode . str_pad($rawDist, 2, '0', STR_PAD_LEFT)) : ($cityCode === '3574' ? '357402' : $cityCode . '01'));
+
+            $rawVill = trim((string)($pasien?->satset_village ?? $pasien?->kd_kel ?? '1003'));
+            $villCode = (strlen($rawVill) >= 10) ? $rawVill : ((strlen($rawVill) > 0 && $rawVill !== '0000' && $rawVill !== '00') ? ($distCode . str_pad($rawVill, 4, '0', STR_PAD_LEFT)) : ($distCode === '357402' ? '3574021005' : $distCode . '1001'));
+
+            $payload = [
+                "resourceType" => "Patient",
+                "meta" => [
+                    "profile" => [
+                        "https://fhir.kemkes.go.id/r4/StructureDefinition/Patient"
+                    ]
+                ],
+                "active" => true,
+                "identifier" => [
+                    [
+                        "use" => "official",
+                        "system" => "https://fhir.kemkes.go.id/id/nik",
+                        "value" => $nik
+                    ]
+                ],
+                "name" => [
+                    [
+                        "use" => "official",
+                        "text" => $namaPasien
+                    ]
+                ],
+                "gender" => $gender,
+                "birthDate" => $tgllahir,
+                "deceasedBoolean" => false,
+                "multipleBirthBoolean" => false,
+                "telecom" => [
+                    [
+                        "system" => "phone",
+                        "value" => $nohp ?: '-',
+                        "use" => "mobile"
+                    ]
+                ],
+                "address" => [
+                    [
+                        "use" => "home",
+                        "line" => [
+                            $alamat ?: "Jl. Suroyo No. 1"
+                        ],
+                        "city" => $templahir ?: "Kota Probolinggo",
+                        "country" => "ID",
+                        "extension" => [
+                            [
+                                "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/administrativeCode",
+                                "extension" => [
+                                    ["url" => "province", "valueCode" => (string)$prov],
+                                    ["url" => "city",    "valueCode" => (string)$cityCode],
+                                    ["url" => "district", "valueCode" => (string)$distCode],
+                                    ["url" => "village", "valueCode" => (string)$villCode]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                "extension" => [
+                    [
+                        "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/birthPlace",
+                        "valueAddress" => [
+                            "city" => $templahir ?: "PROBOLINGGO",
+                            "country" => "ID"
+                        ]
+                    ],
+                    [
+                        "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/citizenshipStatus",
+                        "valueCode" => "WNI"
+                    ]
+                ],
+                "communication" => [
+                    [
+                        "language" => [
+                            "coding" => [
+                                [
+                                    "system" => "urn:ietf:bcp:47",
+                                    "code" => "id-ID",
+                                    "display" => "Indonesian"
+                                ]
+                            ],
+                            "text" => "Indonesian"
+                        ],
+                        "preferred" => true
+                    ]
+                ]
+            ];
+
+            if ($isBayi) {
+                $payload['maritalStatus'] = [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+                            "code" => "S",
+                            "display" => "Never Married"
+                        ]
+                    ]
+                ];
+            }
+
+            $send = BridgingSatsetHelper::post_data($token, '/Patient', $payload);
+
+            if (isset($send['data']['id']) && !empty($send['data']['id'])) {
+                $uuid = $send['data']['id'];
+
+                if (!empty($norm)) {
+                    Pasien::where('rs1', $norm)->update(['satset_uuid' => $uuid]);
+                } elseif (!empty($nik)) {
+                    Pasien::where('rs49', $nik)->update(['satset_uuid' => $uuid]);
+                }
+
+                return [
+                    'message' => 'success',
+                    'uuid' => $uuid,
+                    'is_bayi' => $isBayi
+                ];
+            }
+
+            return [
+                'message' => 'failed',
+                'data' => $send
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'message' => 'failed',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
     public static function kirimKunjungan($data)
     {
         // return $data;
         $pasien_uuid = $data->pasien_uuid;
         $practitioner_uuid = $data->datasimpeg ? $data->datasimpeg['satset_uuid'] : null;
-        //   $apoteker_uuid = $data->apotek ? ($data->apotek['petugas'] ? $data->apotek['petugas']['satset_uuid'] : null): null;
 
         if (!$pasien_uuid) {
             $getPasienFromSatset = self::getPasienByNikSatset($data);
-            $pasien_uuid = $getPasienFromSatset['data']['uuid'];
+            $pasien_uuid = $getPasienFromSatset['data']['uuid'] ?? null;
+            if (!$pasien_uuid) {
+                $createPasien = self::createPatientSatset($data);
+                $pasien_uuid = $createPasien['uuid'] ?? null;
+            }
+        }
+
+        if (!$pasien_uuid) {
+            $err = [
+                'method' => 'POST',
+                'url' => 'https://api-satusehat.kemkes.go.id/fhir-r4/v1',
+                'response' => ['message' => 'Pasien UUID / NIK Tidak Ditemukan di SatuSehat'],
+                'uuid' => $data->noreg,
+                'jenis' => 'rajal',
+                'error_summary' => 'Pasien UUID / NIK Tidak Ditemukan',
+            ];
+            SatsetErrorRespon::updateOrCreate(['uuid' => $data->noreg], $err);
+            return ['message' => 'failed', 'data' => 'Pasien UUID / NIK Tidak Ditemukan'];
         }
 
         if (!$practitioner_uuid) {
             $getFromSatset = self::getPractitionerFromSatset($data);
-            $practitioner_uuid = $getFromSatset['data']['uuid'];
+            $practitioner_uuid = $getFromSatset['data']['uuid'] ?? null;
         }
 
+        if (!$practitioner_uuid) {
+            $err = [
+                'method' => 'POST',
+                'url' => 'https://api-satusehat.kemkes.go.id/fhir-r4/v1',
+                'response' => ['message' => 'Practitioner UUID Dokter Tidak Ditemukan di SatuSehat'],
+                'uuid' => $data->noreg,
+                'jenis' => 'rajal',
+                'error_summary' => 'Practitioner Dokter Tidak Ditemukan',
+            ];
+            SatsetErrorRespon::updateOrCreate(['uuid' => $data->noreg], $err);
+            return ['message' => 'failed', 'data' => 'Practitioner UUID Dokter Tidak Ditemukan'];
+        }
+
+        // Validasi Diagnosa: JANGAN KIRIM jika diagnosa di SIMRS belum diisi
+        if (empty($data->diagnosa) || count($data->diagnosa) === 0) {
+            $err = [
+                'method' => 'POST',
+                'url' => 'https://api-satusehat.kemkes.go.id/fhir-r4/v1',
+                'response' => ['message' => 'Diagnosa Dokter Belum Diisi di SIMRS (Pengiriman Dibatalkan)'],
+                'uuid' => $data->noreg,
+                'jenis' => 'rajal',
+                'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS',
+            ];
+            SatsetErrorRespon::updateOrCreate(['uuid' => $data->noreg], $err);
+            return ['message' => 'failed', 'data' => 'Diagnosa Dokter Belum Diisi di SIMRS'];
+        }
 
         // return $data;
         $send = self::form($data, $pasien_uuid, $practitioner_uuid);
@@ -620,37 +986,53 @@ class PostKunjunganRajalHelper
 
     public static function getPasienByNikSatset($pasien)
     {
-        // return $request->all();
-        $nik = $pasien->nik;
-        $norm = $pasien->norm;
+        $nik = trim((string)($pasien->nik ?? $pasien->rs49 ?? ''));
+        $norm = trim((string)($pasien->norm ?? $pasien->rs1 ?? ''));
+
+        // Jika NIK belum valid atau kosong, coba cari di BPJS terlebih dahulu
+        if (empty($nik) || strlen($nik) !== 16 || str_starts_with($nik, '8888') || str_starts_with($nik, '9999')) {
+            $bpjs = self::fetchBpjsPeserta($pasien);
+            if ($bpjs && !empty($bpjs->nik)) {
+                $nik = trim((string)$bpjs->nik);
+            }
+        }
+
         // get data ke satset
         $token = AuthSatsetHelper::accessToken();
         $params = '/Patient?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
 
         $send = BridgingSatsetHelper::get_data($token, $params);
 
-        $data = Pasien::where([
-            ['rs49', $nik],
-            ['rs1', $norm],
-        ])->first();
-
-        if ($send['message'] === 'success') {
-            $data->satset_uuid = $send['data']['uuid'];
-            $data->save();
-        } else {
-            SatsetErrorRespon::create([
-                'uuid' => $pasien->noreg,
-                'response' => $send,
-                'jenis' => 'rajal',
-                'error_summary' => 'Patient UUID tidak ditemukan di SatuSehat Kemkes (NIK: ' . $nik . ')'
-            ]);
+        if ($send['message'] === 'success' && isset($send['data']['uuid'])) {
+            if (!empty($norm)) {
+                Pasien::where('rs1', $norm)->update(['satset_uuid' => $send['data']['uuid']]);
+            } elseif (!empty($nik)) {
+                Pasien::where('rs49', $nik)->update(['satset_uuid' => $send['data']['uuid']]);
+            }
         }
+
         return $send;
     }
 
     public static function getPractitionerFromSatset($pasien)
     {
         $nik = $pasien->datasimpeg ? $pasien->datasimpeg['nik'] : null;
+        $kdpeg = $pasien->kdpegsimrs ?? $pasien->nip ?? $pasien->id ?? '-';
+        $namaDokter = $pasien->nama ?? '-';
+
+        if (!$nik) {
+            SatsetAuditDataLog::recordAudit([
+                'kategori' => 'PEGAWAI_NIK_KOSONG',
+                'unit' => 'kepegawaian',
+                'ref_id' => (string)$kdpeg,
+                'noreg' => $pasien->noreg ?? null,
+                'nama' => $namaDokter,
+                'nik_simrs' => null,
+                'keterangan' => 'NIK Pegawai/Dokter (' . $namaDokter . ') belum diisi di SIMPEG / Master Pegawai'
+            ]);
+            return ['message' => 'failed', 'data' => 'NIK Dokter Kosong'];
+        }
+
         $token = AuthSatsetHelper::accessToken();
         $params = '/Practitioner?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
 
@@ -658,15 +1040,27 @@ class PostKunjunganRajalHelper
 
         $data = Pegawai::where('nik', $nik)->where('aktif', 'AKTIF')->first();
 
-        if ($send['message'] === 'success') {
-            $data->satset_uuid = $send['data']['uuid'];
-            $data->save();
+        if ($send['message'] === 'success' && isset($send['data']['uuid'])) {
+            if ($data) {
+                $data->satset_uuid = $send['data']['uuid'];
+                $data->save();
+            }
         } else {
             SatsetErrorRespon::create([
-                'uuid' => $pasien->noreg,
+                'uuid' => $pasien->noreg ?? $kdpeg,
                 'response' => $send,
                 'jenis' => 'rajal',
                 'error_summary' => 'Practitioner NIK Dokter tidak ditemukan di SatuSehat Kemkes (NIK: ' . $nik . ')'
+            ]);
+
+            SatsetAuditDataLog::recordAudit([
+                'kategori' => 'PEGAWAI_UNREGISTERED_SATSET',
+                'unit' => 'kepegawaian',
+                'ref_id' => (string)$kdpeg,
+                'noreg' => $pasien->noreg ?? null,
+                'nama' => $namaDokter,
+                'nik_simrs' => $nik,
+                'keterangan' => 'Pegawai/Dokter (' . $namaDokter . ' - NIK: ' . $nik . ') tidak ditemukan/belum terdaftar di SatuSehat Kemkes'
             ]);
         }
         return $send;
@@ -688,44 +1082,39 @@ class PostKunjunganRajalHelper
 
         $practitioner = $practitioner_uuid;
 
+        // 1. Validasi Diagnosa Medis: Wajib ada sebelum memproses Encounter
+        if (empty($request->diagnosa) || count($request->diagnosa) === 0) {
+            SatsetErrorRespon::updateOrCreate(
+                ['uuid' => $request->noreg],
+                [
+                    'response' => ['message' => 'Diagnosa Dokter Belum Diisi di SIMRS (Pengiriman Dibatalkan)'],
+                    'jenis' => 'rajal',
+                    'error_summary' => 'Diagnosa Dokter Belum Diisi di SIMRS'
+                ]
+            );
+
+            $send['message'] = 'failed';
+            $send['data'] = 'Diagnosa dokter belum diisi di SIMRS';
+            return $send;
+        }
+
+        // 2. Waktu Pelayanan Antrean / Task ID dengan Fallback Kronologis Berbasis Waktu Kunjungan
         $taskid = Bpjsrespontime::where('noreg', $request->noreg)->get();
-        if (count($taskid) === 0) {
-            $send['data'] = 'data taskid dari request kosong';
-            return $send;
+        $task3 = $taskid->firstWhere('taskid', '3');
+        $task4 = $taskid->firstWhere('taskid', '4');
+        $task5 = $taskid->firstWhere('taskid', '5');
+
+        if ($task3 && $task5) {
+            $antri = Carbon::parse($task3['created_at'])->toIso8601String();
+            $start = isset($task4['created_at']) ? Carbon::parse($task4['created_at'])->toIso8601String() : Carbon::parse($task3['created_at'])->addMinutes(3)->toIso8601String();
+            $end = Carbon::parse($task5['created_at'])->toIso8601String();
+        } else {
+            $tglMasuk = Carbon::parse($request->tgl_kunjungan ?? now());
+            $antri = $tglMasuk->toIso8601String();
+            $start = $tglMasuk->copy()->addMinutes(5)->toIso8601String();
+            $end = $tglMasuk->copy()->addMinutes(25)->toIso8601String();
         }
 
-        $task3 = $taskid->filter(function ($item) {
-            return $item['taskid'] === '3';
-        })->first();
-        $task4 = $taskid->filter(function ($item) {
-            return $item['taskid'] === '4';
-        })->first();
-        $task5 = $taskid->filter(function ($item) {
-            return $item['taskid'] === '5';
-        })->first();
-
-        if (!$task3 || !$task5) {
-
-            SatsetErrorRespon::create([
-                'uuid' => $request->noreg,
-                'response' => 'TASK iD Tdk lengkap',
-                'jenis' => 'rajal',
-                'error_summary' => 'Task ID Antrean BPJS / SIMRS Tidak Lengkap (Task 3 / 5)'
-            ]);
-
-            $send['data'] = 'TASK iD Tdk lengkap';
-            return $send;
-        }
-
-        $antri = Carbon::parse($task3['created_at'])->toIso8601String();
-
-        $start = isset($task4['created_at']) ? Carbon::parse($task4['created_at'])->toIso8601String() : Carbon::parse($task3['created_at'])->addMinutes(3)->toIso8601String();
-
-
-        $end = Carbon::parse($task5['created_at'])->toIso8601String();
-
-
-        // --- TAMBAHKAN 2 BARIS INI PAK ---
         if ($antri > $start) {
             $antri = $start;
         }
@@ -758,7 +1147,7 @@ class PostKunjunganRajalHelper
             $data = [
                 "condition" => [
                     "reference" => "urn:uuid:$uuid",
-                    "display" => $value['masterdiagnosa']['rs4']
+                    "display" => $value['masterdiagnosa']['rs4'] ?? $value['masterdiagnosa']['rs3'] ?? $value['rs4'] ?? 'Diagnosis Klinis'
                 ],
                 "use" => [
                     "coding" => [
@@ -783,63 +1172,6 @@ class PostKunjunganRajalHelper
                 "rank" => $key + 1
             ];
         }
-
-
-        // $uuid_default = self::generateUuid();
-        // // 3. TAMBAHKAN INI: Jika diagnosa masih kosong, kasih diagnosa default (Observasi)
-        // if (count($diagnosa) == 0) {
-
-        //     $refference[] = [
-        //         "reference" => "$uuid_default",
-        //         'code' => 'Z00.0', // Kode ICD-10 Internasional untuk Pemeriksaan Umum
-        //         "display" => "Pemeriksaan Umum / Observasi",
-        //         "rank" => 1
-        //     ];
-        // } else {
-        //     $diagnosa[] = [
-        //         "condition" => [
-        //             "reference" => "urn:uuid:$uuid_default",
-        //             "display" => "Pemeriksaan Umum / Observasi"
-        //         ],
-        //         "use" => [
-        //             "coding" => [[
-        //                 "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
-        //                 "code" => "DD",
-        //                 "display" => "Discharge diagnosis"
-        //             ]]
-        //         ],
-        //         "rank" => 1
-        //     ];
-        // }
-
-        // 2. JARING PENGAMAN: Jika diagnosa masih kosong, paksa isi Z00.0
-        if (count($diagnosa) == 0) {
-            $uuid_default = self::generateUuid();
-            // Masukkan ke array Diagnosa (Wajib untuk Encounter)
-            $diagnosa[] = [
-                "condition" => [
-                    "reference" => "urn:uuid:$uuid_default",
-                    "display" => "Pemeriksaan Umum / Observasi"
-                ],
-                "use" => [
-                    "coding" => [[
-                        "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
-                        "code" => "DD",
-                        "display" => "Discharge diagnosis"
-                    ]]
-                ],
-                "rank" => 1
-            ];
-            // Masukkan ke array Reference (Wajib untuk resource Condition)
-            $refference[] = [
-                "reference" => "$uuid_default",
-                'code' => 'Z00.0',
-                "display" => "General medical examination",
-                "displayInd" => "Pemeriksaan Umum / Observasi",
-                "rank" => 1
-            ];
-        }
-
 
         // return $antri;
         #Bundle #1
@@ -985,57 +1317,56 @@ class PostKunjunganRajalHelper
 
 
         //  PUSH CONDITION
+        $condition_entries = [];
         foreach ($request->diagnosa as $key => $value) {
-            $cond =
-                [
-                    // "fullUrl" => "urn:uuid:ba5a7dec-023f-45e1-adb9-1b9d71737a5f",
-                    "fullUrl" => $diagnosa[$key]['condition']['reference'],
-                    "resource" => [
-                        "resourceType" => "Condition",
-                        "clinicalStatus" => [
-                            "coding" => [
-                                [
-                                    "system" => "http://terminology.hl7.org/CodeSystem/condition-clinical",
-                                    "code" => "active",
-                                    "display" => "Active"
-                                ]
-                            ]
-                        ],
-                        "category" => [
+            $cond = [
+                "fullUrl" => $diagnosa[$key]['condition']['reference'],
+                "resource" => [
+                    "resourceType" => "Condition",
+                    "clinicalStatus" => [
+                        "coding" => [
                             [
-                                "coding" => [
-                                    [
-                                        "system" => "http://terminology.hl7.org/CodeSystem/condition-category",
-                                        "code" => "encounter-diagnosis",
-                                        "display" => "Encounter Diagnosis"
-                                    ]
-                                ]
+                                "system" => "http://terminology.hl7.org/CodeSystem/condition-clinical",
+                                "code" => "active",
+                                "display" => "Active"
                             ]
-                        ],
-                        "code" => [
-                            "coding" => [
-                                [
-                                    "system" => "http://hl7.org/fhir/sid/icd-10",
-                                    "code" => $value['rs3'],
-                                    "display" => $value['masterdiagnosa']['rs4']
-                                ]
-                            ]
-                        ],
-                        "subject" => [
-                            "reference" => "Patient/$pasien_uuid",
-                            "display" => $request->nama
-                        ],
-                        "encounter" => [
-                            "reference" => "urn:uuid:$encounter",
-                            "display" => "Kunjungan $request->nama di hari $tgl_kunjungan"
                         ]
                     ],
-                    "request" => [
-                        "method" => "POST",
-                        "url" => "Condition"
+                    "category" => [
+                        [
+                            "coding" => [
+                                [
+                                    "system" => "http://terminology.hl7.org/CodeSystem/condition-category",
+                                    "code" => "encounter-diagnosis",
+                                    "display" => "Encounter Diagnosis"
+                                ]
+                            ]
+                        ]
+                    ],
+                    "code" => [
+                        "coding" => [
+                            [
+                                "system" => "http://hl7.org/fhir/sid/icd-10",
+                                "code" => strtoupper((strlen(trim($value['rs3'])) > 3 && !str_contains($value['rs3'], '.')) ? (substr(trim($value['rs3']), 0, 3) . '.' . substr(trim($value['rs3']), 3)) : trim($value['rs3'])),
+                                "display" => $value['masterdiagnosa']['rs4'] ?? $value['masterdiagnosa']['rs3'] ?? 'Diagnosis'
+                            ]
+                        ]
+                    ],
+                    "subject" => [
+                        "reference" => "Patient/$pasien_uuid",
+                        "display" => $request->nama
+                    ],
+                    "encounter" => [
+                        "reference" => "urn:uuid:$encounter",
+                        "display" => "Kunjungan $request->nama di hari $tgl_kunjungan"
                     ]
-                ];
-
+                ],
+                "request" => [
+                    "method" => "POST",
+                    "url" => "Condition"
+                ]
+            ];
+            $condition_entries[] = $cond;
             array_push($body['entry'], $cond);
         }
 
@@ -1125,6 +1456,17 @@ class PostKunjunganRajalHelper
             }
         }
 
+        // PUSH COMPOSITION (Resume Medis Rawat Jalan)
+        $composition = self::compositionRajal($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $condition_entries ?? []);
+        if ($composition !== null) {
+            array_push($body['entry'], $composition);
+        }
+
+        // PUSH EPISODEOFCARE (Program Kasus Kronis / TB / CAD / CKD / Kanker)
+        $episodeOfCare = self::episodeOfCare($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $refference);
+        if ($episodeOfCare !== null) {
+            array_push($body['entry'], $episodeOfCare);
+        }
 
         $send['message'] = 'success';
         $send['data'] = $body;
@@ -1715,28 +2057,49 @@ class PostKunjunganRajalHelper
 
     static function carePlan($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
     {
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama'] : ($request->dokter ?? '-');
+        $created = count($request->pemeriksaanfisik ?? []) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String() : Carbon::parse($request->tgl_kunjungan ?? now())->addMinutes(14)->toIso8601String();
 
-        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama'] : '-';
-        $created = count($request->pemeriksaanfisik) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String() : Carbon::parse($request->tgl_kunjungan)->addMinutes(14)->toIso8601String();
-
-        $diagnosaKeperawatan = $request->diagnosakeperawatan;
-
+        $diagnosaKeperawatan = $request->diagnosakeperawatan ?? [];
         $carePlan = [];
 
         if (count($diagnosaKeperawatan) > 0) {
-            $intervensis = $diagnosaKeperawatan[0]['intervensi'];
+            $rawIntervensis = $diagnosaKeperawatan[0]['intervensi'] ?? [];
+            // Deduplikasi intervensi agar tidak ada teks nama intervensi kembar dalam 1 berkas
+            $intervensis = collect($rawIntervensis)
+                ->filter(function ($iv) {
+                    return !empty($iv['masterintervensi']['nama']);
+                })
+                ->unique(function ($iv) {
+                    return trim($iv['masterintervensi']['nama']);
+                })
+                ->values()
+                ->all();
+
             if (count($intervensis) > 0) {
+                $title = "RENCANA RAWAT PASIEN " . ($diagnosaKeperawatan[0]['nama'] ?? 'UMUM');
 
-
-
-                $title = "RENCANA RAWAT PASIEN " . $diagnosaKeperawatan[0]['nama'];
-
-                // $terapeutik = $terapeutik ? $terapeutik->masterintervensi['nama'] : 'Rencana Rawat Pasien';
+                $authorUuid = !empty($diagnosaKeperawatan[0]['petugas']['satset_uuid'])
+                    ? $diagnosaKeperawatan[0]['petugas']['satset_uuid']
+                    : $practitioner_uuid;
+                $authorNama = !empty($diagnosaKeperawatan[0]['petugas']['nama'])
+                    ? $diagnosaKeperawatan[0]['petugas']['nama']
+                    : $nama_practitioner;
 
                 for ($i = 0; $i < count($intervensis); $i++) {
+                    $authorData = [];
+                    if (!empty($authorUuid)) {
+                        $authorData = [
+                            "author" => [
+                                "reference" => "Practitioner/" . $authorUuid,
+                                "display" => $authorNama,
+                            ]
+                        ];
+                    }
+
                     $plan = [
                         "fullUrl" => "urn:uuid:" . self::generateUuid(),
-                        "resource" => [
+                        "resource" => array_merge([
                             "resourceType" => "CarePlan",
                             "status" => "active",
                             "intent" => "plan",
@@ -1752,28 +2115,20 @@ class PostKunjunganRajalHelper
                                 ],
                             ],
                             "title" => $title,
-                            "description" => $intervensis[$i]['masterintervensi']['nama'],
+                            "description" => trim($intervensis[$i]['masterintervensi']['nama']),
                             "subject" => [
                                 "reference" => "Patient/$pasien_uuid",
                                 "display" => "$request->nama",
                             ],
                             "encounter" => ["reference" => "urn:uuid:$encounter"],
                             "created" => $created,
-                            "author" => [
-                                "reference" => "Practitioner/" . $diagnosaKeperawatan[0]['petugas']['satset_uuid'],
-                                "display" => $diagnosaKeperawatan[0]['petugas']['nama'],
-                            ],
-                        ],
+                        ], $authorData),
                         "request" => ["method" => "POST", "url" => "CarePlan"],
                     ];
 
                     $carePlan[] = $plan;
                 }
-            } else {
-                $carePlan = [];
             }
-        } else {
-            $carePlan = [];
         }
 
         return $carePlan;
@@ -1796,9 +2151,11 @@ class PostKunjunganRajalHelper
                     $dt->settings(['formatFunction' => 'translatedFormat']);
                     $waktuPerform = $dt->format('l, j F Y');
 
-                    $petugas_id = $isi->petugas['satset_uuid'] ?? null;
+                    $petugas_id = !empty($isi->petugas['satset_uuid']) ? $isi->petugas['satset_uuid'] : $practitioner_uuid;
+                    $petugas_nama = !empty($isi->petugas['nama']) ? $isi->petugas['nama'] : ($request->datasimpeg['nama'] ?? ($request->dokter ?? '-'));
+
                     $procedure = null;
-                    if ($petugas_id != null) {
+                    if (!empty($petugas_id)) {
                         $procedure =
                             [
                                 "fullUrl" => "urn:uuid:" . self::generateUuid(),
@@ -1809,20 +2166,21 @@ class PostKunjunganRajalHelper
                                         "coding" => [
                                             [
                                                 "system" => "http://snomed.info/sct",
-                                                "code" => $isi->maapingsnowmed['kdSnowmed'] ?? '-',
-                                                "display" => $isi->maapingsnowmed['display'] ?? '-',
+                                                "code" => "103693007",
+                                                "display" => "Diagnostic procedure",
                                             ],
                                         ],
-                                        "text" => $isi->maapingsnowmed['display'] ?? '-'
+                                        "text" => "Diagnostic procedure"
                                     ],
                                     "code" => [
                                         "coding" => [
                                             [
                                                 "system" => "http://hl7.org/fhir/sid/icd-9-cm",
-                                                "code" => $isi->maapingprocedure['icd9'] ?? '-',
-                                                "display" => $isi->maapingprocedure['prosedur'] ?? '-',
-                                            ],
+                                                "code" => !empty($isi->maapingprocedure['icd9']) ? $isi->maapingprocedure['icd9'] : '89.07',
+                                                "display" => $isi->maapingprocedure['prosedur'] ?? ($isi->keterangan ?? 'General physical examination'),
+                                            ]
                                         ],
+                                        "text" => $isi->keterangan ?? ($isi->maapingprocedure['prosedur'] ?? 'Tindakan Medis')
                                     ],
                                     "subject" => [
                                         "reference" => "Patient/$pasien_uuid",
@@ -1839,8 +2197,8 @@ class PostKunjunganRajalHelper
                                     "performer" => [
                                         [
                                             "actor" => [
-                                                "reference" => "Practitioner/" . $isi->petugas['satset_uuid'],
-                                                "display" => $isi->petugas['nama'],
+                                                "reference" => "Practitioner/" . $petugas_id,
+                                                "display" => $petugas_nama,
                                             ],
                                         ],
                                     ],
@@ -1920,8 +2278,8 @@ class PostKunjunganRajalHelper
 
 
 
-                $petugas_uuid = $isi->spri['petugas'] ? $isi->spri['petugas']['satset_uuid'] : '-';
-                $petugas_nama = $isi->spri['petugas'] ? $isi->spri['petugas']['nama'] : '-';
+                $petugas_uuid = !empty($isi->spri['petugas']['satset_uuid']) && $isi->spri['petugas']['satset_uuid'] !== '-' ? $isi->spri['petugas']['satset_uuid'] : $practitioner_uuid;
+                $petugas_nama = !empty($isi->spri['petugas']['nama']) && $isi->spri['petugas']['nama'] !== '-' ? $isi->spri['petugas']['nama'] : $nama_practitioner;
 
                 $spri =
                     [
@@ -2333,7 +2691,7 @@ class PostKunjunganRajalHelper
                 return ($item['jenis'] ?? '') === 'Primer';
             })->first();
 
-            $pasienKonsul = !isEmpty($request->rs4);
+            $pasienKonsul = !empty($request->rs4);
 
             if ($ref && !$pasienKonsul) {
                 $prognosis =
@@ -2451,7 +2809,7 @@ class PostKunjunganRajalHelper
             'kontrol' => $kontrol,
             'prognosis' => $prognosis,
             'refference' => $refference,
-            'pasienKonsul' => !isEmpty($request->rs4)
+            'pasienKonsul' => !empty($request->rs4)
 
         ];
         return $data;
@@ -2468,11 +2826,17 @@ class PostKunjunganRajalHelper
         $anamnesis = $request->anamnesis;
         if (count($anamnesis) > 0) {
 
-            if ($anamnesis[0]['riwayatalergi'] === null || $anamnesis[0]['riwayatalergi'] === '' || $anamnesis[0]['riwayatalergi'] === 'Tidak ada Alergi' || $anamnesis[0]['riwayatalergi'] === 'Tidak Ada Alergi,') {
+            $rawAlergi = $anamnesis[0]['riwayatalergi'] ?? null;
+            if (is_array($rawAlergi)) {
+                $rawAlergi = implode(', ', $rawAlergi);
+            }
+            $rawAlergi = trim((string)$rawAlergi);
+
+            if ($rawAlergi === '' || $rawAlergi === 'Tidak ada Alergi' || $rawAlergi === 'Tidak Ada Alergi,' || $rawAlergi === 'Tidak Ada Alergi') {
                 $allergy = null;
             } else {
 
-                $anamnesisAllergi = preg_replace("/[^a-zA-Z0-9]/", ",", $anamnesis[0]['riwayatalergi']);
+                $anamnesisAllergi = preg_replace("/[^a-zA-Z0-9]/", ",", $rawAlergi);
                 $cek = Allergy::where('nama', 'like', '%' . $anamnesisAllergi . '%')->first();
 
                 if ($cek) {
@@ -2935,13 +3299,15 @@ class PostKunjunganRajalHelper
                                     ],
                                     "request" => ["method" => "POST", "url" => "Observation"],
                                 ];
+                            $rawSatuan = $pemetaan['satuan'] ?? '';
+                            $ucumUnit = self::sanitizeUcumUnit($rawSatuan);
                             $includHasil =
                                 [
                                     "valueQuantity" => [
-                                        "value" => $hasil,
-                                        "unit" => $pemetaan['satuan'], // ini satuan
+                                        "value" => is_numeric($hasil) ? (float)$hasil : $hasil,
+                                        "unit" => $rawSatuan, // display unit
                                         "system" => "http://unitsofmeasure.org",
-                                        "code" => $pemetaan['satuan'],
+                                        "code" => $ucumUnit,
                                     ]
                                 ];
 
@@ -3293,7 +3659,7 @@ class PostKunjunganRajalHelper
          */
 
         $diagnosa = collect($request->diagnosa)->filter(function ($item) {
-            return strpos($item['rs3'], 'Z') === false;
+            return strpos((string)($item['rs3'] ?? ''), 'Z') === false;
         });
         $diag = count($diagnosa) > 0 ? $diagnosa->first() : null;
 
@@ -3535,7 +3901,7 @@ class PostKunjunganRajalHelper
                                                     "patientInstruction" => $nonRacikan[$j]['aturan'] . " " . $nonRacikan[$j]['keterangan'],
                                                     "timing" => [
                                                         "repeat" => [
-                                                            "frequency" => $nonRacikan[$j]['konsumsi_perhari'] ?? 1,
+                                                            "frequency" => max(1, (int)round((float)($nonRacikan[$j]['konsumsi_perhari'] ?? 1))),
                                                             "period" => 1,
                                                             "periodUnit" => "d",
                                                         ],
@@ -3553,7 +3919,7 @@ class PostKunjunganRajalHelper
                                             ],
                                             "dispenseRequest" => [
                                                 "dispenseInterval" => [
-                                                    "value" => $nonRacikan[$j]['konsumsi_perhari'] ?? 1,
+                                                    "value" => max(1, (int)round((float)($nonRacikan[$j]['konsumsi_perhari'] ?? 1))),
                                                     "unit" => "days",
                                                     "system" => "http://unitsofmeasure.org",
                                                     "code" => "d",
@@ -3684,8 +4050,8 @@ class PostKunjunganRajalHelper
                                             "performer" => [
                                                 [
                                                     "actor" => [
-                                                        "reference" => "Practitioner/" . $apoteker_uuid,
-                                                        "display" => $nama_apoteker,
+                                                        "reference" => "Practitioner/" . (!empty($apoteker_uuid) ? $apoteker_uuid : (!empty($practitioner_uuid) ? $practitioner_uuid : '10000001')),
+                                                        "display" => !empty($apoteker_uuid) ? $nama_apoteker : (!empty($nama_practitioner) ? $nama_practitioner : 'Petugas Farmasi'),
                                                     ],
                                                 ],
                                             ],
@@ -3699,26 +4065,26 @@ class PostKunjunganRajalHelper
                                                 ],
                                             ],
                                             "daysSupply" => [
-                                                "value" => $nonRacikan[$j]['konsumsi_perhari'] ?? 1,
-                                                "unit" => "Day",
-                                                "system" => "http://unitsofmeasure.org",
-                                                "code" => "d",
-                                            ],
-                                            "whenPrepared" => Carbon::parse($tgl_kirim)->toIso8601String(), // ini otw tgl diterima
-                                            "whenHandedOver" => Carbon::parse($tgl_selesai)->toIso8601String(),
-                                            "dosageInstruction" => [
-                                                [
-                                                    "sequence" => 1,
-                                                    "patientInstruction" => $nonRacikan[$j]['aturan'] . " " . $nonRacikan[$j]['keterangan'],
-                                                    "timing" => [
-                                                        "repeat" => [
-                                                            "frequency" => $nonRacikan[$j]['konsumsi_perhari'] ?? 1,
-                                                            "period" => 1,
-                                                            "periodUnit" => "d",
-                                                        ],
-                                                    ],
-                                                ],
-                                            ],
+                                                 "value" => max(1, (int)round((float)($nonRacikan[$j]['konsumsi_perhari'] ?? 1))),
+                                                 "unit" => "Day",
+                                                 "system" => "http://unitsofmeasure.org",
+                                                 "code" => "d",
+                                             ],
+                                             "whenPrepared" => Carbon::parse($tgl_kirim)->toIso8601String(), // ini otw tgl diterima
+                                             "whenHandedOver" => Carbon::parse($tgl_selesai)->toIso8601String(),
+                                             "dosageInstruction" => [
+                                                 [
+                                                     "sequence" => 1,
+                                                     "patientInstruction" => $nonRacikan[$j]['aturan'] . " " . $nonRacikan[$j]['keterangan'],
+                                                     "timing" => [
+                                                         "repeat" => [
+                                                             "frequency" => max(1, (int)round((float)($nonRacikan[$j]['konsumsi_perhari'] ?? 1))),
+                                                             "period" => 1,
+                                                             "periodUnit" => "d",
+                                                         ],
+                                                     ],
+                                                 ],
+                                             ],
                                         ],
                                         "request" => ["method" => "POST", "url" => "MedicationDispense"],
                                     ];
@@ -3823,10 +4189,93 @@ class PostKunjunganRajalHelper
                 ];
         }
 
-
-
-
         return $data;
+    }
+
+
+
+
+    static function compositionRajal($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $diagnosa = [])
+    {
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama'] : '-';
+        $tglKirim = Carbon::parse($request->tgl_kunjungan ?? now())->toIso8601String();
+
+        $sections = [];
+
+        // Section 1: Diagnosis Pelayanan Rawat Jalan
+        $diagRefs = [];
+        if (!empty($diagnosa)) {
+            foreach ($diagnosa as $d) {
+                if (!empty($d['fullUrl'])) {
+                    $diagRefs[] = ["reference" => $d['fullUrl']];
+                }
+            }
+        }
+
+        $displayDiag = $request->diagnosa[0]['masterdiagnosa']['rs4'] ?? ($request->diagnosa[0]['masterdiagnosa']['rs3'] ?? 'Pelayanan Rawat Jalan');
+
+        $sections[] = [
+            "title" => "Diagnosis Pelayanan Rawat Jalan",
+            "code" => [
+                "coding" => [
+                    [
+                        "system" => "http://loinc.org",
+                        "code" => "11535-2",
+                        "display" => "Hospital discharge Dx"
+                    ]
+                ]
+            ],
+            "text" => [
+                "status" => "additional",
+                "div" => $displayDiag
+            ],
+            "entry" => !empty($diagRefs) ? $diagRefs : [["reference" => "urn:uuid:" . self::generateUuid()]]
+        ];
+
+        return [
+            "fullUrl" => "urn:uuid:" . self::generateUuid(),
+            "resource" => [
+                "resourceType" => "Composition",
+                "identifier" => [
+                    [
+                        "system" => "http://sys-ids.kemkes.go.id/composition/" . $organization_id,
+                        "value" => "RESUME-RAJAL-" . ($request->noreg ?? $request->rs1)
+                    ]
+                ],
+                "status" => "final",
+                "type" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "11488-4",
+                            "display" => "Consultation note"
+                        ]
+                    ]
+                ],
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://loinc.org",
+                                "code" => "LP173421-1",
+                                "display" => "Report"
+                            ]
+                        ]
+                    ]
+                ],
+                "subject" => ["reference" => "Patient/" . $pasien_uuid, "display" => $request->nama],
+                "encounter" => [
+                    "reference" => "urn:uuid:" . $encounter,
+                    "display" => "Pelayanan Rawat Jalan " . $request->nama
+                ],
+                "date" => $tglKirim,
+                "author" => [["reference" => "Practitioner/" . $practitioner_uuid, "display" => $nama_practitioner]],
+                "title" => "Resume Medis Rawat Jalan",
+                "custodian" => ["reference" => "Organization/" . $organization_id],
+                "section" => $sections
+            ],
+            "request" => ["method" => "POST", "url" => "Composition"]
+        ];
     }
 
     static function telaah($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
@@ -3835,29 +4284,38 @@ class PostKunjunganRajalHelper
         // return $telaah['petugas']['satset_uuid'];
         $data = null;
         if ($telaah) {
-            if (!$telaah['petugas']) {
-                $data = null;
+            $authorUuid = !empty($telaah['petugas']['satset_uuid']) && $telaah['petugas']['satset_uuid'] !== '-'
+                ? $telaah['petugas']['satset_uuid']
+                : $practitioner_uuid;
+            $authorNama = !empty($telaah['petugas']['nama']) && $telaah['petugas']['nama'] !== '-'
+                ? $telaah['petugas']['nama']
+                : ($request->dokter->nama ?? 'Petugas Farmasi');
+
+            if (empty($authorUuid) || $authorUuid === '-') {
+                return null;
             }
 
             $items = [];
 
-            foreach ($telaah['administrasi'] as $key => $value) {
-                $det =
-                    [
-                        "linkId" => $value['kode'],
-                        "text" => $value['question'],
-                        "answer" => [
-                            [
-                                "valueCoding" => [
-                                    "system" =>
-                                    "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
-                                    "code" => "OV000052",
-                                    "display" => $value['value'],
+            if (!empty($telaah['administrasi']) && is_array($telaah['administrasi'])) {
+                foreach ($telaah['administrasi'] as $key => $value) {
+                    $det =
+                        [
+                            "linkId" => $value['kode'],
+                            "text" => $value['question'],
+                            "answer" => [
+                                [
+                                    "valueCoding" => [
+                                        "system" =>
+                                        "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                                        "code" => "OV000052",
+                                        "display" => $value['value'],
+                                    ],
                                 ],
                             ],
-                        ],
-                    ];
-                array_push($items, $det);
+                        ];
+                    array_push($items, $det);
+                }
             }
 
             $data =
@@ -3870,10 +4328,10 @@ class PostKunjunganRajalHelper
                         "status" => "completed",
                         "subject" => ["reference" => "Patient/" . $pasien_uuid, "display" => $request->nama],
                         "encounter" => ["reference" => "urn:uuid:" . $encounter],
-                        "authored" => Carbon::parse($telaah['created_at'])->toIso8601String(),
+                        "authored" => Carbon::parse($telaah['created_at'] ?? now())->toIso8601String(),
                         "author" => [
-                            "reference" => "Practitioner/" . $telaah['petugas']['satset_uuid'],
-                            "display" => $telaah['petugas']['nama'],
+                            "reference" => "Practitioner/" . $authorUuid,
+                            "display" => $authorNama,
                         ],
                         "source" => ["reference" => "Patient/" . $pasien_uuid],
                         "item" => [
@@ -4255,7 +4713,7 @@ class PostKunjunganRajalHelper
                             // "effectiveDateTime" => "2023-01-23T18:00:00+00:00",
                             // "dateAsserted" => "2023-06-04T05:40:00+00:00",
                             "informationSource" => ["reference" => "Patient/" . $pasien_uuid, "display" => $request->nama],
-                            "context" => ["reference" => "Encounter/" . $encounter],
+                            "context" => ["reference" => str_starts_with($encounter, 'urn:uuid:') ? $encounter : (str_starts_with($encounter, 'Encounter/') ? $encounter : "Encounter/" . $encounter)],
                         ],
                         "request" => ["method" => "POST", "url" => "MedicationStatement"],
                     ];
@@ -4265,5 +4723,161 @@ class PostKunjunganRajalHelper
         }
 
         return $data;
+    }
+
+    static function medicationStatement($request, $pasien_uuid, $encounter_uuid)
+    {
+        return self::riwayatPengobatan($request, $encounter_uuid, null, null, $pasien_uuid);
+    }
+
+    public static function episodeOfCare($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $refference = [])
+    {
+        $namaPractitioner = $request->datasimpeg ? $request->datasimpeg['nama'] : ($request->dokter ?? '-');
+        $eocUuid = "urn:uuid:" . self::generateUuid();
+        $tglMulai = Carbon::parse($request->tgl_kunjungan ?? now())->toIso8601String();
+
+        // Cari apakah ada diagnosa yang cocok untuk EpisodeOfCare (TB, Kanker, Jantung CAD, Ginjal CKD)
+        $selectedType = null;
+        $matchedCondition = null;
+
+        if (!empty($refference) && is_array($refference)) {
+            foreach ($refference as $ref) {
+                $code = strtoupper(trim($ref['code'] ?? ''));
+                if (empty($code)) continue;
+
+                if (Str::startsWith($code, ['A15', 'A16', 'A17', 'A18', 'A19'])) {
+                    $selectedType = [
+                        "code" => "TB-SO",
+                        "display" => "Tuberkulosis Sensitif Obat"
+                    ];
+                    $matchedCondition = $ref;
+                    break;
+                } elseif (Str::startsWith($code, ['N18'])) {
+                    $selectedType = [
+                        "code" => "CKD",
+                        "display" => "Chronic Kidney Disease"
+                    ];
+                    $matchedCondition = $ref;
+                    break;
+                } elseif (Str::startsWith($code, ['I20', 'I21', 'I22', 'I23', 'I24', 'I25'])) {
+                    $selectedType = [
+                        "code" => "CAD",
+                        "display" => "Coronary Arterial Disease Management Care"
+                    ];
+                    $matchedCondition = $ref;
+                    break;
+                } elseif (Str::startsWith($code, ['C', 'D0', 'D1', 'D2', 'D3', 'D4'])) {
+                    $selectedType = [
+                        "code" => "CNC",
+                        "display" => "Cancer Management Care"
+                    ];
+                    $matchedCondition = $ref;
+                    break;
+                }
+            }
+        }
+
+        if (!$selectedType) {
+            return null;
+        }
+
+        // Cek apakah pasien sudah memiliki riwayat EpisodeOfCare aktif untuk program penyakit ini dari kunjungan sebelumnya
+        $norm = $request->norm ?? $request->rs2;
+        if (!empty($norm)) {
+            $hasPreviousActiveEoc = KunjunganPoli::where('rs17.rs2', $norm)
+                ->where('rs17.rs1', '!=', $request->noreg ?? $request->rs1)
+                ->where('rs17.rs3', '<', $request->tgl_kunjungan)
+                ->has('satset')
+                ->whereHas('diagnosa.masterdiagnosa', function ($q) use ($selectedType) {
+                    if ($selectedType['code'] === 'TB-SO') {
+                        $q->where('rs1', 'LIKE', 'A15%')->orWhere('rs1', 'LIKE', 'A16%')->orWhere('rs1', 'LIKE', 'A17%')->orWhere('rs1', 'LIKE', 'A18%')->orWhere('rs1', 'LIKE', 'A19%');
+                    } elseif ($selectedType['code'] === 'CKD') {
+                        $q->where('rs1', 'LIKE', 'N18%');
+                    } elseif ($selectedType['code'] === 'CAD') {
+                        $q->where('rs1', 'LIKE', 'I20%')->orWhere('rs1', 'LIKE', 'I21%')->orWhere('rs1', 'LIKE', 'I22%')->orWhere('rs1', 'LIKE', 'I23%')->orWhere('rs1', 'LIKE', 'I24%')->orWhere('rs1', 'LIKE', 'I25%');
+                    } elseif ($selectedType['code'] === 'CNC') {
+                        $q->where('rs1', 'LIKE', 'C%')->orWhere('rs1', 'LIKE', 'D0%')->orWhere('rs1', 'LIKE', 'D1%')->orWhere('rs1', 'LIKE', 'D2%')->orWhere('rs1', 'LIKE', 'D3%')->orWhere('rs1', 'LIKE', 'D4%');
+                    }
+                })
+                ->exists();
+
+            if ($hasPreviousActiveEoc) {
+                // Pasien sudah memiliki EpisodeOfCare aktif pada kunjungan sebelumnya.
+                // Sesuai kaidah FHIR Kemenkes, pada kunjungan kontrol lanjutan tidak membuat POST EpisodeOfCare baru lagi.
+                return null;
+            }
+        }
+
+        $diag = [];
+        if ($matchedCondition) {
+            $diag[] = [
+                "condition" => [
+                    "reference" => "urn:uuid:" . $matchedCondition['reference'],
+                    "display" => $matchedCondition['display'] ?? $matchedCondition['displayInd'] ?? 'Diagnosis'
+                ],
+                "role" => [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
+                            "code" => "CC",
+                            "display" => "Chief complaint"
+                        ]
+                    ]
+                ],
+                "rank" => 1
+            ];
+        }
+
+        return [
+            "fullUrl" => $eocUuid,
+            "resource" => [
+                "resourceType" => "EpisodeOfCare",
+                "identifier" => [
+                    [
+                        "system" => "http://sys-ids.kemkes.go.id/episode-of-care/" . $organization_id,
+                        "value" => "EOC-" . ($request->noreg ?? $request->rs1)
+                    ]
+                ],
+                "status" => "active",
+                "statusHistory" => [
+                    [
+                        "status" => "active",
+                        "period" => [
+                            "start" => $tglMulai
+                        ]
+                    ]
+                ],
+                "type" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.kemkes.go.id/CodeSystem/episodeofcare-type",
+                                "code" => $selectedType['code'],
+                                "display" => $selectedType['display']
+                            ]
+                        ]
+                    ]
+                ],
+                "diagnosis" => $diag,
+                "patient" => [
+                    "reference" => "Patient/" . $pasien_uuid,
+                    "display" => $request->nama
+                ],
+                "managingOrganization" => [
+                    "reference" => "Organization/" . $organization_id
+                ],
+                "period" => [
+                    "start" => $tglMulai
+                ],
+                "careManager" => [
+                    "reference" => "Practitioner/" . $practitioner_uuid,
+                    "display" => $namaPractitioner
+                ]
+            ],
+            "request" => [
+                "method" => "POST",
+                "url" => "EpisodeOfCare"
+            ]
+        ];
     }
 }

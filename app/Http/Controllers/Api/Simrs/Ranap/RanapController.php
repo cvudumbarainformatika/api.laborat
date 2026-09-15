@@ -119,12 +119,13 @@ class RanapController extends Controller
                                 $skrining[$key] !== null &&
                                 $skrining[$key] !== false &&
                                 $skrining[$key] !== '' &&
-                                $skrining[$key] !== []
+                                $skrining[$key] !== [] &&
+                                $skrining[$key] !== 'None'
                             ) {
                                 $score++;
                             }
                         }
-                        if ($score >= 3) {
+                        if ($score > 3) {
                             $item->pasien_mpp = true;
                         }
                     }

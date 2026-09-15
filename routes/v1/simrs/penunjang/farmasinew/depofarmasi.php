@@ -51,6 +51,7 @@ Route::group([
     Route::post('/pembuatanresep', [EresepController::class, 'pembuatanresep']);
     // Route::get('/listresepbydokter', [EresepController::class, 'listresepbydokter']);
     Route::get('/listresepbydokter', [EresepController::class, 'newlistresepbydokter']);
+    Route::get('/download-list-resep', [EresepController::class, 'downloadListResep']);
     Route::post('/kirimresep', [EresepController::class, 'kirimresep']);
     Route::get('/conterracikan', [EresepController::class, 'conterracikan']);
     // Route::post('/eresepobatkeluar', [EresepController::class, 'eresepobatkeluar']);

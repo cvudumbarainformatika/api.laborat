@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Events\NotifMessageEvent;
+use App\Exports\DepoEresepExport;
+use App\Exports\DepoEresepXlsxWriter;
 use App\Helpers\FormatingHelper;
 use App\Helpers\HargaHelper;
 use App\Helpers\ResponseHelper;
@@ -39,9 +41,43 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class EresepController extends Controller
 {
+
+    public function downloadListResep(Request $request)
+    {
+        $validated = $request->validate([
+            'from' => ['required', 'date_format:Y-m-d'],
+            'to' => ['required', 'date_format:Y-m-d', 'after_or_equal:from'],
+            'kddepo' => ['required', 'string'],
+            'flag' => ['nullable', Rule::in(['', '1', '2', '3', '4', '5', 'semua', 'tidak_diberikan_semua'])],
+            'format' => ['required', 'in:header,rincian'],
+        ]);
+
+        $filename = sprintf(
+            'list-e-resep-%s-%s-sampai-%s.xlsx',
+            $validated['format'],
+            $validated['from'],
+            $validated['to']
+        );
+
+        $export = new DepoEresepExport(
+            $validated['from'],
+            $validated['to'],
+            $validated['kddepo'],
+            $validated['flag'] ?? '',
+            $validated['format']
+        );
+        $path = DepoEresepXlsxWriter::write($export);
+
+        return response()->download(
+            $path,
+            $filename,
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+        )->deleteFileAfterSend(true);
+    }
 
     public function getForPrint()
     {

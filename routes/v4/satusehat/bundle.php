@@ -24,4 +24,9 @@ Route::group([
     Route::get('/dashboard/list-kunjungan', [DashboardSatsetController::class, 'listKunjungan']);
     Route::get('/dashboard/detail-kunjungan', [DashboardSatsetController::class, 'detailKunjungan']);
     Route::post('/dashboard/retry', [DashboardSatsetController::class, 'retry']);
+
+    // Audit Log & Rekonsiliasi Data SatuSehat
+    Route::get('/dashboard/audit-stats', [DashboardSatsetController::class, 'auditStats']);
+    Route::get('/dashboard/audit-list', [DashboardSatsetController::class, 'auditList']);
+    Route::post('/dashboard/audit-update-status', [DashboardSatsetController::class, 'updateAuditStatus']);
 });

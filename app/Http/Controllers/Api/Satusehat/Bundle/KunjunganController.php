@@ -30,10 +30,8 @@ class KunjunganController extends Controller
         $jenis_kunjungan = request('jenis');
 
         if ($jenis_kunjungan === 'hd') {
-
-            return PostKunjunganHDHerlper::cobarajal('110752/01/2025/J');
-            // return CobaPostKunjunganRajalHelper::cekKunjungan('74740/09/2024/J');
-            // return self::cekKunjunganRajal('74748/09/2024/J');
+            $noreg = request('noreg') ?: '110752/01/2025/J';
+            return PostKunjunganHDHerlper::cobarajal($noreg);
         }
         if ($jenis_kunjungan === 'rajal') {
 
@@ -649,7 +647,7 @@ class KunjunganController extends Controller
         $send = PostKunjunganRanapHelper::form($data, $pasien_uuid);
         if ($send['message'] === 'success') {
             $token = AuthSatsetHelper::accessToken();
-            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg, 'ranap');
         }
         return $send;
     }

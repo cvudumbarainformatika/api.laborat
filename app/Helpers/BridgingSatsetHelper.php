@@ -246,11 +246,10 @@ class BridgingSatsetHelper
             isset($data['resourceType']) &&
             $data['resourceType'] === 'OperationOutcome'
         ) {
-
             $err = [
                 'method'   => 'POST',
                 'url'      => $params,
-                'response' => $data
+                'response' => self::compactErrorResponse($data, $response->status(), $response->body())
             ];
 
             // simpan log
@@ -290,12 +289,12 @@ class BridgingSatsetHelper
         $data = json_decode($response, true);
 
         // JIKA ERROR
-        $error = $data['resourceType'] === 'OperationOutcome';
+        $error = ($data['resourceType'] ?? '') === 'OperationOutcome';
         if ($error) {
             $err = [
                 'method' => 'PUT',
                 'url' => $params,
-                'response' => $data
+                'response' => self::compactErrorResponse($data, $response->status(), $response->body())
             ];
             $resp = SatsetErrorRespon::create($err);
 
@@ -328,8 +327,6 @@ class BridgingSatsetHelper
     public static function post_bundle($token, $form, $noreg, $jenis = null)
     {
         $url = self::base_url();
-        $response = Http::withToken($token)->post($url, $form);
-        $data = json_decode($response, true);
 
         // Deteksi jenis modul jika null
         if (!$jenis) {
@@ -348,91 +345,191 @@ class BridgingSatsetHelper
                         $jenis = 'rajal';
                     }
                 } else {
-                    // 3. Fallback
+                    // 3. Fallback (Hanya jika noreg SIMRS)
                     if (str_ends_with(strtolower($noregStr), '/i')) {
                         $jenis = 'ranap';
                     } elseif (str_ends_with(strtolower($noregStr), '/x')) {
                         $jenis = 'igd';
-                    } else {
+                    } elseif (str_ends_with(strtolower($noregStr), '/j')) {
                         $jenis = 'rajal';
+                    } else {
+                        $jenis = null;
                     }
                 }
             }
         }
 
-        $statusCode = $response->status();
-        $isSuccess = ($statusCode === 200 || $statusCode === 201) && isset($data['resourceType']) && $data['resourceType'] === 'Bundle';
+        try {
+            $response = Http::timeout(60)->withToken($token)->post($url, $form);
+            $data = json_decode($response, true);
 
-        // JIKA GAGAL / ERROR
-        if (!$isSuccess) {
-            $errorSummary = 'Error SatuSehat HTTP ' . $statusCode;
-            if (isset($data['issue']) && is_array($data['issue']) && count($data['issue']) > 0) {
-                $errorSummary = $data['issue'][0]['details']['text'] ?? $data['issue'][0]['diagnostics'] ?? $errorSummary;
-            } elseif (isset($data['message'])) {
-                $errorSummary = $data['message'];
+            $statusCode = $response->status();
+            $isSuccess = ($statusCode === 200 || $statusCode === 201) && isset($data['resourceType']) && $data['resourceType'] === 'Bundle';
+
+            // JIKA GAGAL / ERROR
+            if (!$isSuccess) {
+                $errorSummary = 'Error SatuSehat HTTP ' . $statusCode;
+                if (isset($data['issue']) && is_array($data['issue']) && count($data['issue']) > 0) {
+                    $errorSummary = $data['issue'][0]['details']['text'] ?? $data['issue'][0]['diagnostics'] ?? $errorSummary;
+                } elseif (isset($data['message'])) {
+                    $errorSummary = $data['message'];
+                }
+
+                $cleanError = self::compactErrorResponse($data, $statusCode, $response->body());
+
+                $err = [
+                    'method' => 'POST',
+                    'url' => $url,
+                    'response' => $cleanError,
+                    'uuid' => $noreg,
+                    'jenis' => $jenis,
+                    'error_summary' => substr($errorSummary, 0, 255),
+                ];
+                $resp = SatsetErrorRespon::updateOrCreate(['uuid' => $noreg], $err);
+
+                return [
+                    'message' => 'failed',
+                    'data' => $resp
+                ];
             }
 
+            // JIKA SUCCESS - Standarkan compact bundle response untuk semua modul (Rajal, IGD, Ranap)
+            $saveData = self::compactBundleResponse($data);
+
+            $success = [
+                'method' => 'POST',
+                'url' => $url,
+                'response' => $saveData,
+                'jenis' => $jenis,
+            ];
+            $resp = Satset::updateOrCreate([
+                'resource' => $data['resourceType'] ?? 'Bundle',
+                'uuid' => $noreg
+            ], $success);
+
+            // Jika sukses, bersihkan dari tabel satset_error_respon
+            SatsetErrorRespon::where('uuid', $noreg)->delete();
+
+            $send = [
+                'message' => 'success',
+                'data' => $resp
+            ];
+
+            // Push DICOM PACS jika ada
+            try {
+                $pacs = DB::table('rs48_pacs')
+                    ->where('noreg', $noreg)
+                    ->where('status', 'COMPLETED')
+                    ->whereNotNull('study_id')
+                    ->get(['nota', 'study_id']);
+                foreach ($pacs as $item) {
+                    try {
+                        Http::withHeaders(['X-API-KEY' => config('services.orthanc.api_key')])
+                            ->timeout(3)
+                            ->post(config('services.orthanc.url') . '/api/v1/satusehat/push-dicom', [
+                                'nota'     => $item->nota,
+                                'study_id' => $item->study_id,
+                            ]);
+                    } catch (\Exception $e) {
+                        Log::error("Gagal Push DICOM ke Middleware untuk Nota: " . $item->nota . ". Error: " . $e->getMessage());
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error("Gagal Query rs48_pacs untuk Noreg: " . $noreg . ". Error: " . $e->getMessage());
+            }
+
+            return $send;
+        } catch (\Throwable $e) {
             $err = [
                 'method' => 'POST',
                 'url' => $url,
-                'response' => $data ?? ['raw' => $response->body()],
+                'response' => ['error' => substr($e->getMessage(), 0, 500)],
                 'uuid' => $noreg,
                 'jenis' => $jenis,
-                'error_summary' => substr($errorSummary, 0, 255),
+                'error_summary' => substr('Connection Timeout / Error: ' . $e->getMessage(), 0, 255),
             ];
             $resp = SatsetErrorRespon::create($err);
 
-            $send = [
+            return [
                 'message' => 'failed',
-                'data' => $resp
+                'data' => $resp,
+                'error' => $e->getMessage()
             ];
-            return $send;
+        }
+    }
+
+    /**
+     * Memadatkan respons Bundle SatuSehat (Rajal, IGD, Ranap) agar database tidak membengkak
+     * Membuang etag, lastModified, dan location URL panjang yang redundan
+     */
+    public static function compactBundleResponse($data): array
+    {
+        if (!is_array($data) || !isset($data['entry']) || !is_array($data['entry'])) {
+            return is_array($data) ? $data : [];
         }
 
-        // JIKA SUCCESS
-        $success = [
-            'method' => 'POST',
-            'url' => $url,
-            'response' => $data,
-            'jenis' => $jenis,
-        ];
-        $resp = Satset::updateOrCreate([
-            'resource' => $data['resourceType'] ?? 'Bundle',
-            'uuid' => $noreg
-        ], $success);
+        $compactEntries = [];
+        foreach ($data['entry'] as $e) {
+            $res = $e['response'] ?? [];
+            $resType = $res['resourceType'] ?? ($e['resource']['resourceType'] ?? null);
+            $resId = $res['resourceID'] ?? ($e['resource']['id'] ?? null);
+            $status = $res['status'] ?? '201 Created';
 
-        $send = [
-            'message' => 'success',
-            'data' => $resp
-        ];
-
-
-
-        // Sebelum return $send:
-        try {
-            $pacs = DB::table('rs48_pacs')
-                ->where('noreg', $noreg)
-                ->where('status', 'COMPLETED')
-                ->whereNotNull('study_id')
-                ->get(['nota', 'study_id']);
-            foreach ($pacs as $item) {
-                try {
-                    Http::withHeaders(['X-API-KEY' => config('services.orthanc.api_key')])
-                        ->timeout(3)
-                        ->post(config('services.orthanc.url') . '/api/v1/satusehat/push-dicom', [
-                            'nota'     => $item->nota,
-                            'study_id' => $item->study_id,  // langsung pakai!
-                        ]);
-                } catch (\Exception $e) { /* abaikan */
-                    // Log error per nota
-                    Log::error("Gagal Push DICOM ke Middleware untuk Nota: " . $item->nota . ". Error: " . $e->getMessage());
-                }
+            if ($resType) {
+                $compactEntries[] = [
+                    'response' => [
+                        'status' => $status,
+                        'resourceType' => $resType,
+                        'resourceID' => $resId,
+                    ]
+                ];
             }
-        } catch (\Exception $e) { /* abaikan */
-            // Log error query database
-            Log::error("Gagal Query rs48_pacs untuk Noreg: " . $noreg . ". Error: " . $e->getMessage());
         }
 
-        return $send;
+        return [
+            'resourceType' => $data['resourceType'] ?? 'Bundle',
+            'type' => $data['type'] ?? 'transaction-response',
+            'total' => $data['total'] ?? count($compactEntries),
+            'entry' => $compactEntries
+        ];
+    }
+
+    /**
+     * Memadatkan respons Error SatuSehat agar rapi dan tidak menyimpan HTML/Stack trace raksasa
+     */
+    public static function compactErrorResponse($data, $statusCode, $rawBody = ''): array
+    {
+        if (is_array($data) && isset($data['issue']) && is_array($data['issue'])) {
+            $cleanIssues = [];
+            foreach ($data['issue'] as $iss) {
+                $cleanIssues[] = [
+                    'severity' => $iss['severity'] ?? 'error',
+                    'code' => $iss['code'] ?? 'invalid',
+                    'details' => [
+                        'text' => $iss['details']['text'] ?? ($iss['diagnostics'] ?? 'Error SatuSehat')
+                    ],
+                    'expression' => $iss['expression'] ?? []
+                ];
+            }
+            return [
+                'resourceType' => 'OperationOutcome',
+                'issue' => $cleanIssues
+            ];
+        }
+
+        // Jika respons bukan JSON valid (misal HTML 502/504 dari Cloudflare/Gateway)
+        $cleanText = strip_tags(substr($rawBody, 0, 500));
+        return [
+            'resourceType' => 'OperationOutcome',
+            'issue' => [
+                [
+                    'severity' => 'error',
+                    'code' => 'http_' . $statusCode,
+                    'details' => [
+                        'text' => 'HTTP ' . $statusCode . ': ' . ($cleanText ?: 'Server SatuSehat Tidak Merespon')
+                    ]
+                ]
+            ]
+        ];
     }
 }

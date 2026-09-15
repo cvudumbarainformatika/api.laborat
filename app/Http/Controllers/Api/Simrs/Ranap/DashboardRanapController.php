@@ -246,11 +246,11 @@ class DashboardRanapController extends Controller
                     if (is_array($skr)) {
                         $score = 0;
                         foreach ($mppKeys as $k) {
-                            if (!empty($skr[$k])) {
+                            if (!empty($skr[$k]) && $skr[$k] !== 'None') {
                                 $score++;
                             }
                         }
-                        if ($score >= 3) {
+                        if ($score > 3) {
                             $cntMpp++;
                         }
                     }

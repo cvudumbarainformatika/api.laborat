@@ -138,4 +138,9 @@ class Resepkeluarheder extends Model
     {
         return $this->hasOne(Returpenjualan_h::class, 'noresep', 'noresep');
     }
+
+    public function returs()
+    {
+        return $this->hasMany(Returpenjualan_h::class, 'noresep', 'noresep');
+    }
 }
