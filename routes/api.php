@@ -32,6 +32,9 @@ Route::prefix('v4')->group(function () {
 Route::prefix('v5')->group(function () {
     RouteHelper::includeRouteFiles(__DIR__ . '/v5');
 });
+Route::prefix('v6')->group(function () {
+    RouteHelper::includeRouteFiles(__DIR__ . '/v6');
+});
 // Route::prefix('rest')->group(function () {
 //     RouteHelper::includeRouteFiles(__DIR__ . '/rest');
 // });
