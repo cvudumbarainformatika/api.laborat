@@ -22,4 +22,8 @@ class Perubahan_pak_header extends Model
      public function rincian(){
         return $this->hasMany(Perubahan_pak_rinci::class,'notrans', 'notrans')->orderBy('keterangan');
     }
+
+    public function penetapancopy(){
+        return $this->hasMany(Tampungcopy::class,'kodekegiatanblud', 'kodeKegiatan');
+    }
 }
