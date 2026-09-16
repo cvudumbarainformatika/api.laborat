@@ -1192,6 +1192,18 @@ class PostKunjunganRanapHelper
             $form['entry'][] = $composition;
         }
 
+        // 14. NutritionOrder (Instruksi Gizi / Asuhan Gizi Terstandar Rawat Inap - Sesuai Juknis Kemenkes)
+        if (!empty($request->pagt) && count($request->pagt) > 0) {
+            $nutritionOrders = self::nutritionOrderRanap($request, $encounter_uuid, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id);
+            if (!empty($nutritionOrders) && is_array($nutritionOrders)) {
+                foreach ($nutritionOrders as $nutOrder) {
+                    if (!empty($nutOrder)) {
+                        $form['entry'][] = $nutOrder;
+                    }
+                }
+            }
+        }
+
         return ['message' => 'success', 'data' => $form];
     }
 
@@ -2651,6 +2663,102 @@ class PostKunjunganRanapHelper
         ];
     }
 
+    public static function nutritionOrderRanap($request, $encounter_uuid, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    {
+        // HARD GUARD: Jika pagt kosong atau tidak ada data gizi, jangan ikutkan resource NutritionOrder
+        if (empty($request->pagt) || count($request->pagt) === 0) {
+            return [];
+        }
+
+        $results = [];
+        $namaPasien = $request->nama ?? $request->nama_panggil ?? 'Pasien';
+
+        foreach ($request->pagt as $pagt) {
+            if (empty($pagt)) continue;
+
+            $dietDetails = [];
+            if (!empty($pagt->energi)) {
+                $dietDetails[] = "Kebutuhan Energi: " . $pagt->energi;
+            }
+            if (!empty($pagt->status_gizi)) {
+                $dietDetails[] = "Status Gizi: " . trim(str_replace(["\r\n", "\r", "\n"], ", ", $pagt->status_gizi));
+            }
+            if (!empty($pagt->nafsu_makan_ket)) {
+                $dietDetails[] = "Asupan Makanan: " . $pagt->nafsu_makan_ket;
+            }
+            if (!empty($pagt->klinis_ket)) {
+                $dietDetails[] = "Kondisi Klinis: " . $pagt->klinis_ket;
+            }
+            if (!empty($pagt->rw_peny_dhl) && is_array($pagt->rw_peny_dhl)) {
+                $dietDetails[] = "Diet Penyakit: " . implode(', ', $pagt->rw_peny_dhl);
+            }
+            if (!empty($pagt->alergi_makanan_ket)) {
+                $dietDetails[] = "Alergi Makanan: " . $pagt->alergi_makanan_ket;
+            }
+
+            $instruction = !empty($dietDetails) ? implode('; ', $dietDetails) : 'Asuhan Gizi Terstandar Pasien Rawat Inap';
+
+            $dietText = 'Diet Terstandar Rawat Inap';
+            if (!empty($pagt->rw_peny_dhl) && is_array($pagt->rw_peny_dhl) && count($pagt->rw_peny_dhl) > 0) {
+                $dietText = "Diet: " . implode(', ', $pagt->rw_peny_dhl);
+            } elseif (!empty($pagt->energi)) {
+                $dietText = "Diet: " . $pagt->energi;
+            }
+
+            // Orderer: Prioritaskan practitioner_uuid DPJP yang valid (atau petugas gizi jika ada)
+            $ordererUuid = $practitioner_uuid;
+            if (!empty($pagt->petugas) && !empty($pagt->petugas->satset_uuid)) {
+                $ordererUuid = $pagt->petugas->satset_uuid;
+            }
+
+            $tglOrder = !empty($pagt->created_at) ? Carbon::parse($pagt->created_at)->toIso8601String() : Carbon::parse($tgl_kunjungan)->toIso8601String();
+
+            $results[] = [
+                "fullUrl" => "urn:uuid:" . self::generateUuid(),
+                "resource" => [
+                    "resourceType" => "NutritionOrder",
+                    "identifier" => [
+                        [
+                            "system" => "http://sys-ids.kemkes.go.id/nutrition-order/" . $organization_id,
+                            "value" => ($request->noreg ?? $request->rs1) . "-NUTRITION-" . ($pagt->id ?? self::generateUuid())
+                        ]
+                    ],
+                    "status" => "active",
+                    "intent" => "order",
+                    "patient" => [
+                        "reference" => "Patient/" . $pasien_uuid,
+                        "display" => $namaPasien
+                    ],
+                    "encounter" => [
+                        "reference" => "urn:uuid:" . $encounter_uuid
+                    ],
+                    "dateTime" => $tglOrder,
+                    "orderer" => [
+                        "reference" => "Practitioner/" . $ordererUuid
+                    ],
+                    "oralDiet" => [
+                        "type" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => "182922004",
+                                        "display" => "Dietary modification"
+                                    ]
+                                ],
+                                "text" => $dietText
+                            ]
+                        ],
+                        "instruction" => $instruction
+                    ]
+                ],
+                "request" => ["method" => "POST", "url" => "NutritionOrder"]
+            ];
+        }
+
+        return $results;
+    }
+
     public static function apotekRanap($request, $encounter_uuid, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $condPrimerUuid, $diagPrimer)
     {
         $entries = [];
@@ -3192,6 +3300,7 @@ class PostKunjunganRanapHelper
                             "subject" => ["reference" => "Patient/" . $pasien_uuid],
                             "encounter" => ["reference" => "urn:uuid:" . $encounter_uuid],
                             "effectiveDateTime" => Carbon::parse($rincian['updated_at'] ?? $rad['rs3'])->toIso8601String(),
+                            "issued" => Carbon::parse($rincian['updated_at'] ?? $rad['rs3'])->toIso8601String(),
                             "performer" => [["reference" => "Practitioner/" . ($request->datasimpeg['satset_uuid'] ?? '-')]],
                             "valueString" => $hasil_expertise
                         ],
