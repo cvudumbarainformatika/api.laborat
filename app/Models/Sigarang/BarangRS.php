@@ -2,6 +2,7 @@
 
 namespace App\Models\Sigarang;
 
+use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DetailDistribusiDepo;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use App\Models\Sigarang\Transaksi\DistribusiLangsung\DetailDistribusiLangsung;
@@ -176,6 +177,10 @@ class BarangRS extends Model
         return $this->hasMany(DetailPenerimaan::class, 'kode_rs', 'kode');
     }
 
+    public function pagu()
+    {
+        return $this->hasOne(PergeseranPaguRinci::class, 'koders', 'kode');
+    }
     public function scopeFilter($search, array $reqs)
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {
