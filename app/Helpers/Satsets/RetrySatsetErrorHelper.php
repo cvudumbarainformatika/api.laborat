@@ -106,6 +106,31 @@ class RetrySatsetErrorHelper
             ];
         }
 
+        // Cek record error eksisting untuk validasi /Patient dan Max Retry
+        $errRecord = SatsetErrorRespon::where('uuid', $uuid)->first();
+        $wasAlreadyRetry1 = false;
+        if ($errRecord) {
+            // Guard 1: Lewati jika url mengandung /Patient
+            if (!empty($errRecord->url) && str_contains($errRecord->url, '/Patient')) {
+                return [
+                    'status' => 'skipped',
+                    'uuid' => $uuid,
+                    'message' => 'Dilewati: Error pencarian NIK Pasien (/Patient)'
+                ];
+            }
+
+            // Guard 2: Lewati jika sudah ditandai [ABORT_MAX_RETRY]
+            if (!empty($errRecord->error_summary) && str_contains($errRecord->error_summary, '[ABORT_MAX_RETRY]')) {
+                return [
+                    'status' => 'aborted',
+                    'uuid' => $uuid,
+                    'message' => 'Dilewati: Sudah mencapai batas maksimal 2x retry'
+                ];
+            }
+
+            $wasAlreadyRetry1 = str_contains($errRecord->error_summary ?? '', '[RETRY_1]');
+        }
+
         // Bersihkan duplikasi error lama untuk uuid yang sama (hanya sisakan 1 baris)
         $duplicates = SatsetErrorRespon::where('uuid', $uuid)->orderBy('id', 'desc')->pluck('id');
         if ($duplicates->count() > 1) {
@@ -166,13 +191,34 @@ class RetrySatsetErrorHelper
                 'data' => $res
             ];
         } else {
-            // Jika masih gagal: Update jenis jika sebelumnya kosong & geser ke antrean belakang (touch)
+            // Jika masih gagal: Update status retry (Maksimal 2x Retry)
             $err = SatsetErrorRespon::where('uuid', $uuid)->first();
             if ($err) {
                 if (empty($err->jenis) && $jenis) {
                     $err->jenis = $jenis;
                 }
-                $err->touch(); // Perbarui updated_at agar cron berikutnya mengambil data lain (Anti-Stuck)
+
+                $currSummary = $err->error_summary ?: ($res['error'] ?? 'Pengiriman ulang gagal');
+
+                if ($wasAlreadyRetry1 || str_contains($currSummary, '[RETRY_1]')) {
+                    // Percobaan retry ke-2 gagal -> Abort permanen agar tidak masuk antrean lagi
+                    $cleanedSummary = trim(str_replace(['[RETRY_1]', '[ABORT_MAX_RETRY]'], '', $currSummary));
+                    $err->error_summary = '[ABORT_MAX_RETRY] ' . substr($cleanedSummary, 0, 230);
+                    $err->save();
+
+                    return [
+                        'status' => 'aborted',
+                        'uuid' => $uuid,
+                        'jenis' => $jenis,
+                        'message' => 'Maksimal 2x retry tercapai. Data diabaikan permanen dari antrean retry.'
+                    ];
+                } else {
+                    // Percobaan retry ke-1 gagal -> Tandai [RETRY_1] dan geser antrean
+                    $cleanedSummary = trim(str_replace(['[RETRY_1]', '[ABORT_MAX_RETRY]'], '', $currSummary));
+                    $err->error_summary = '[RETRY_1] ' . substr($cleanedSummary, 0, 240);
+                    $err->save();
+                    $err->touch();
+                }
             }
 
             return [
@@ -203,6 +249,18 @@ class RetrySatsetErrorHelper
         $query = SatsetErrorRespon::query()
             ->whereNotNull('uuid')
             ->where('uuid', '!=', '');
+
+        // 1. FILTER LEWATI /Patient: Abaikan error pencarian NIK pasien (bukan transaksi medis)
+        $query->where(function ($q) {
+            $q->whereNull('url')
+              ->orWhere('url', 'NOT LIKE', '%/Patient%');
+        });
+
+        // 2. FILTER MAKSIMAL 2x RETRY: Lewati data yang sudah gagal 2x ([ABORT_MAX_RETRY])
+        $query->where(function ($q) {
+            $q->whereNull('error_summary')
+              ->orWhere('error_summary', 'NOT LIKE', '%[ABORT_MAX_RETRY]%');
+        });
 
         // Filter tahun nomor registrasi (misal %/2026/%)
         if (!empty($year) && $year !== 'all') {
@@ -238,12 +296,14 @@ class RetrySatsetErrorHelper
         // Anti-Stuck: Urutkan berdasarkan updated_at ASC (FIFO Queue Berputar)
         $query->orderBy('updated_at', 'ASC');
 
-        $items = $query->limit($limit)->get(['id', 'uuid', 'jenis', 'created_at', 'updated_at']);
+        $items = $query->limit($limit)->get(['id', 'uuid', 'jenis', 'error_summary', 'url', 'created_at', 'updated_at']);
 
         $summary = [
             'total_processed' => count($items),
             'success' => 0,
             'failed' => 0,
+            'aborted' => 0,
+            'skipped' => 0,
             'already_success' => 0,
             'details' => []
         ];
@@ -256,6 +316,10 @@ class RetrySatsetErrorHelper
                 $summary['success']++;
             } elseif ($status === 'already_success') {
                 $summary['already_success']++;
+            } elseif ($status === 'aborted') {
+                $summary['aborted']++;
+            } elseif ($status === 'skipped') {
+                $summary['skipped']++;
             } else {
                 $summary['failed']++;
             }

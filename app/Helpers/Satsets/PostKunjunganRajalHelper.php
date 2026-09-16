@@ -1477,13 +1477,21 @@ class PostKunjunganRajalHelper
     static function anamnesis($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
     {
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama'] : '-';
-        $data = $request->anamnesis[0];
-        $keluhanUtama = $data['rs4'];
-        // return $keluhanUtama;
 
-        // $q = preg_replace('/[^a-z\d]+/i', ' ', $keluhanUtama);
-        // $q = preg_replace('/\s+/', ' ', $q);
-        // $q = trim($q);
+        if (empty($request->anamnesis) || count($request->anamnesis) === 0) {
+            return [
+                'keluhanUtama' => null,
+            ];
+        }
+
+        $data = $request->anamnesis[0];
+        $keluhanUtama = $data['rs4'] ?? '';
+        if (empty($keluhanUtama)) {
+            return [
+                'keluhanUtama' => null,
+            ];
+        }
+
         $q = strip_tags($keluhanUtama);
 
         $cari = DB::connection('mysql')->table('m_ku_snomed')
@@ -3543,6 +3551,7 @@ class PostKunjunganRajalHelper
                             "subject" => ["reference" => "Patient/" . $pasien_uuid],
                             "encounter" => ["reference" => "urn:uuid:" . $encounter],
                             "effectiveDateTime" => Carbon::parse($rincian['updated_at'])->toIso8601String(),
+                            "issued" => Carbon::parse($rincian['updated_at'])->toIso8601String(),
                             "performer" => [["reference" => "Practitioner/" . $practitioner_uuid]], // FIX RULE 10383
                             "valueString" => $hasil_expertise
                         ],

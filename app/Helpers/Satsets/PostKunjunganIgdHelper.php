@@ -1845,17 +1845,23 @@ class PostKunjunganIgdHelper
 
         $tglCreated = Carbon::parse($tgl_kunjungan)->addMinutes(15)->toIso8601String();
 
-        // 1. CarePlan Rencana Rawat IGD (Emergency health care plan agreed)
-        $descRawat = "Rencana rawat IGD: observasi dan penanganan kegawatdaruratan, tindakan stabilisasi, pemeriksaan penunjang diagnostik, dan tata laksana medis berkelanjutan.";
+        // 1. CarePlan Rencana Rawat IGD (Emergency health care plan agreed - SNOMED 702779007)
+        $descParts = [];
         if (count($request->pemeriksaanfisik) > 0 && !empty($request->pemeriksaanfisik[0]['planning'])) {
-            $descRawat = $request->pemeriksaanfisik[0]['planning'];
+            $descParts[] = "Rencana: " . trim($request->pemeriksaanfisik[0]['planning']);
         }
+        if (count($request->pemeriksaanfisik) > 0 && !empty($request->pemeriksaanfisik[0]['instruksidokter'])) {
+            $descParts[] = "Instruksi DPJP: " . trim($request->pemeriksaanfisik[0]['instruksidokter']);
+        }
+        $descRawat = !empty($descParts)
+            ? implode('. ', $descParts)
+            : "Rencana rawat IGD: observasi dan penanganan kegawatdaruratan, tindakan stabilisasi, pemeriksaan penunjang diagnostik, dan tata laksana medis berkelanjutan.";
 
         $carePlanRencanaRawat = [
             "fullUrl" => "urn:uuid:" . self::generateUuid(),
             "resource" => [
                 "resourceType" => "CarePlan",
-                "title" => "Rencana Rawat",
+                "title" => "Rencana Rawat dan Tindakan Emergensi",
                 "status" => "active",
                 "intent" => "plan",
                 "category" => [
@@ -1883,45 +1889,7 @@ class PostKunjunganIgdHelper
             "request" => ["method" => "POST", "url" => "CarePlan"]
         ];
 
-        // 2. CarePlan Instruksi Medik dan Keperawatan
-        $descInstruksi = "Instruksi medik dan keperawatan: monitoring tanda-tanda vital secara berkala, pemberian terapi cairan dan medikasi emergensi sesuai advis DPJP.";
-        if (count($request->pemeriksaanfisik) > 0 && !empty($request->pemeriksaanfisik[0]['instruksidokter'])) {
-            $descInstruksi = $request->pemeriksaanfisik[0]['instruksidokter'];
-        }
-
-        $carePlanInstruksi = [
-            "fullUrl" => "urn:uuid:" . self::generateUuid(),
-            "resource" => [
-                "resourceType" => "CarePlan",
-                "title" => "Instruksi Medik dan Keperawatan",
-                "status" => "active",
-                "intent" => "plan",
-                "category" => [
-                    [
-                        "coding" => [
-                            [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "702779007",
-                                "display" => "Emergency health care plan agreed"
-                            ]
-                        ]
-                    ]
-                ],
-                "description" => $descInstruksi,
-                "subject" => [
-                    "reference" => "Patient/$pasien_uuid",
-                    "display" => $request->nama
-                ],
-                "encounter" => ["reference" => "urn:uuid:$encounter"],
-                "created" => $tglCreated,
-                "author" => [
-                    "reference" => "Practitioner/$practitioner_uuid"
-                ]
-            ],
-            "request" => ["method" => "POST", "url" => "CarePlan"]
-        ];
-
-        // 3. CarePlan Perencanaan Pemulangan Pasien (Discharge care plan)
+        // 2. CarePlan Perencanaan Pemulangan Pasien (Discharge care plan - SNOMED 736372004)
         $descPulang = "Rencana pemulangan pasien: kontrol kembali ke fasilitas pelayanan kesehatan / dokter spesialis sesuai jadwal.";
         if (!empty($request->planning[0]['spri'])) {
             $descPulang = "Perawatan lanjutan dipindahkan ke rawat inap.";
@@ -1963,10 +1931,16 @@ class PostKunjunganIgdHelper
 
         $results = is_array($carePlans) ? $carePlans : [];
         $results[] = $carePlanRencanaRawat;
-        $results[] = $carePlanInstruksi;
         $results[] = $carePlanDischarge;
 
-        return $results;
+        // Deduplikasi CarePlan berbasis SNOMED Code & Title agar tidak duplicate resource
+        return collect($results)
+            ->filter()
+            ->unique(function ($cp) {
+                return ($cp['resource']['category'][0]['coding'][0]['code'] ?? '') . '_' . ($cp['resource']['title'] ?? '');
+            })
+            ->values()
+            ->all();
     }
 
     public static function procedureIgd($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)

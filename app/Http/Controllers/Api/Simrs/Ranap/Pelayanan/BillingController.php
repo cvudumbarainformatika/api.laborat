@@ -1667,12 +1667,14 @@ public function getFakturDetail(Request $request)
         $visiteItems = DB::table('rs140')
             ->leftJoin('rs21', 'rs21.rs1', '=', 'rs140.rs3')
             ->leftJoin('rs30tarif', 'rs30tarif.rs3', '=', 'rs140.rs6')
+            ->leftJoin('rs24', 'rs24.rs1', '=', 'rs140.rs8')
             ->where('rs140.rs1', $noreg)
             ->select(
                 'rs140.id',
                 DB::raw("concat(dayofmonth(rs140.rs2),'-',month(rs140.rs2),'-',year(rs140.rs2),' ',time(rs140.rs2)) as tgl"),
                 'rs30tarif.rs2 as keterangan',
                 'rs21.rs2 as dokter',
+                DB::raw("COALESCE(rs24.rs2, '" . addslashes($pasien->ruang_poli ?? "") . "') as ruangan"),
                 DB::raw('round(rs140.rs4+rs140.rs5, 0) as biaya')
             )
             ->orderBy('rs140.id', 'asc')
@@ -2123,8 +2125,55 @@ public function getFakturDetail(Request $request)
             + $eResepNonRacikanTotal
             + $eResepRacikanTotal;
 
+        // Tgl Masuk IGD dari rs17
+        $tglMasukIgd = DB::table('rs17')->where('rs1', $noreg)->value('rs3') ?? '';
+
+        // Hitung Ongkos Perawatan per Hari (sarana + pelayanan dari rs30tarif K1#)
+        $perhari = 0;
+        $tarifKamar = DB::table('rs23')
+            ->join('rs24', 'rs24.rs1', '=', 'rs23.rs5')
+            ->join('rs30tarif', function ($join) {
+                $join->on('rs30tarif.rs3', '=', DB::raw("'K1#'"))
+                    ->whereRaw("rs30tarif.rs4 LIKE CONCAT('%', rs24.rs4, '%')")
+                    ->whereRaw("rs30tarif.rs5 LIKE CONCAT('%', rs24.rs3, '%')");
+            })
+            ->where('rs23.rs1', $noreg)
+            ->select(
+                DB::raw("CASE rs24.rs3 
+                    WHEN '3' THEN rs30tarif.rs6 
+                    WHEN 'IC' THEN rs30tarif.rs6 
+                    WHEN 'ICC' THEN rs30tarif.rs6 
+                    WHEN 'NICU' THEN rs30tarif.rs6 
+                    WHEN 'IN' THEN rs30tarif.rs6 
+                    WHEN '2' THEN rs30tarif.rs8
+                    WHEN '1' THEN rs30tarif.rs10         
+                    WHEN 'Utama' THEN rs30tarif.rs12         
+                    WHEN 'VIP' THEN rs30tarif.rs14     
+                    WHEN 'VVIP' THEN rs30tarif.rs16
+                END as sarana"),
+                DB::raw("CASE rs24.rs3 
+                    WHEN '3' THEN rs30tarif.rs7 
+                    WHEN 'IC' THEN rs30tarif.rs7 
+                    WHEN 'ICC' THEN rs30tarif.rs7 
+                    WHEN 'NICU' THEN rs30tarif.rs7 
+                    WHEN 'IN' THEN rs30tarif.rs7 
+                    WHEN '2' THEN rs30tarif.rs9
+                    WHEN '1' THEN rs30tarif.rs11         
+                    WHEN 'Utama' THEN rs30tarif.rs13         
+                    WHEN 'VIP' THEN rs30tarif.rs15     
+                    WHEN 'VVIP' THEN rs30tarif.rs17
+                END as pelayanan")
+            )
+            ->first();
+
+        if ($tarifKamar) {
+            $perhari = (float)$tarifKamar->sarana + (float)$tarifKamar->pelayanan;
+        }
+
         $response = [
             'header' => [
+                'tglmasuk_igd'    => $tglMasukIgd,
+                'ongkos_perhari'  => $perhari,
                 'noreg'         => $pasien->noreg,
                 'norm'          => $pasien->norm,
                 'nama'          => $pasien->nama,

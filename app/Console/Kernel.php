@@ -28,28 +28,29 @@ class Kernel extends ConsoleKernel
         // $schedule->command('permintaanRadiologi:update-batal')->daily();
 
         // Jalankan setiap menit
-        // withoutOverlapping() memastikan kalau pengiriman lagi lambat, menit berikutnya tidak numpuk
-        $schedule->command('satset:send-ranap')->everyMinute()->withoutOverlapping()->between('01:00', '05:50');
+        // withoutOverlapping(5) memastikan kalau pengiriman lagi lambat, menit berikutnya tidak numpuk dan otomatis lepas dalam 5 menit jika timeout
+        $schedule->command('satset:send-ranap')->everyMinute()->withoutOverlapping(5)->between('01:00', '05:50');
 
 
         $schedule->command('send:rajal')
             ->everyMinute()
-            ->withoutOverlapping()
+            ->withoutOverlapping(5)
             ->between('16:30', '23:50');
 
         $schedule->command('send:hd')
             ->everyMinute()
+            ->withoutOverlapping(5)
             ->between('17:30', '23:50');
 
         $schedule->command('satset:send-igd')
             ->everyMinute()
-            ->withoutOverlapping()
+            ->withoutOverlapping(5)
             ->between('02:00', '05:50');
 
         // Retry data error kunjungan SatuSehat setiap 5 menit (50 data) dari jam 21:00 s/d 23:55 malam
         $schedule->command('satset:retry-error --limit=50 --cooldown=6')
             ->everyFiveMinutes()
-            ->withoutOverlapping()
+            ->withoutOverlapping(10)
             ->between('21:00', '23:55');
 
 
@@ -59,7 +60,7 @@ class Kernel extends ConsoleKernel
         // Sync jadwal poli BPJS ke tabel jadwal_poli_cache setiap jam 02:00 dini hari
         $schedule->command('antrean:sync-jadwal-poli')
             ->dailyAt('02:00')
-            ->withoutOverlapping();
+            ->withoutOverlapping(15);
         // $schedule->call(function () {
         //     Artisan::call('cache:clear'); // you can move this part to Job
         // })
