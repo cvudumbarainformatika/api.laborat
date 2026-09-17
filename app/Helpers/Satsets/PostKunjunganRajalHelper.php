@@ -60,6 +60,64 @@ class PostKunjunganRajalHelper
         return $map[$satuan] ?? ($satuan ?: '1');
     }
 
+    public static function sanitizeIcd10Code($code)
+    {
+        if (empty($code)) return 'Z00.0';
+
+        // 1. Trim whitespace, backticks, quotes, hyphens at ends
+        $c = trim((string)$code, " \t\n\r\0\x0B`'\"-");
+        $c = strtoupper($c);
+
+        // 2. Remove spaces around dot (e.g. 'E11 . 6' -> 'E11.6')
+        $c = preg_replace('/\s*\.\s*/', '.', $c);
+
+        // 3. Remove all remaining spaces
+        $c = preg_replace('/\s+/', '', $c);
+
+        // 4. Fix typo where digit '1' was typed instead of letter 'I' (e.g. '169.3' -> 'I69.3', '110' -> 'I10')
+        if (preg_match('/^1([0-9]{2}(\.[0-9]+)?)$/', $c, $mTypo)) {
+            $c = 'I' . $mTypo[1];
+        }
+
+        // 5. If it is words / non-ICD string (e.g. 'Low. back pain', 'FAT.TY (CHANGE O'), fallback to Z00.0
+        if (!preg_match('/^[A-Z][0-9]/', $c)) {
+            return 'Z00.0';
+        }
+
+        // 6. Clean trailing non-alphanumeric (like 'L84.-' -> 'L84')
+        $c = rtrim($c, '.-');
+
+        // 7. Format without dot: e.g. 'J459' -> 'J45.9', 'G045' -> 'G04.5'
+        if (strlen($c) == 4 && !str_contains($c, '.')) {
+            $c = substr($c, 0, 3) . '.' . substr($c, 3, 1);
+        }
+
+        // 8. Known specific 3-digit pure WHO codes that should not have sub-digits (US ICD-10-CM artifact)
+        $pure3DigitCodes = ['N40', 'R11', 'R31', 'R51', 'R05', 'F03', 'K30', 'R04', 'R53', 'R50', 'L84'];
+        $prefix3 = substr($c, 0, 3);
+        if (in_array($prefix3, $pure3DigitCodes)) {
+            return $prefix3;
+        }
+
+        // 9. Specific known invalid 4-digit codes mapping to valid WHO ICD-10
+        $manualMap = [
+            'J45.3' => 'J45.9',
+            'K65.2' => 'K65.9',
+            'N18.6' => 'N18.5',
+            'R10.9' => 'R10.4',
+        ];
+        if (isset($manualMap[$c])) {
+            return $manualMap[$c];
+        }
+
+        // 10. Trim 5-character CM sub-digits (e.g. 'R10.49' -> 'R10.4', 'S01.51' -> 'S01.5', 'B18.19' -> 'B18.1', 'S83.50' -> 'S83.5', 'S42.00' -> 'S42.0')
+        if (preg_match('/^([A-Z][0-9]{2}\.[0-9])[0-9]+$/', $c, $m)) {
+            return $m[1];
+        }
+
+        return $c;
+    }
+
     public static function cekKunjungan()
     {
         // $ygTerkirim =0;
@@ -1137,12 +1195,21 @@ class PostKunjunganRajalHelper
         $specimenSnomeds =  Msnomed::whereNotNull('spesimen')->get();
 
 
-        // DIAGNOSA
+        // DIAGNOSA (Deduplikasi agar tidak ada duplikasi Condition)
+        $uniqueDiagnosa = [];
+        $seenDiagCodes = [];
+        foreach ($request->diagnosa as $val) {
+            $sanitized = self::sanitizeIcd10Code($val['rs3'] ?? ($val['masterdiagnosa']['rs1'] ?? ''));
+            if (!isset($seenDiagCodes[$sanitized])) {
+                $seenDiagCodes[$sanitized] = true;
+                $uniqueDiagnosa[] = $val;
+            }
+        }
 
         $diagnosa = [];
         $refference = [];
 
-        foreach ($request->diagnosa as $key => $value) {
+        foreach ($uniqueDiagnosa as $key => $value) {
             $uuid = self::generateUuid();
             $data = [
                 "condition" => [
@@ -1318,7 +1385,7 @@ class PostKunjunganRajalHelper
 
         //  PUSH CONDITION
         $condition_entries = [];
-        foreach ($request->diagnosa as $key => $value) {
+        foreach ($uniqueDiagnosa as $key => $value) {
             $cond = [
                 "fullUrl" => $diagnosa[$key]['condition']['reference'],
                 "resource" => [
@@ -1347,10 +1414,11 @@ class PostKunjunganRajalHelper
                         "coding" => [
                             [
                                 "system" => "http://hl7.org/fhir/sid/icd-10",
-                                "code" => strtoupper((strlen(trim($value['rs3'])) > 3 && !str_contains($value['rs3'], '.')) ? (substr(trim($value['rs3']), 0, 3) . '.' . substr(trim($value['rs3']), 3)) : trim($value['rs3'])),
+                                "code" => self::sanitizeIcd10Code($value['rs3']),
                                 "display" => $value['masterdiagnosa']['rs4'] ?? $value['masterdiagnosa']['rs3'] ?? 'Diagnosis'
                             ]
-                        ]
+                        ],
+                        "text" => $value['masterdiagnosa']['rs3'] ?? $value['masterdiagnosa']['rs4'] ?? ($value['rs3'] ?? 'Diagnosis')
                     ],
                     "subject" => [
                         "reference" => "Patient/$pasien_uuid",
@@ -2270,7 +2338,7 @@ class PostKunjunganRajalHelper
         });
         $diag = count($diagnosa) > 0 ? $diagnosa->first() : null;
 
-        $icd10 = $diag ? ($diag['rs3'] ?? null) : null;
+        $icd10 = $diag ? self::sanitizeIcd10Code($diag['rs3'] ?? null) : null;
         $display = $diag ? ($diag['masterdiagnosa'] ? $diag['masterdiagnosa']['rs4'] ?? null : null) : null;
         $uraian = $diag ? ($diag['masterdiagnosa'] ? $diag['masterdiagnosa']['rs3'] ?? null : null) : null;
 

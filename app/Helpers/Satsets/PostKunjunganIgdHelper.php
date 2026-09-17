@@ -22,6 +22,11 @@ class PostKunjunganIgdHelper
         return (string) Str::orderedUuid();
     }
 
+    public static function sanitizeIcd10Code($code)
+    {
+        return PostKunjunganRajalHelper::sanitizeIcd10Code($code);
+    }
+
     public static function cekKunjungan($tgl = null)
     {
         $query = KunjunganPoli::select(
@@ -911,8 +916,19 @@ class PostKunjunganIgdHelper
         // 3. Diagnosis & Condition
         $diagnosa_entries = [];
         $condition_entries = [];
-        $conds = $request->diagnosa ?? [];
+        $rawConds = $request->diagnosa ?? [];
         $condAwalUuid = null;
+
+        // Deduplikasi kode diagnosa agar tidak terjadi error duplicate Condition di SatuSehat
+        $conds = [];
+        $seenDiagCodes = [];
+        foreach ($rawConds as $rawD) {
+            $sanitized = self::sanitizeIcd10Code($rawD['rs3'] ?? '');
+            if (!isset($seenDiagCodes[$sanitized])) {
+                $seenDiagCodes[$sanitized] = true;
+                $conds[] = $rawD;
+            }
+        }
 
         foreach ($conds as $key => $d) {
             $cond_uuid = self::generateUuid();
@@ -967,10 +983,11 @@ class PostKunjunganIgdHelper
                         "coding" => [
                             [
                                 "system" => "http://hl7.org/fhir/sid/icd-10",
-                                "code" => $d['rs3'],
+                                "code" => self::sanitizeIcd10Code($d['rs3']),
                                 "display" => $diagName,
                             ]
-                        ]
+                        ],
+                        "text" => $d['masterdiagnosa']['rs3'] ?? $d['masterdiagnosa']['rs4'] ?? ($d['rs3'] ?? $diagName)
                     ],
                     "subject" => ["reference" => "Patient/$pasien_uuid", "display" => $request->nama],
                     "encounter" => ["reference" => "urn:uuid:$encounter"],

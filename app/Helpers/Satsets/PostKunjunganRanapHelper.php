@@ -23,6 +23,11 @@ class PostKunjunganRanapHelper
         return (string) Str::orderedUuid();
     }
 
+    public static function sanitizeIcd10Code($code)
+    {
+        return PostKunjunganRajalHelper::sanitizeIcd10Code($code);
+    }
+
     public static function ranap($tgl = null)
     {
         $query = Kunjunganranap::query();
@@ -1232,6 +1237,17 @@ class PostKunjunganRanapHelper
                     'indonesia' => $diagAkhir,
                 ]
             ];
+        } else {
+            $uniqueRanapDiags = [];
+            $seenRanapCodes = [];
+            foreach ($diagnosas as $dVal) {
+                $sanitized = self::sanitizeIcd10Code($dVal['kode'] ?? '');
+                if (!isset($seenRanapCodes[$sanitized])) {
+                    $seenRanapCodes[$sanitized] = true;
+                    $uniqueRanapDiags[] = $dVal;
+                }
+            }
+            $diagnosas = $uniqueRanapDiags;
         }
 
         foreach ($diagnosas as $key => $val) {
@@ -1287,11 +1303,11 @@ class PostKunjunganRanapHelper
                         "coding" => [
                             [
                                 "system" => "http://hl7.org/fhir/sid/icd-10",
-                                "code" => $val['kode'],
+                                "code" => self::sanitizeIcd10Code($val['kode']),
                                 "display" => $diagName
                             ]
                         ],
-                        "text" => $val['indonesia'] ?? $diagName
+                        "text" => $val['indonesia'] ?? ($val['kode'] ?? $diagName)
                     ],
                     "subject" => [
                         "reference" => "Patient/$pasien_uuid",
@@ -2334,7 +2350,7 @@ class PostKunjunganRanapHelper
     {
         $namaPasien = $request->nama ?? $request->nama_panggil ?? 'Pasien';
         $tglEff = Carbon::parse($tgl_kunjungan)->toIso8601String();
-        $codeIcd10 = $diagPrimer['kode'] ?? ($request->diagakhir ?? 'Z00.0');
+        $codeIcd10 = self::sanitizeIcd10Code($diagPrimer['kode'] ?? ($request->diagakhir ?? 'Z00.0'));
         $displayDiag = $diagPrimer['inggris'] ?? $diagPrimer['indonesia'] ?? ($request->memodiagnosa ?? 'Pemeriksaan Rawat Inap');
 
         // Mapping Prognosis SNOMED
@@ -2420,7 +2436,7 @@ class PostKunjunganRanapHelper
         $namaPasien = $request->nama ?? $request->nama_panggil ?? 'Pasien';
         $tglAuthored = $request->tglkeluar ? Carbon::parse($request->tglkeluar)->toIso8601String() : Carbon::parse($tgl_kunjungan)->toIso8601String();
         $tglKontrol = $request->tglkeluar ? Carbon::parse($request->tglkeluar)->addDays(7)->toIso8601String() : Carbon::parse($tgl_kunjungan)->addDays(7)->toIso8601String();
-        $codeIcd10 = $diagPrimer['kode'] ?? ($request->diagakhir ?? 'Z00.0');
+        $codeIcd10 = self::sanitizeIcd10Code($diagPrimer['kode'] ?? ($request->diagakhir ?? 'Z00.0'));
         $displayDiag = $diagPrimer['inggris'] ?? $diagPrimer['indonesia'] ?? ($request->memodiagnosa ?? 'Pemeriksaan Rawat Inap');
 
         return [
@@ -2764,7 +2780,7 @@ class PostKunjunganRanapHelper
         $entries = [];
         $resep = $request->apotek ?? [];
         $namaPasien = $request->nama ?? $request->nama_panggil ?? 'Pasien';
-        $codeIcd10 = $diagPrimer['kode'] ?? ($request->diagakhir ?? 'Z00.0');
+        $codeIcd10 = self::sanitizeIcd10Code($diagPrimer['kode'] ?? ($request->diagakhir ?? 'Z00.0'));
         $displayDiag = $diagPrimer['inggris'] ?? $diagPrimer['indonesia'] ?? ($request->memodiagnosa ?? 'Terapi Pasien Rawat Inap');
 
         $hasKajianResep = false;
