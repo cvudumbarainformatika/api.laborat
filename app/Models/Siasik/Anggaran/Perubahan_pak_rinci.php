@@ -32,7 +32,7 @@ class Perubahan_pak_rinci extends Model
         return $this->jurnal ?? $this->jurnalkode50;
     }
 
-    protected $appends = ['jenis', 'datajurnal'];
+    protected $appends = ['datajurnal'];
     
     protected $hidden = [
         'jurnalkode50',
