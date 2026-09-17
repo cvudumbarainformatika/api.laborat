@@ -8,21 +8,27 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReqAmbulan extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\LogsActivity;
     protected $table = 'rs276';
     protected $guarded = ['id'];
 
     public function tujuan()
     {
-        return $this->hasOne(TujuanAmbulan::class, 'rs1','rs10');
+        return $this->hasOne(TujuanAmbulan::class, 'rs1', 'rs10');
     }
 
     public function perawat()
     {
-        return $this->hasOne(Mnakes::class, 'rs1','rs13');
+        return $this->hasOne(Mnakes::class, 'rs1', 'rs13');
     }
+
+    public function driver()
+    {
+        return $this->hasOne(\App\Models\Sigarang\Pegawai::class, 'kdpegsimrs', 'kd_driver');
+    }
+
     public function perawat2()
     {
-        return $this->hasOne(Mnakes::class, 'rs1','rs14');
+        return $this->hasOne(Mnakes::class, 'rs1', 'rs14');
     }
 }
