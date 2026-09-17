@@ -3138,9 +3138,9 @@ class PostKunjunganRajalHelper
                                         "type" => [ //*
                                             "coding" => [
                                                 [
-                                                    "system" => $snomedSpesimen['system'],
-                                                    "code" => "{$snomedSpesimen['code']}",
-                                                    "display" => $snomedSpesimen['display'],
+                                                    "system" => $snomedSpesimen['system'] ?? "http://snomed.info/sct",
+                                                    "code" => !empty($snomedSpesimen['code']) ? "{$snomedSpesimen['code']}" : "119297000",
+                                                    "display" => $snomedSpesimen['display'] ?? "Blood specimen",
                                                 ],
                                             ],
                                         ],
@@ -3462,13 +3462,35 @@ class PostKunjunganRajalHelper
             $diagnosa_klinis = $radiologi['diagnosakerja'] ?? 'Permintaan Foto';
 
             foreach ($radiologi['rincians'] as $rincian) {
-                $modality = $rincian['relmasterpemeriksaan']['modality'] ?? 'CR';
-                $nama_foto = $rincian['relmasterpemeriksaan']['rs2'];
-                $study_uid = $rincian['study_instance_uid'];
+                $modality = !empty(trim($rincian['relmasterpemeriksaan']['modality'] ?? '')) ? trim($rincian['relmasterpemeriksaan']['modality']) : null;
+                if (empty($modality)) {
+                    $jenisMaster = strtoupper($rincian['relmasterpemeriksaan']['rs3'] ?? '');
+                    $namaMaster = strtoupper($rincian['relmasterpemeriksaan']['rs2'] ?? ($rincian['pemeriksaan'] ?? ''));
+                    $loincText = strtoupper($rincian['relmasterpemeriksaan']['loinc_display'] ?? '');
+
+                    if (strpos($jenisMaster, 'CT SCAN') !== false || strpos($namaMaster, 'CT SCAN') !== false || strpos($loincText, 'CT') !== false) {
+                        $modality = 'CT';
+                    } elseif (strpos($jenisMaster, 'USG') !== false || strpos($jenisMaster, 'ULTRA SONO') !== false || strpos($namaMaster, 'USG') !== false || strpos($namaMaster, 'ULTRASONOGRAFI') !== false || strpos($loincText, 'US') !== false) {
+                        $modality = 'US';
+                    } elseif (strpos($jenisMaster, 'MRI') !== false || strpos($namaMaster, 'MRI') !== false || strpos($loincText, 'MR') !== false || strpos($loincText, 'MRI') !== false) {
+                        $modality = 'MR';
+                    } elseif (strpos($jenisMaster, 'MAMMOGRAFI') !== false || strpos($namaMaster, 'MAMMOGRAFI') !== false || strpos($loincText, 'MAMMOGRAM') !== false) {
+                        $modality = 'MG';
+                    } elseif (strpos($jenisMaster, 'C-ARM') !== false || strpos($namaMaster, 'C-ARM') !== false || strpos($loincText, 'FLUOROSCOPY') !== false) {
+                        $modality = 'XA';
+                    } elseif (strpos($jenisMaster, 'PANORAMIC') !== false || strpos($namaMaster, 'PANORAMIC') !== false || strpos($loincText, 'DENTAL') !== false) {
+                        $modality = 'DX';
+                    } else {
+                        $modality = 'CR';
+                    }
+                }
+
+                $nama_foto = !empty($rincian['relmasterpemeriksaan']['rs2']) ? $rincian['relmasterpemeriksaan']['rs2'] : ($rincian['pemeriksaan'] ?? 'Pemeriksaan Radiologi');
+                $study_uid = $rincian['study_instance_uid'] ?? null;
                 $hasil_expertise = $rincian['hasil'] ?? null;
 
-                $loinc_code = $rincian['relmasterpemeriksaan']['loinc_code'] ?? '24648-8';
-                $loinc_display = $rincian['relmasterpemeriksaan']['loinc_display'] ?? 'Chest XR';
+                $loinc_code = !empty($rincian['relmasterpemeriksaan']['loinc_code']) ? $rincian['relmasterpemeriksaan']['loinc_code'] : '24648-8';
+                $loinc_display = !empty($rincian['relmasterpemeriksaan']['loinc_display']) ? $rincian['relmasterpemeriksaan']['loinc_display'] : 'Chest XR';
 
                 // 1. ServiceRequest (ORDER)
                 $servisRequest_uuid = "urn:uuid:" . self::generateUuid();
