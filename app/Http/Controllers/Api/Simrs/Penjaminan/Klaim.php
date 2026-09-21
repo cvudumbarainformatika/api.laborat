@@ -2067,12 +2067,23 @@ class Klaim extends Controller
         $pelayanan = request('pelayanan');
         $bulan = request('bulan');
         $tahun = request('tahun');
-        if($pelayanan === '1')
-        {
-            $kdpoli = ['POL014'];
-        }else{
-            $kdpoli = Mpoli::select('rs1')->where('rs1', '!=', 'POL014')->get();
+        $kodepoli = request('kodepoli');
 
+        if ($pelayanan === '1') {
+            $kdpoli = ['POL014'];
+        } else {
+            if (!empty($kodepoli) && $kodepoli !== 'SEMUA' && $kodepoli !== 'SEMUA POLI' && $kodepoli !== 'all') {
+                if (is_array($kodepoli)) {
+                    $filtered = array_filter($kodepoli, function ($item) {
+                        return $item !== 'SEMUA' && $item !== 'SEMUA POLI' && $item !== 'all' && !empty($item);
+                    });
+                    $kdpoli = count($filtered) > 0 ? array_values($filtered) : Mpoli::select('rs1')->where('rs1', '!=', 'POL014')->get();
+                } else {
+                    $kdpoli = [$kodepoli];
+                }
+            } else {
+                $kdpoli = Mpoli::select('rs1')->where('rs1', '!=', 'POL014')->get();
+            }
         }
 
             $data = listcasmixrajal::select('listkirimcasmixRajal.noreg as noreg','listkirimcasmixRajal.norm as norm',
