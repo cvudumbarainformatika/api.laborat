@@ -354,6 +354,11 @@ class RanapController extends Controller
                         ->orWhere('rs15.rs2', 'like',  '%' . request('q') . '%');
                 });
             })
+            ->where(function ($query) {
+                $query->when(request('kodedokter'), function ($q) {
+                    $q->where('rs23.rs10', '=', request('kodedokter'));
+                });
+            })
             ->orderby('rs23.rs3', 'DESC')
             ->groupBy('rs23.rs1');
 
