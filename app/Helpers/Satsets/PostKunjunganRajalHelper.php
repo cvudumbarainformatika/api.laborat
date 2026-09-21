@@ -1534,6 +1534,14 @@ class PostKunjunganRajalHelper
         $episodeOfCare = self::episodeOfCare($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $refference);
         if ($episodeOfCare !== null) {
             array_push($body['entry'], $episodeOfCare);
+            // Tautkan referensi EpisodeOfCare ke dalam resource Encounter (wajib untuk modul Episode Perawatan SatuSehat)
+            if (!empty($episodeOfCare['fullUrl']) && isset($body['entry'][0]['resource']['resourceType']) && $body['entry'][0]['resource']['resourceType'] === 'Encounter') {
+                $body['entry'][0]['resource']['episodeOfCare'] = [
+                    [
+                        'reference' => $episodeOfCare['fullUrl']
+                    ]
+                ];
+            }
         }
 
         $send['message'] = 'success';

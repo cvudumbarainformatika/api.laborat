@@ -3383,7 +3383,9 @@ class PostKunjunganRanapHelper
 
                 return str_contains($text, 'hb0')
                     || str_contains($text, 'hepatitis b')
-                    || str_contains($text, 'vaksin hb0');
+                    || str_contains($text, 'vaksin hb0')
+                    || str_contains($text, 'bcg')
+                    || str_contains($text, 'polio');
             });
 
         $form = [];
@@ -3393,6 +3395,27 @@ class PostKunjunganRanapHelper
         $practitioner_uuid = $request?->datasimpeg?->satset_uuid;
 
         if ($imunisasi) {
+            $textObat = strtolower(($imunisasi['nama_obat'] ?? '') . ' ' . ($imunisasi['kandungan'] ?? ''));
+            if (str_contains($textObat, 'bcg')) {
+                $kfaCode = 'VG17';
+                $kfaDisplay = 'BCG';
+                $cvxCode = '19';
+                $cvxDisplay = 'BCG';
+                $series = 'BCG';
+            } elseif (str_contains($textObat, 'polio')) {
+                $kfaCode = 'VG01';
+                $kfaDisplay = 'bOPV';
+                $cvxCode = '02';
+                $cvxDisplay = 'OPV';
+                $series = 'Polio';
+            } else {
+                $kfaCode = 'VG45';
+                $kfaDisplay = 'HepB';
+                $cvxCode = '93';
+                $cvxDisplay = 'Hepatitis B';
+                $series = 'Hepatitis B';
+            }
+
             $form = [
                 "fullUrl" => "urn:uuid:" . self::generateUuid(),
                 "resource" => [
@@ -3401,9 +3424,14 @@ class PostKunjunganRanapHelper
                     "vaccineCode" => [
                         "coding" => [
                             [
+                                "system" => "http://sys-ids.kemkes.go.id/kfa",
+                                "code" => $kfaCode,
+                                "display" => $kfaDisplay
+                            ],
+                            [
                                 "system" => "http://hl7.org/fhir/sid/cvx",
-                                "code" => "93",
-                                "display" => "Hepatitis B"
+                                "code" => $cvxCode,
+                                "display" => $cvxDisplay
                             ]
                         ]
                     ],
@@ -3425,7 +3453,7 @@ class PostKunjunganRanapHelper
                     "encounter" => [
                         "reference" => "urn:uuid:" . $encounter_uuid
                     ],
-                    "occurrenceDateTime" => Carbon::parse($imunisasi['created_at'])->toIso8601String(),
+                    "occurrenceDateTime" => Carbon::parse($imunisasi['created_at'] ?? now())->toIso8601String(),
                     "primarySource" => true,
                     "lotNumber" => $imunisasi['kdobat'] ?? 'LOT-HB0',
                     "expirationDate" => date('Y-m-d', strtotime('+18 months')),
@@ -3452,7 +3480,7 @@ class PostKunjunganRanapHelper
                     "protocolApplied" => [
                         [
                             "doseNumberPositiveInt" => 1,
-                            "series" => "Hepatitis B"
+                            "series" => $series
                         ]
                     ]
                 ],
