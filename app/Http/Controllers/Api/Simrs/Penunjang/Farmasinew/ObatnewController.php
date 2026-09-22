@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Illuminate\Support\Facades\Validator;
 
 use function PHPUnit\Framework\isEmpty;
@@ -227,6 +228,9 @@ class ObatnewController extends Controller
 
     public function exportExcel()
     {
+        ini_set('max_execution_time', 300);
+        ini_set('memory_limit', '512M');
+
         $q = request('q');
         $statusPrb = request('status_prb');
         
@@ -236,7 +240,7 @@ class ObatnewController extends Controller
     }
 }
 
-class MasterObatExport implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithMapping, \Maatwebsite\Excel\Concerns\ShouldAutoSize
+class MasterObatExport implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithMapping, \Maatwebsite\Excel\Concerns\ShouldAutoSize, \Maatwebsite\Excel\Concerns\WithStyles
 {
     protected $q;
     protected $statusPrb;
@@ -262,76 +266,138 @@ class MasterObatExport implements \Maatwebsite\Excel\Concerns\FromCollection, \M
             ->when($this->statusPrb == 'true' || $this->statusPrb == '1', function ($q) {
                 $q->where('status_prb', '1');
             })
-            ->orderBy('nama_obat', 'asc')
+            ->orderBy('id', 'asc')
             ->where('flag', '')
             ->get();
+    }
+
+    public function styles(Worksheet $sheet)
+    {
+        return [
+            1 => ['font' => ['bold' => true]],
+        ];
     }
 
     public function headings(): array
     {
         return [
             'No',
+            'ID Obat',
             'Kode Obat',
             'Nama Obat',
+            'Kode KFA',
+            'Kode KFA 93',
             'Kode BPJS',
+            'Merk',
+            'Kandungan / Generik',
             'Kekuatan Dosis',
             'Volume Sediaan',
             'Bentuk Sediaan',
-            'Merk',
             'Jenis Perbekalan',
-            'Kandungan',
-            'Penyimpanan',
-            'RKO',
-            'Uraian 108',
-            'Uraian 50',
+            'Kelas Terapi',
+            'Indikasi',
+            'Kelompok Penyimpanan',
+            'Kelompok RKO',
+            'Napza / Psikotropika',
             'Satuan Besar',
             'Satuan Kecil',
-            'Generik',
-            'Fornas',
-            'Forkit',
-            'Kronis',
-            'PRB',
-            'Program',
-            'Donasi',
-            'Kebijakan',
-            'Konsinyasi',
+            'Status Generik',
+            'Status Fornas',
+            'Status Forkit',
+            'Status Kronis',
+            'Restriksi Fornas / Ket. Kronis',
+            'Status PRB',
+            'Obat Program',
+            'Obat Donasi',
+            'Obat Kebijakan',
+            'Status Konsinyasi',
+            'Nilai TKDN',
+            'Sertifikat TKDN',
             'Sistem Bayar',
-            'Gudang'
+            'Lokasi Gudang',
+            'Kode 108',
+            'Uraian 108',
+            'Kode 50',
+            'Uraian 50',
+            'Tanggal Dibuat',
+            'Terakhir Diubah'
         ];
     }
 
     public function map($row): array
     {
         $this->rowNumber++;
-        
+
+        // Kelas Terapi (gabungan dari relasi mkelasterapi dan field kelas_terapi jika ada)
+        $kelasTerapiList = [];
+        if ($row->mkelasterapi && $row->mkelasterapi->isNotEmpty()) {
+            $kelasTerapiList = $row->mkelasterapi->pluck('kelas_terapi')->filter()->unique()->toArray();
+        }
+        if (!empty($row->kelas_terapi) && !in_array($row->kelas_terapi, $kelasTerapiList)) {
+            $kelasTerapiList[] = $row->kelas_terapi;
+        }
+        $kelasTerapi = !empty($kelasTerapiList) ? implode(', ', $kelasTerapiList) : '-';
+
+        // Indikasi (dari relasi indikasi)
+        $indikasi = ($row->indikasi && $row->indikasi->isNotEmpty())
+            ? $row->indikasi->pluck('indikasi')->filter()->unique()->implode(', ')
+            : '-';
+
+        // Lokasi Gudang (deskripsi yang mudah dibaca)
+        $gudangMap = [
+            'Gd-03010100' => 'Gudang Farmasi (Floor Stok)',
+            'Gd-05010100' => 'Gudang Farmasi (Kamar Obat)',
+        ];
+        $namaGudang = !empty($row->gudang) ? ($gudangMap[$row->gudang] ?? $row->gudang) : 'Semua Gudang';
+
+        // Nilai TKDN
+        $nilaiTkdn = !empty($row->nilai_kdn) ? (is_numeric($row->nilai_kdn) ? $row->nilai_kdn . '%' : $row->nilai_kdn) : '-';
+
+        // Tanggal
+        $tglDibuat = !empty($row->created_at) ? date('d-m-Y H:i', strtotime($row->created_at)) : '-';
+        $tglDiubah = !empty($row->updated_at) ? date('d-m-Y H:i', strtotime($row->updated_at)) : '-';
+
         return [
             $this->rowNumber,
+            $row->id,
             $row->kd_obat,
             $row->nama_obat,
-            $row->kode_bpjs ?? '-',
-            $row->kekuatan_dosis ?? '-',
-            $row->volumesediaan ?? '-',
-            $row->bentuk_sediaan ?? '-',
-            $row->merk ?? '-',
-            $row->jenis_perbekalan ?? '-',
-            $row->kandungan ?? '-',
-            $row->kelompok_penyimpanan ?? '-',
-            $row->kelompok_rko ?? '-',
-            $row->uraian108 ?? '-',
-            $row->uraian50 ?? '-',
-            $row->satuan_b ?? '-',
-            $row->satuan_k ?? '-',
+            $row->kode_kfa ?: '-',
+            $row->kode_kfa_93 ?: '-',
+            $row->kode_bpjs ?: '-',
+            $row->merk ?: '-',
+            $row->kandungan ?: '-',
+            $row->kekuatan_dosis ?: '-',
+            $row->volumesediaan ?: '-',
+            $row->bentuk_sediaan ?: '-',
+            $row->jenis_perbekalan ?: '-',
+            $kelasTerapi,
+            $indikasi,
+            $row->kelompok_penyimpanan ?: '-',
+            $row->kelompok_rko ?: '-',
+            $row->kelompok_psikotropika == '1' ? 'YA' : 'TIDAK',
+            $row->satuan_b ?: '-',
+            $row->satuan_k ?: '-',
             $row->status_generik === '1' ? 'YA' : 'TIDAK',
             $row->status_fornas === '1' ? 'YA' : 'TIDAK',
             $row->status_forkid === '1' ? 'YA' : 'TIDAK',
             $row->status_kronis === '1' ? 'YA' : 'TIDAK',
+            $row->keterangan_kronis ?: '-',
             $row->status_prb === '1' ? 'YA' : 'TIDAK',
             $row->obat_program === '1' ? 'YA' : 'TIDAK',
             $row->obat_donasi === '1' ? 'YA' : 'TIDAK',
             $row->obat_kebijakan === '1' ? 'YA' : 'TIDAK',
-            $row->status_konsinyasi === '1' ? 'YA' : 'TIDAK',
-            $row->sistembayar ?? '-',
-            $row->gudang ?? '-'
+            $row->status_konsinyasi === '1' ? 'Konsinyasi' : 'Non-Konsinyasi',
+            $nilaiTkdn,
+            $row->sertifikatkdn ?: '-',
+            $row->sistembayar ?: 'SEMUA',
+            $namaGudang,
+            $row->kode108 ?: '-',
+            $row->uraian108 ?: '-',
+            $row->kode50 ?: '-',
+            $row->uraian50 ?: '-',
+            $tglDibuat,
+            $tglDiubah
         ];
     }
 }
