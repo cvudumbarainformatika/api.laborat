@@ -233,7 +233,12 @@ class RadiologiLuarController extends Controller
           //     'rs11' => 1,
           // ]);
 
-          return new JsonResponse(['message' => 'Data berhasil disimpan', 'data' => $simpan], 200);
+          $simpan->tgl = $simpan->rs7;
+          return new JsonResponse([
+              'message' => 'Data berhasil disimpan',
+              'data' => $simpan,
+              'tgl' => $simpan->rs7
+          ], 200);
       } else {
           return response("Hasil Tidak Bisa Dientry Karena Belum Ada Permintaan...!!");
       }
