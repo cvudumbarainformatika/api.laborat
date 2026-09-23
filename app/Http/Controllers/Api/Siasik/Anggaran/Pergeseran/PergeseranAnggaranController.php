@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Siasik\Anggaran\Pergeseran;
 
 use App\Http\Controllers\Controller;
+use App\Models\Siasik\Anggaran\Penetapan\Penetapan_Rka;
 use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Header;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Anggaran\Perubahan_pak_header;
@@ -286,11 +287,16 @@ class PergeseranAnggaranController extends Controller
                 ->get();
 
             if ($datas->isEmpty()) {
+                DB::rollBack();
                 return response()->json([
                     'message' => 'Data tidak ditemukan'
                 ], 404);
             }
 
+           
+            /*
+            * Masuk ke t_tampung (untuk pengambilan Anggaran saat ini)
+            */
             foreach ($datas as $data) {
 
                 PergeseranPaguRinci::updateOrInsert(
@@ -331,6 +337,161 @@ class PergeseranAnggaranController extends Controller
             return response()->json([
                 'message' => 'Gagal',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
+    public function penetapanrka(Request $request)
+    {
+        $request->validate([
+            'notrans' => 'required|array|min:1',
+            'notrans.*' => 'required|string',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            // Hilangkan duplikat notrans dari request
+            $notransList = collect($request->notrans)
+                ->filter()
+                ->unique()
+                ->values();
+
+            if ($notransList->isEmpty()) {
+                return response()->json([
+                    'message' => 'Tidak ada notrans yang dikirim'
+                ], 422);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | 1. Ambil semua data Tampungcopy sekaligus
+            |--------------------------------------------------------------------------
+            */
+            $datas = PergeseranPaguRinci::whereIn('notrans', $notransList)
+                ->get();
+
+            if ($datas->isEmpty()) {
+                DB::rollBack();
+
+                return response()->json([
+                    'message' => 'Data tidak ditemukan'
+                ], 404);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | 2. Ambil verif_ke terakhir untuk semua notrans sekaligus
+            |--------------------------------------------------------------------------
+            */
+            $verifikasiTerakhir = Penetapan_Rka::select(
+                    'notrans',
+                    DB::raw('MAX(verif_ke) as verif_ke')
+                )
+                ->whereIn('notrans', $notransList)
+                ->groupBy('notrans')
+                ->get()
+                ->keyBy('notrans');
+
+            /*
+            |--------------------------------------------------------------------------
+            | 3. Kelompokkan data berdasarkan notrans
+            |--------------------------------------------------------------------------
+            */
+            $datasByNotrans = $datas->groupBy('notrans');
+
+            $insertData = [];
+            $hasil = [];
+
+            foreach ($datasByNotrans as $notrans => $items) {
+
+                /*
+                * Ambil verif_ke terakhir untuk notrans ini
+                */
+                $lastVerif = $verifikasiTerakhir
+                    ->get($notrans);
+
+                $verifikasiKe = $lastVerif
+                    ? ((int) $lastVerif->verif_ke + 1)
+                    : 1;
+
+                /*
+                |--------------------------------------------------------------------------
+                | 4. Buat snapshot history
+                |--------------------------------------------------------------------------
+                */
+                foreach ($items as $data) {
+
+                    $insertData[] = [
+                        'notrans' => $data->notrans,
+                        'verif_ke' => $verifikasiKe,
+
+                        'idpp' => $data->idpp,
+                        'usulan' => $data->usulan,
+                        'pagu' => $data->pagu,
+                        'koderek108' => $data->koderek108,
+                        'koderek50' => $data->koderek50,
+                        'kodekegiatanblud' => $data->kodekegiatanblud,
+                        'tgl' => $data->tgl,
+                        'volume' => $data->volume,
+                        'harga' => $data->harga,
+                        'satuan' => $data->satuan,
+                        'uraian50' => $data->uraian50,
+                        'uraian108' => $data->uraian108,
+                        'flag' => $data->flag,
+                        'bidang' => $data->bidang,
+                        'koders' => $data->koders,
+
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+
+                $hasil[] = [
+                    'notrans' => $notrans,
+                    'verif_ke' => $verifikasiKe,
+                    'jumlah_data' => $items->count(),
+                ];
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | 5. Bulk INSERT
+            |--------------------------------------------------------------------------
+            |
+            | Jauh lebih cepat daripada:
+            |
+            | foreach (...) {
+            |     Penetapan_Rka::create(...)
+            | }
+            |
+            */
+            if (!empty($insertData)) {
+                Penetapan_Rka::insert($insertData);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Berhasil Penetapan',
+
+                'jumlah_notrans' => count($hasil),
+
+                'jumlah_data' => count($insertData),
+
+                'data' => $hasil,
+            ], 200);
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Gagal Penetapan',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
