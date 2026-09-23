@@ -88,6 +88,7 @@ class PostKunjunganHDHerlper
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
             'rs15.rs2 as nama',
+            'rs15.rs2 as nama_panggil',
             'rs15.rs49 as nik',
             'rs17.rs19 as status',
             'rs15.satset_uuid as pasien_uuid',

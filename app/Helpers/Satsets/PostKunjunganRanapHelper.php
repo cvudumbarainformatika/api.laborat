@@ -813,7 +813,8 @@ class PostKunjunganRanapHelper
             $genderLower = strtolower($genderRaw);
             $gender = ($genderLower === 'l' || str_starts_with($genderLower, 'laki') || $genderLower === 'male') ? 'male' : 'female';
 
-            $nama = $bpjs ? trim((string)$bpjs->nama) : (!empty($pasien->nama) ? $pasien->nama : (!empty($pasien->rs2) ? $pasien->rs2 : ($pasien->nama_panggil ?? '-')));
+            $nama = $bpjs ? trim((string)$bpjs->nama) : (!empty($pasien->nama_panggil) ? $pasien->nama_panggil : (!empty($pasien->rs2) ? $pasien->rs2 : SatsetAuditDataLog::cleanNameForComparison($pasien->nama ?? '-')));
+            $nama = SatsetAuditDataLog::cleanNameForComparison($nama);
             $alamat = $pasien->alamatbarcode ?? $pasien->alamat ?? $pasien->rs4 ?? '-';
             $templahir = $pasien->templahir ?? $pasien->rs37 ?? '-';
             $nohp = ($bpjs && !empty($bpjs->mr->noTelepon)) ? trim((string)$bpjs->mr->noTelepon) : ($pasien->nohp ?? $pasien->rs55 ?? '-');

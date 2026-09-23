@@ -182,6 +182,7 @@ class PostKunjunganRajalHelper
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
             'rs15.rs2 as nama',
+            'rs15.rs2 as nama_panggil',
             'rs15.rs49 as nik',
             'rs15.rs46 as noka',
             'rs15.rs16 as tgllahir',
@@ -458,6 +459,7 @@ class PostKunjunganRajalHelper
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
             'rs15.rs2 as nama',
+            'rs15.rs2 as nama_panggil',
             'rs15.rs49 as nik',
             'rs15.rs46 as noka',
             'rs15.rs16 as tgllahir',
@@ -834,7 +836,8 @@ class PostKunjunganRajalHelper
             $genderLower = strtolower($genderRaw);
             $gender = ($genderLower === 'l' || str_starts_with($genderLower, 'laki') || $genderLower === 'male') ? 'male' : 'female';
 
-            $namaPasien = $bpjs ? trim((string)$bpjs->nama) : (!empty($pasien->nama) ? $pasien->nama : (!empty($pasien->rs2) ? $pasien->rs2 : ($pasien->nama_panggil ?? '-')));
+            $namaPasien = $bpjs ? trim((string)$bpjs->nama) : (!empty($pasien->nama_panggil) ? $pasien->nama_panggil : (!empty($pasien->rs2) ? $pasien->rs2 : SatsetAuditDataLog::cleanNameForComparison($pasien->nama ?? '-')));
+            $namaPasien = SatsetAuditDataLog::cleanNameForComparison($namaPasien);
             $templahir = $pasien->templahir ?? $pasien->rs37 ?? 'PROBOLINGGO';
             $alamat = $pasien->alamat ?? $pasien->rs4 ?? ($pasien->alamatbarcode ?? 'Jl. Suroyo No. 1');
             $nohp = ($bpjs && !empty($bpjs->mr->noTelepon)) ? trim((string)$bpjs->mr->noTelepon) : ($pasien->nohp ?? $pasien->rs55 ?? '-');
