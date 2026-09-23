@@ -101,7 +101,13 @@ class DashboardSatsetController extends Controller
             $totalKunjungan = $totalRajal + $totalRanap + $totalIgd + $totalHd;
             $totalTerkirim = $terkirimRajal + $terkirimRanap + $terkirimIgd + $terkirimHd;
             $totalError = $errorRajal + $errorRanap + $errorIgd + $errorHd;
-            $complianceRate = $totalKunjungan > 0 ? round(($totalTerkirim / $totalKunjungan) * 100, 2) : 0;
+            $totalDiproses = $totalTerkirim + $totalError;
+            $complianceRate = $totalDiproses > 0 ? round(($totalTerkirim / $totalDiproses) * 100, 2) : 100;
+
+            $rajalDiproses = $terkirimRajal + $errorRajal;
+            $ranapDiproses = $terkirimRanap + $errorRanap;
+            $igdDiproses = $terkirimIgd + $errorIgd;
+            $hdDiproses = $terkirimHd + $errorHd;
 
             return [
                 'periode' => [
@@ -112,6 +118,7 @@ class DashboardSatsetController extends Controller
                     'total_kunjungan' => $totalKunjungan,
                     'total_terkirim' => $totalTerkirim,
                     'total_error' => $totalError,
+                    'total_diproses' => $totalDiproses,
                     'compliance_rate' => $complianceRate . '%',
                 ],
                 'detail_modul' => [
@@ -119,25 +126,25 @@ class DashboardSatsetController extends Controller
                         'total_kunjungan' => $totalRajal,
                         'terkirim' => $terkirimRajal,
                         'error' => $errorRajal,
-                        'rate' => $totalRajal > 0 ? round(($terkirimRajal / $totalRajal) * 100, 2) . '%' : '0%'
+                        'rate' => $rajalDiproses > 0 ? round(($terkirimRajal / $rajalDiproses) * 100, 2) . '%' : '100%'
                     ],
                     'ranap' => [
                         'total_kunjungan' => $totalRanap,
                         'terkirim' => $terkirimRanap,
                         'error' => $errorRanap,
-                        'rate' => $totalRanap > 0 ? round(($terkirimRanap / $totalRanap) * 100, 2) . '%' : '0%'
+                        'rate' => $ranapDiproses > 0 ? round(($terkirimRanap / $ranapDiproses) * 100, 2) . '%' : '100%'
                     ],
                     'igd' => [
                         'total_kunjungan' => $totalIgd,
                         'terkirim' => $terkirimIgd,
                         'error' => $errorIgd,
-                        'rate' => $totalIgd > 0 ? round(($terkirimIgd / $totalIgd) * 100, 2) . '%' : '0%'
+                        'rate' => $igdDiproses > 0 ? round(($terkirimIgd / $igdDiproses) * 100, 2) . '%' : '100%'
                     ],
                     'hd' => [
                         'total_kunjungan' => $totalHd,
                         'terkirim' => $terkirimHd,
                         'error' => $errorHd,
-                        'rate' => $totalHd > 0 ? round(($terkirimHd / $totalHd) * 100, 2) . '%' : '0%'
+                        'rate' => $hdDiproses > 0 ? round(($terkirimHd / $hdDiproses) * 100, 2) . '%' : '100%'
                     ],
                 ]
             ];
