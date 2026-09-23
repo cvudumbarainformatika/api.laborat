@@ -56,4 +56,46 @@ class SatsetAuditDataLog extends Model
             return null;
         }
     }
+
+    /**
+     * Normalisasi nama pasien untuk komparasi audit (hanya menghapus awalan sapaan seperti Tn., Ny., An., By., dll.).
+     * Karakter nama, ejaan asli, dan tanda baca tetap dipertahankan agar perbedaan pengetikan tetap terdeteksi audit.
+     */
+    public static function cleanNameForComparison($name)
+    {
+        if (empty($name)) {
+            return '';
+        }
+
+        $name = strtoupper(trim((string)$name));
+
+        // Hanya bersihkan awalan sapaan di depan nama sesuai master SIMRS
+        $prefixes = [
+            'BY NY ', 'BY. NY. ', 'BY. NY ', 'BY ', 'BY. ', 'BAYI ', 'BY. N ', 'BY N ',
+            'TN. ', 'TN ', 'TUAN ',
+            'NY. ', 'NY ', 'NYONYA ',
+            'BPK. ', 'BPK ', 'BAPAK. ', 'BAPAK ',
+            'IBU. ', 'IBU ',
+            'AN. ', 'AN ', 'ANAK ',
+            'SDR. ', 'SDR ', 'SAUDARA ', 'SDRI. ', 'SDRI ',
+            'NN. ', 'NN ', 'NONA ',
+            'MR. ', 'MR ', 'MRS. ', 'MRS ', 'MISS ',
+        ];
+
+        $changed = true;
+        while ($changed) {
+            $changed = false;
+            foreach ($prefixes as $p) {
+                if (str_starts_with($name, $p)) {
+                    $name = trim(substr($name, strlen($p)));
+                    $changed = true;
+                }
+            }
+        }
+
+        // Rapikan spasi ganda tanpa menghapus tanda baca / karakter asli
+        $name = preg_replace('/\s+/', ' ', $name);
+
+        return trim($name);
+    }
 }

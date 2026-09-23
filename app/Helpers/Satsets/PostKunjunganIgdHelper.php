@@ -483,15 +483,18 @@ class PostKunjunganIgdHelper
         if ($bpjsPeserta) {
             $norm = trim((string)($pasien->norm ?? $pasien->rs1 ?? ''));
             $noreg = $pasien->noreg ?? ($pasien->rs1 ?? null);
-            $namaSimrs = trim((string)(!empty($pasien->nama) ? $pasien->nama : (!empty($pasien->rs2) ? $pasien->rs2 : '')));
+            $namaSimrs = trim((string)(!empty($pasien->nama_panggil) ? $pasien->nama_panggil : (!empty($pasien->rs2) ? $pasien->rs2 : (!empty($pasien->nama) ? $pasien->nama : ''))));
             $tglLahirSimrs = $pasien->tgllahir ?? $pasien->rs16 ?? null;
 
             $nikBpjs = trim((string)$bpjsPeserta->nik);
             $namaBpjs = trim((string)$bpjsPeserta->nama);
             $tglLahirBpjs = trim((string)$bpjsPeserta->tglLahir);
 
+            $cleanNamaSimrs = SatsetAuditDataLog::cleanNameForComparison($namaSimrs);
+            $cleanNamaBpjs = SatsetAuditDataLog::cleanNameForComparison($namaBpjs);
+
             $diffNik = empty($nik) || $nik !== $nikBpjs || str_starts_with($nik, '8888') || str_starts_with($nik, '9999') || strlen($nik) < 16;
-            $diffNama = !empty($namaSimrs) && strtolower($namaSimrs) !== strtolower($namaBpjs);
+            $diffNama = !empty($cleanNamaSimrs) && !empty($cleanNamaBpjs) && $cleanNamaSimrs !== $cleanNamaBpjs;
             $diffTgl = !empty($tglLahirSimrs) && trim((string)$tglLahirSimrs) !== $tglLahirBpjs;
 
             if ($diffNik || $diffNama || $diffTgl) {
