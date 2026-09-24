@@ -372,16 +372,20 @@ class RanapController extends Controller
             return $namaSamaMap;
         }
 
-        // Ambil semua pasien aktif di ruangan-ruangan tersebut beserta nomor bed (rs23.rs7)
+        // Ambil semua pasien aktif di ruangan-ruangan tersebut beserta nomor bed (rs23.rs7) dan group ruangan (rs24.groups)
         $allPasienInRooms = DB::table('rs23')
             ->join('rs15', 'rs15.rs1', '=', 'rs23.rs2')
-            ->select('rs23.rs5 as kdruangan', 'rs23.rs1 as noreg', 'rs15.rs2 as nama', 'rs23.rs7 as nomorbed')
+            ->leftJoin('rs24', 'rs24.rs1', '=', 'rs23.rs5')
+            ->select('rs23.rs5 as kdruangan', 'rs24.groups as group_ruangan', 'rs23.rs1 as noreg', 'rs15.rs2 as nama', 'rs23.rs7 as nomorbed')
             ->whereIn('rs23.rs5', $kdruangans)
             ->where('rs23.rs22', '=', '')
             ->where('rs23.rs1', '!=', '')
             ->get();
 
-        $groupedByRuangan = $allPasienInRooms->groupBy('kdruangan');
+        // Kelompokkan berdasarkan group_ruangan (misal ASK untuk semua kelas Asoka) agar pasien dengan nama mirip antar-kelas di gedung/ruangan yang sama tetap terdeteksi
+        $groupedByRuangan = $allPasienInRooms->groupBy(function ($item) {
+            return $item->group_ruangan ?: $item->kdruangan;
+        });
         foreach ($groupedByRuangan as $kdruang => $pasiens) {
             // Optimasi: Lakukan pembersihan string di awal (O(N)), bukan di dalam loop nested (O(N^2))
             foreach ($pasiens as $p) {
