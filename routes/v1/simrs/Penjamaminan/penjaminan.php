@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\Penjaminan\Klaim;
+use App\Http\Controllers\Api\Simrs\Penjaminan\KlaimRanapController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -28,3 +29,14 @@ Route::group([
     Route::post('/grouping-idrg', [Klaim::class, 'groupingIdrg']);
     Route::post('/terimapasien', [Klaim::class, 'terimapasien']);
 });
+
+Route::group([
+    'middleware' => 'auth:api',
+    'prefix' => 'simrs/penjaminan/klaimranap'
+], function () {
+    Route::get('/getdataklaimranap', [KlaimRanapController::class, 'getdataklaimranap']);
+    Route::post('/kirimpenjaminan', [KlaimRanapController::class, 'kirimpenjaminan']);
+    Route::post('/verifikasi-rm', [KlaimRanapController::class, 'verifikasiRekamMedik']);
+    Route::get('/ruangan-ranap', [KlaimRanapController::class, 'getRuanganRanap']);
+});
+
