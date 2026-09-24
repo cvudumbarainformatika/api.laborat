@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Siasik\Anggaran;
 
 use App\Http\Controllers\Controller;
+use App\Models\Siasik\Anggaran\Penetapan\Penetapan_Rka;
 use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Header;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Anggaran\Perubahan_pak_header;
@@ -610,6 +611,257 @@ class CetakAnggaranController extends Controller
     })->all();
 
         return new JsonResponse($finalData);
+    }
+
+
+
+
+
+    // AMBIL DATA RKA DI TABEL BARU penetapan_rka
+
+    public function listPenetapan_ke (Request $request)
+    {
+        $tahun = $request->input('tahun', date('Y'));
+        $verifKeList = Penetapan_Rka::query()
+            ->where('tgl', $tahun)
+            ->where('verif_ke', '>=', 2)
+            ->when($request->filled('bidang'), function ($query) use ($request) {
+                $query->where('bidang', $request->bidang);
+            })
+            ->when($request->filled('kegiatan'), function ($query) use ($request) {
+                $query->where('kodekegiatanblud', $request->kegiatan);
+            })
+            ->select('verif_ke')
+            ->distinct()
+            ->orderBy('verif_ke')
+            ->get()
+            ->map(function ($item) {
+                 $verifKe = (int) $item->verif_ke;
+
+                return [
+                    'verif_ke' => $verifKe,
+                    'label' => 'Pergeseran ke-' . ($verifKe - 1),
+                    // 'label' => $verifKe === 1
+                    //     ? 'Penetapan awal'
+                    //     : 'Pergeseran ke-' . ($verifKe - 1),
+                ];
+            })
+            ->values();
+            return response()->json([
+            'data' => $verifKeList,
+        ]);
+    }
+    public function penetapanRka(Request $request)
+    {
+        $validated = $request->validate([
+            'tahun' => 'required|digits:4',
+            'verif_ke' => 'required|integer|min:2',
+        ]);
+
+        $tahun = $validated['tahun'];
+        $verifKe = isset($validated['verif_ke'])
+            ? (int) $validated['verif_ke']
+            : null;
+        $verifSebelumnya = $verifKe - 1;
+
+        $data = Penetapan_Rka::leftJoin('akun50_2024', function ($join) {
+                $join->on(
+                    'penetapan_rka.koderek50',
+                    '=',
+                    'akun50_2024.kodeall2'
+                )->orOn(
+                    'penetapan_rka.koderek50',
+                    '=',
+                    'akun50_2024.kodeall3'
+                );
+            })
+            ->leftJoin(
+                'penyesesuaianperioritas_heder as header',
+                'header.notrans',
+                '=',
+                'penetapan_rka.notrans'
+            )
+            ->where('penetapan_rka.tgl', $tahun)
+            ->whereIn('penetapan_rka.verif_ke', [$verifSebelumnya, $verifKe])
+            ->when($request->filled('bidang'), function ($query) use ($request) {
+                $query->where(
+                    'penetapan_rka.bidang',
+                    $request->bidang
+                );
+            })
+            ->when($request->filled('kegiatan'), function ($query) use ($request) {
+                $query->where(
+                    'penetapan_rka.kodekegiatanblud',
+                    $request->kegiatan
+                );
+            })
+            ->select(
+                'header.kodepptk',
+                'header.pptk',
+                'header.kodebidang',
+                'header.namabidang',
+                'header.kodekegiatan',
+                'header.kegiatan',
+                'header.capaianprogram',
+                'header.masukan',
+                'header.keluaran',
+                'header.hasil',
+                'header.targetcapaian',
+                'header.targetkeluaran',
+                'header.targethasil',
+                'penetapan_rka.id',
+                'penetapan_rka.idpp',
+                'penetapan_rka.notrans',
+                'penetapan_rka.verif_ke',
+                'penetapan_rka.usulan',
+                'penetapan_rka.pagu',
+                'penetapan_rka.koderek108',
+                'penetapan_rka.kodekegiatanblud',
+                'penetapan_rka.tgl',
+                'penetapan_rka.volume',
+                'penetapan_rka.harga',
+                'penetapan_rka.satuan',
+                'penetapan_rka.uraian50',
+                'penetapan_rka.uraian108',
+                'penetapan_rka.bidang',
+                'penetapan_rka.koders',
+
+                'akun50_2024.uraian as uraian'
+            )
+            ->addSelect(
+                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
+                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
+                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
+                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'),
+                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 6) as kode6'),
+
+                DB::raw('(SELECT uraian FROM akun50_2024
+                    WHERE kodeall2 = SUBSTRING_INDEX(penetapan_rka.koderek50, ".", 1)
+                    LIMIT 1) as uraian1'),
+
+                DB::raw('(SELECT uraian FROM akun50_2024
+                    WHERE kodeall2 = SUBSTRING_INDEX(penetapan_rka.koderek50, ".", 2)
+                    LIMIT 1) as uraian2'),
+
+                DB::raw('(SELECT uraian FROM akun50_2024
+                    WHERE kodeall2 = SUBSTRING_INDEX(penetapan_rka.koderek50, ".", 3)
+                    LIMIT 1) as uraian3'),
+
+                DB::raw('(SELECT uraian FROM akun50_2024
+                    WHERE kodeall2 = SUBSTRING_INDEX(penetapan_rka.koderek50, ".", 4)
+                    LIMIT 1) as uraian4'),
+
+                DB::raw('(SELECT uraian FROM akun50_2024
+                    WHERE kodeall2 = SUBSTRING_INDEX(penetapan_rka.koderek50, ".", 5)
+                    LIMIT 1) as uraian5'),
+                DB::raw('(SELECT uraian FROM akun50_2024
+                    WHERE kodeall2 = SUBSTRING_INDEX(penetapan_rka.koderek50, ".", 6)
+                    LIMIT 1) as uraian6')
+            )
+            ->orderBy('penetapan_rka.notrans')
+            ->orderBy('penetapan_rka.idpp')
+            ->orderBy('penetapan_rka.verif_ke')
+            ->get();
+
+        $hasil = $data
+        ->groupBy(function ($item) {
+            return $item->notrans . '|' . $item->idpp;
+        })
+        ->map(function ($items) use ($verifKe, $verifSebelumnya) {
+            $sebelumnya = $items->firstWhere('verif_ke', $verifSebelumnya);
+            $sekarang = $items->firstWhere('verif_ke', $verifKe);
+
+            if (!$sekarang) {
+                return null;
+            }
+
+            $dasar = $sebelumnya ?: $sekarang;
+
+            return [
+                'notrans' => $sekarang->notrans,
+
+                'kodepptk' => $sekarang->kodepptk,
+                'pptk' => $sekarang->pptk,
+                'kodebidang' => $sekarang->kodebidang,
+                'namabidang' => $sekarang->namabidang,
+                'kodekegiatan' => $sekarang->kodekegiatan,
+                'kegiatan' => $sekarang->kegiatan,
+                'capaianprogram' => $sekarang->capaianprogram,
+                'masukan' => $sekarang->masukan,
+                'keluaran' => $sekarang->keluaran,
+                'hasil' => $sekarang->hasil,
+                'targetcapaian' => $sekarang->targetcapaian,
+                'targetkeluaran' => $sekarang->targetkeluaran,
+                'targethasil' => $sekarang->targethasil,
+                'rincian' => [[
+                    'idpp' => $sekarang->idpp,
+                    'usulan' => $sekarang->usulan ?? $dasar->usulan,
+                    'koderek108' => $sekarang->koderek108 ?? $dasar->koderek108,
+                    'koderek50' => $sekarang->koderek50 ?? $dasar->koderek50,
+                    'uraian50' => $sekarang->uraian50 ?? $dasar->uraian50,
+                    'uraian108' => $sekarang->uraian108 ?? $dasar->uraian108,
+                    'satuan' => $sekarang->satuan ?? $dasar->satuan,
+
+                    'volume' => $sebelumnya?->volume ?? 0,
+                    'harga' => $sebelumnya?->harga ?? 0,
+                    'total' => $sebelumnya?->pagu ?? 0,
+
+                    'volumebaru' => $sekarang->volume ?? 0,
+                    'hargabaru' => $sekarang->harga ?? 0,
+                    'totalbaru' => $sekarang->pagu ?? 0,
+
+                    'kode' => $sekarang->kode ?? $dasar->kode,
+                    'uraian' => $sekarang->uraian ?? $dasar->uraian,
+                    'kode1' => $sekarang->kode1 ?? $dasar->kode1,
+                    'kode2' => $sekarang->kode2 ?? $dasar->kode2,
+                    'kode3' => $sekarang->kode3 ?? $dasar->kode3,
+                    'kode4' => $sekarang->kode4 ?? $dasar->kode4,
+                    'kode5' => $sekarang->kode5 ?? $dasar->kode5,
+                    'kode6' => $sekarang->kode6 ?? $dasar->kode6,
+                    'uraian1' => $sekarang->uraian1 ?? $dasar->uraian1,
+                    'uraian2' => $sekarang->uraian2 ?? $dasar->uraian2,
+                    'uraian3' => $sekarang->uraian3 ?? $dasar->uraian3,
+                    'uraian4' => $sekarang->uraian4 ?? $dasar->uraian4,
+                    'uraian5' => $sekarang->uraian5 ?? $dasar->uraian5,
+                    'uraian6' => $sekarang->uraian6 ?? $dasar->uraian6,
+                ]],
+            ];
+        })
+        ->filter()
+        ->groupBy('notrans')
+        ->map(function ($items) {
+            $header = $items->first();
+
+            return [
+                'notrans' => $header['notrans'],
+                'kodepptk' => $header['kodepptk'],
+                'pptk' => $header['pptk'],
+                'kodebidang' => $header['kodebidang'],
+                'namabidang' => $header['namabidang'],
+                'kodekegiatan' => $header['kodekegiatan'],
+                'kegiatan' => $header['kegiatan'],
+                'capaianprogram' => $header['capaianprogram'],
+                'masukan' => $header['masukan'],
+                'keluaran' => $header['keluaran'],
+                'hasil' => $header['hasil'],
+                'targetcapaian' => $header['targetcapaian'],
+                'targetkeluaran' => $header['targetkeluaran'],
+                'targethasil' => $header['targethasil'],
+                'rincian' => $items
+                    ->flatMap(fn ($item) => $item['rincian'])
+                    ->values()
+                    ->all(),
+            ];
+        })
+        ->values();
+
+        return response()->json([
+            'tahun' => $tahun,
+            'verif_ke_sebelumnya' => $verifSebelumnya,
+            'verif_ke_saat_ini' => $verifKe,
+            'data' => $hasil,
+        ]);
     }
 }
 

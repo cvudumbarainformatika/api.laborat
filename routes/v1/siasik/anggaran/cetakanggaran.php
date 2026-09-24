@@ -13,4 +13,10 @@ Route::group([
     Route::get('/getanggaran', [CetakAnggaranController::class, 'getAnggaran']);
     Route::get('/getrkapergeseran', [CetakAnggaranController::class, 'getRka']);
 
+
+
+    // ambil dari Tabel baru Penetapan_Rka
+    Route::get('/get-list-penetapan-rka', [CetakAnggaranController::class, 'listPenetapan_ke']);
+    Route::get('/get-penetapan-rka', [CetakAnggaranController::class, 'penetapanRka']);
+
 });
