@@ -235,7 +235,7 @@ class ReturpenjualanController extends Controller
             ->when(request('from'), function ($q) {
                 $tgl = request('from') . ' 00:00:00';
                 $tglx = Carbon::now()->format('Y-m-d 23:59:59');
-                $q->whereBetween('retur_penjualan_h..tgl_retur', [$tgl, $tglx])
+                $q->whereBetween('retur_penjualan_h.tgl_retur', [$tgl, $tglx])
                     ->orderBy('tgl_retur', 'ASC');
             }, function ($q) {
                 $q->orderBy('tgl_retur', 'DESC');

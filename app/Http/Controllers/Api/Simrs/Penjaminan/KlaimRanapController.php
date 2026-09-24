@@ -61,7 +61,8 @@ class KlaimRanapController extends Controller
             ->leftJoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs23.rs10')
             ->leftJoin('klaim_trans_ranap', 'klaim_trans_ranap.noreg', '=', 'listkirimcasmixranap.noreg')
             ->whereYear('rs23.rs3', $tahun)
-            ->whereMonth('rs23.rs3', $bulan);
+            ->whereMonth('rs23.rs3', $bulan)
+            ->where('rs9.groups', '1');
 
         if (!empty($kdruangan) && $kdruangan !== 'SEMUA' && $kdruangan !== 'SEMUA RUANGAN' && $kdruangan !== 'all') {
             $query->where(function ($qRuang) use ($kdruangan) {
@@ -99,6 +100,7 @@ class KlaimRanapController extends Controller
 
     /**
      * Endpoint untuk mengirim data kunjungan rawat inap ke antrean penjaminan/casemix ranap.
+     * Hanya pasien dengan penjamin group BPJS (rs9.groups = '1') yang dapat dikirim.
      */
     public function kirimpenjaminan(Request $request): JsonResponse
     {
@@ -116,16 +118,31 @@ class KlaimRanapController extends Controller
         ]);
 
         $kunjungan = DB::table('rs23')->where('rs1', $validated['noreg'])->first();
-        $pasien = $kunjungan ? DB::table('rs15')->where('rs1', $kunjungan->rs2)->first() : null;
+        if (!$kunjungan) {
+            return new JsonResponse(['message' => 'Data kunjungan pasien ranap tidak ditemukan'], 404);
+        }
 
-        $norm = $validated['norm'] ?? $kunjungan?->rs2 ?? null;
+        $kdSistemBayar = $validated['kdsistembayar'] ?? $kunjungan->rs14;
+        $sistemBayar = DB::table('rs9')->where('rs1', $kdSistemBayar)->first();
+
+        // Validasi: hanya pasien group BPJS (rs9.groups = '1') yang dapat dikirim
+        if ($sistemBayar && $sistemBayar->groups !== '1') {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Hanya pasien BPJS yang dapat dikirim ke Casemix. Pasien umum dan tagihan tidak perlu dikirim.'
+            ], 422);
+        }
+
+        $pasien = DB::table('rs15')->where('rs1', $kunjungan->rs2)->first();
+
+        $norm = $validated['norm'] ?? $kunjungan->rs2;
         $noka = $validated['noka'] ?? $pasien?->rs46 ?? null;
-        $nosep = $validated['nosep'] ?? $kunjungan?->rs24 ?? null;
-        $kdruangan = $validated['kdruangan'] ?? $kunjungan?->rs5 ?? null;
-        $kdsistembayar = $validated['kdsistembayar'] ?? $kunjungan?->rs14 ?? null;
-        $kddpjp = $validated['kddpjp'] ?? $kunjungan?->rs10 ?? null;
-        $tgl_masuk = $validated['tgl_masuk'] ?? $kunjungan?->rs3 ?? null;
-        $tgl_pulang = $validated['tgl_pulang'] ?? ($kunjungan?->rs4 !== '0000-00-00 00:00:00' ? $kunjungan?->rs4 : null);
+        $nosep = $validated['nosep'] ?? $kunjungan->rs24 ?? null;
+        $kdruangan = $validated['kdruangan'] ?? $kunjungan->rs5 ?? null;
+        $kdsistembayar = $validated['kdsistembayar'] ?? $kunjungan->rs14 ?? null;
+        $kddpjp = $validated['kddpjp'] ?? $kunjungan->rs10 ?? null;
+        $tgl_masuk = $validated['tgl_masuk'] ?? $kunjungan->rs3 ?? null;
+        $tgl_pulang = $validated['tgl_pulang'] ?? ($kunjungan->rs4 !== '0000-00-00 00:00:00' ? $kunjungan->rs4 : null);
 
         $simpan = ListCasmixRanap::updateOrCreate(
             ['noreg' => $validated['noreg']],
