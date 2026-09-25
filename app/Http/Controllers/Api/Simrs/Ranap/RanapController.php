@@ -264,7 +264,6 @@ class RanapController extends Controller
             'mhambatan.hambatan',
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
-            // 'rs21.rs2 as namanakes',
             'kepegx.pegawai.nama as namanakes',
             'rs227.rs8 as sep',
             'rs227.kodedokterdpjp as kodedokterdpjp',

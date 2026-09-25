@@ -26,7 +26,10 @@ class KlaimRanapController extends Controller
             'listkirimcasmixranap.id',
             'listkirimcasmixranap.noreg as noreg',
             DB::raw('COALESCE(listkirimcasmixranap.norm, rs23.rs2) as norm'),
-            DB::raw('COALESCE(listkirimcasmixranap.nosep, rs23.rs24) as nosep'),
+            DB::raw('COALESCE(NULLIF(listkirimcasmixranap.nosep, ""), rs227.rs8, rs222.rs8, "") as nosep'),
+            'rs227.rs8 as sep_ranap',
+            'rs222.rs8 as sep_igd',
+            DB::raw("CASE WHEN rs227.rs8 IS NOT NULL AND rs227.rs8 != '' THEN 'RANAP' WHEN rs222.rs8 IS NOT NULL AND rs222.rs8 != '' THEN 'IGD' ELSE '' END as jenis_sep"),
             DB::raw('COALESCE(listkirimcasmixranap.noka, rs15.rs46) as noka'),
             DB::raw('COALESCE(listkirimcasmixranap.kdruangan, rs23.rs5) as kdruangan'),
             'listkirimcasmixranap.flag_verif_rm as flag_verif_rm',
@@ -54,6 +57,8 @@ class KlaimRanapController extends Controller
         ])
             ->leftJoin('rs23', 'rs23.rs1', '=', 'listkirimcasmixranap.noreg')
             ->leftJoin('rs15', 'rs15.rs1', '=', DB::raw('COALESCE(listkirimcasmixranap.norm, rs23.rs2)'))
+            ->leftJoin('rs227', 'rs227.rs1', '=', 'listkirimcasmixranap.noreg')
+            ->leftJoin('rs222', 'rs222.rs1', '=', 'listkirimcasmixranap.noreg')
             ->leftJoin('rs24', function ($join) {
                 $join->on('rs24.rs1', '=', DB::raw('COALESCE(listkirimcasmixranap.kdruangan, rs23.rs5)'));
             })
@@ -145,9 +150,11 @@ class KlaimRanapController extends Controller
 
         $pasien = DB::table('rs15')->where('rs1', $kunjungan->rs2)->first();
 
+        $sepRanap = DB::table('rs227')->where('rs1', $kunjungan->rs1)->first();
+        $sepRajal = DB::table('rs222')->where('rs1', $kunjungan->rs1)->first();
         $norm = $validated['norm'] ?: $kunjungan->rs2;
         $noka = $validated['noka'] ?: ($pasien?->rs46 ?? null);
-        $nosep = $validated['nosep'] ?: ($kunjungan->rs24 ?? null);
+        $nosep = $validated['nosep'] ?: ($sepRanap?->rs8 ?: ($sepRajal?->rs8 ?: null));
         $kdruangan = $validated['kdruangan'] ?: ($kunjungan->rs5 ?? null);
         $kddpjp = $validated['kddpjp'] ?: ($kunjungan->rs10 ?? null);
         $tgl_masuk = $validated['tgl_masuk'] ?: ($kunjungan->rs3 ?? null);
