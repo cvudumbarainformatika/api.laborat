@@ -33,10 +33,10 @@ class KlaimRanapController extends Controller
             'listkirimcasmixranap.tgl_verif_rm as tgl_verif_rm',
             'listkirimcasmixranap.petugas_verif_rm as petugas_verif_rm',
             'listkirimcasmixranap.catatan_verif_rm as catatan_verif_rm',
-            'kepegx.pegawai.nama as dokter',
-            'rs23.rs3 as tgl_kunjungan',
-            'rs23.rs3 as tglmasuk',
-            'rs23.rs4 as tglpulang',
+            DB::raw('COALESCE(kepegx.pegawai.nama, listkirimcasmixranap.kddpjp, "-") as dokter'),
+            DB::raw('COALESCE(listkirimcasmixranap.tgl_masuk, rs23.rs3) as tgl_kunjungan'),
+            DB::raw('COALESCE(listkirimcasmixranap.tgl_masuk, rs23.rs3) as tglmasuk'),
+            DB::raw('COALESCE(listkirimcasmixranap.tgl_pulang, rs23.rs4) as tglpulang'),
             'rs15.rs2 as pasien',
             'rs15.rs49 as nktp',
             'rs15.rs55 as nohp',
@@ -46,23 +46,21 @@ class KlaimRanapController extends Controller
             DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
                 TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
                 TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
-            'rs9.rs2 as sistembayar',
+            DB::raw("COALESCE(NULLIF(listkirimcasmixranap.kdsistembayar, ''), rs23.rs19, 'BPJS') as sistembayar"),
             'rs24.rs2 as ruangan',
             'rs24.rs2 as poli',
             'klaim_trans_ranap.status_klaim as ket',
             DB::raw('\'ranap\' as layanan')
         ])
             ->leftJoin('rs23', 'rs23.rs1', '=', 'listkirimcasmixranap.noreg')
-            ->leftJoin('rs15', 'rs15.rs1', '=', 'rs23.rs2')
+            ->leftJoin('rs15', 'rs15.rs1', '=', DB::raw('COALESCE(listkirimcasmixranap.norm, rs23.rs2)'))
             ->leftJoin('rs24', function ($join) {
                 $join->on('rs24.rs1', '=', DB::raw('COALESCE(listkirimcasmixranap.kdruangan, rs23.rs5)'));
             })
-            ->leftJoin('rs9', 'rs9.rs1', '=', 'rs23.rs14')
-            ->leftJoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs23.rs10')
+            ->leftJoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', DB::raw('COALESCE(listkirimcasmixranap.kddpjp, rs23.rs10)'))
             ->leftJoin('klaim_trans_ranap', 'klaim_trans_ranap.noreg', '=', 'listkirimcasmixranap.noreg')
-            ->whereYear('rs23.rs3', $tahun)
-            ->whereMonth('rs23.rs3', $bulan)
-            ->where('rs9.groups', '1');
+            ->whereYear(DB::raw("COALESCE(listkirimcasmixranap.tgl_masuk, rs23.rs3, listkirimcasmixranap.created_at)"), $tahun)
+            ->whereMonth(DB::raw("COALESCE(listkirimcasmixranap.tgl_masuk, rs23.rs3, listkirimcasmixranap.created_at)"), $bulan);
 
         if (!empty($kdruangan) && $kdruangan !== 'SEMUA' && $kdruangan !== 'SEMUA RUANGAN' && $kdruangan !== 'all') {
             $query->where(function ($qRuang) use ($kdruangan) {
@@ -93,14 +91,15 @@ class KlaimRanapController extends Controller
             });
         }
 
-        $data = $query->orderBy('rs23.rs3', 'DESC')->paginate($perPage);
+        $data = $query->orderBy('listkirimcasmixranap.id', 'DESC')->paginate($perPage);
 
         return new JsonResponse($data);
     }
 
     /**
      * Endpoint untuk mengirim data kunjungan rawat inap ke antrean penjaminan/casemix ranap.
-     * Hanya pasien dengan penjamin group BPJS (rs9.groups = '1') yang dapat dikirim.
+     * Hanya pasien dengan penjamin group BPJS yang dapat dikirim.
+     * Satu noreg dipastikan hanya memiliki 1 baris data di antrean casemix ranap.
      */
     public function kirimpenjaminan(Request $request): JsonResponse
     {
@@ -122,11 +121,22 @@ class KlaimRanapController extends Controller
             return new JsonResponse(['message' => 'Data kunjungan pasien ranap tidak ditemukan'], 404);
         }
 
-        $kdSistemBayar = $validated['kdsistembayar'] ?? $kunjungan->rs14;
+        // Ambil kode sistem bayar dari request atau rs23.rs19 atau rs23.rs14
+        $kdSistemBayar = $validated['kdsistembayar'] ?: ($kunjungan->rs19 ?: $kunjungan->rs14);
         $sistemBayar = DB::table('rs9')->where('rs1', $kdSistemBayar)->first();
 
-        // Validasi: hanya pasien group BPJS (rs9.groups = '1') yang dapat dikirim
-        if ($sistemBayar && $sistemBayar->groups !== '1') {
+        // Validasi: hanya pasien BPJS (groups 1, kode BPJS, nama BPJS, atau AR49) yang dapat dikirim
+        $isBpjs = false;
+        if ($sistemBayar) {
+            $isBpjs = $sistemBayar->groups === '1'
+                || stripos((string)$sistemBayar->rs1, 'BPJS') !== false
+                || stripos((string)$sistemBayar->rs2, 'BPJS') !== false
+                || $sistemBayar->rs1 === 'AR49';
+        } else {
+            $isBpjs = stripos((string)$kdSistemBayar, 'BPJS') !== false || $kdSistemBayar === 'AR49';
+        }
+
+        if (!$isBpjs) {
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Hanya pasien BPJS yang dapat dikirim ke Casemix. Pasien umum dan tagihan tidak perlu dikirim.'
@@ -135,15 +145,15 @@ class KlaimRanapController extends Controller
 
         $pasien = DB::table('rs15')->where('rs1', $kunjungan->rs2)->first();
 
-        $norm = $validated['norm'] ?? $kunjungan->rs2;
-        $noka = $validated['noka'] ?? $pasien?->rs46 ?? null;
-        $nosep = $validated['nosep'] ?? $kunjungan->rs24 ?? null;
-        $kdruangan = $validated['kdruangan'] ?? $kunjungan->rs5 ?? null;
-        $kdsistembayar = $validated['kdsistembayar'] ?? $kunjungan->rs14 ?? null;
-        $kddpjp = $validated['kddpjp'] ?? $kunjungan->rs10 ?? null;
-        $tgl_masuk = $validated['tgl_masuk'] ?? $kunjungan->rs3 ?? null;
-        $tgl_pulang = $validated['tgl_pulang'] ?? ($kunjungan->rs4 !== '0000-00-00 00:00:00' ? $kunjungan->rs4 : null);
+        $norm = $validated['norm'] ?: $kunjungan->rs2;
+        $noka = $validated['noka'] ?: ($pasien?->rs46 ?? null);
+        $nosep = $validated['nosep'] ?: ($kunjungan->rs24 ?? null);
+        $kdruangan = $validated['kdruangan'] ?: ($kunjungan->rs5 ?? null);
+        $kddpjp = $validated['kddpjp'] ?: ($kunjungan->rs10 ?? null);
+        $tgl_masuk = $validated['tgl_masuk'] ?: ($kunjungan->rs3 ?? null);
+        $tgl_pulang = $validated['tgl_pulang'] ?: ($kunjungan->rs4 !== '0000-00-00 00:00:00' ? $kunjungan->rs4 : null);
 
+        // updateOrCreate menjamin satu noreg hanya memiliki 1 baris di tabel listkirimcasmixranap
         $simpan = ListCasmixRanap::updateOrCreate(
             ['noreg' => $validated['noreg']],
             [
@@ -151,7 +161,7 @@ class KlaimRanapController extends Controller
                 'noka' => $noka,
                 'nosep' => $nosep,
                 'kdruangan' => $kdruangan,
-                'kdsistembayar' => $kdsistembayar,
+                'kdsistembayar' => $kdSistemBayar,
                 'kddpjp' => $kddpjp,
                 'tgl_masuk' => $tgl_masuk,
                 'tgl_pulang' => $tgl_pulang,
