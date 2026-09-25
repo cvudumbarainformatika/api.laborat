@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\Siasik\Anggaran\PenyusunanAnggaran;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Siasik\Anggaran\Penetapan\Penetapan_Rka;
 use App\Models\Siasik\Anggaran\Pengusulan_header;
-use App\Models\Siasik\Anggaran\Pengusulan_rinci;
 use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Header;
 use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Rinci;
 use App\Models\Siasik\Master\Akun50_2024;
@@ -530,5 +530,132 @@ class PenyesuaianPrioritasController extends Controller
             }])
             ->get();
             return new JsonResponse(['data' => $rkaawal]);
+    }
+
+
+
+    public function penetapanrka(Request $request)
+    {
+        $request->validate([
+            'notrans' => 'required|array|min:1',
+            'notrans.*' => 'required|string',
+        ]);
+
+        $notransList = collect($request->notrans)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($notransList->isEmpty()) {
+            return response()->json([
+                'message' => 'Tidak ada notrans yang dikirim'
+            ], 422);
+        }
+
+        $db = DB::connection('siasik');
+
+        try {
+            $datas = $db->table('penyesesuaianperioritas_rinci as r')
+                ->join(
+                    'penyesesuaianperioritas_heder as h',
+                    'h.notrans',
+                    '=',
+                    'r.notrans'
+                )
+                ->whereIn('h.notrans', $notransList)
+                ->select([
+                    'h.notrans',
+                    'r.id as idpp',
+                    'r.usulan',
+                    'r.nilai as pagu',
+                    'r.koderek108',
+                    'r.koderek50',
+                    'h.kodekegiatan as kodekegiatanblud',
+                    DB::raw('YEAR(h.tgltrans) as tgl'),
+                    'r.jumlahacc as volume',
+                    'r.harga',
+                    'r.satuan',
+                    'r.uraian50',
+                    'r.uraian108',
+                    'h.kodebidang as bidang',
+                    'r.koders',
+                ])
+                ->get();
+
+            if ($datas->isEmpty()) {
+                return response()->json([
+                    'message' => 'Data tidak ditemukan'
+                ], 404);
+            }
+
+            $verifikasiTerakhir = Penetapan_Rka::select(
+                    'notrans',
+                    DB::raw('MAX(verif_ke) as verif_ke')
+                )
+                ->whereIn('notrans', $notransList)
+                ->groupBy('notrans')
+                ->get()
+                ->keyBy('notrans');
+
+            $insertData = [];
+            $hasil = [];
+
+            foreach ($datas->groupBy('notrans') as $notrans => $items) {
+                $lastVerif = $verifikasiTerakhir->get($notrans);
+                $verifikasiKe = $lastVerif
+                    ? ((int) $lastVerif->verif_ke + 1)
+                    : 1;
+
+                foreach ($items as $data) {
+                    $insertData[] = [
+                        'notrans' => $data->notrans,
+                        'verif_ke' => $verifikasiKe,
+
+                        // ID dari penyesesuaianperioritas_rinci
+                        'idpp' => $data->idpp,
+
+                        'usulan' => $data->usulan,
+                        'pagu' => $data->pagu,
+                        'koderek108' => $data->koderek108,
+                        'koderek50' => $data->koderek50,
+                        'kodekegiatanblud' => $data->kodekegiatanblud,
+                        'tgl' => $data->tgl,
+                        'volume' => $data->volume,
+                        'harga' => $data->harga,
+                        'satuan' => $data->satuan,
+                        'uraian50' => $data->uraian50,
+                        'uraian108' => $data->uraian108,
+                        'flag' => '1',
+                        'bidang' => $data->bidang,
+                        'koders' => $data->koders,
+
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+
+                $hasil[] = [
+                    'notrans' => $notrans,
+                    'verif_ke' => $verifikasiKe,
+                    'jumlah_data' => $items->count(),
+                ];
+            }
+
+            $db->transaction(function () use ($insertData) {
+                Penetapan_Rka::insert($insertData);
+            });
+
+            return response()->json([
+                'message' => 'Berhasil Penetapan',
+                'jumlah_notrans' => count($hasil),
+                'jumlah_data' => count($insertData),
+                'data' => $hasil,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Gagal Penetapan',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

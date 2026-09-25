@@ -45,12 +45,17 @@ class PendaftaranHomeCareController extends Controller
         ];
 
         $raw = HomeCareKunjungan::query()
+            ->leftJoin('rs15 as pasien', 'pasien.rs1', '=', 'home_care_kunjungans.norm')
+            ->select([
+                'home_care_kunjungans.*',
+                'pasien.rs2 as nama',
+                'pasien.rs17 as kelamin',
+                'pasien.rs16 as tgllahir',
+            ])
             ->when($req['q'], function ($q) use ($req) {
-                $q->select('home_care_kunjungans.*')
-                    ->leftJoin('rs15', 'rs15.rs1', '=', 'home_care_kunjungans.norm')
-                    ->where(function ($y) use ($req) {
-                        $y->where('rs15.rs2', 'LIKE', '%' . $req['q'] . '%')
-                            ->orWhere('rs15.rs1', 'LIKE', '%' . $req['q'] . '%')
+                $q->where(function ($y) use ($req) {
+                        $y->where('pasien.rs2', 'LIKE', '%' . $req['q'] . '%')
+                            ->orWhere('pasien.rs1', 'LIKE', '%' . $req['q'] . '%')
                             ->orWhere('home_care_kunjungans.noreg', 'LIKE', '%' . $req['q'] . '%');
                     });
             })
@@ -138,6 +143,7 @@ class PendaftaranHomeCareController extends Controller
             'message' => 'Pendaftaran Kunjungan Home Care sudah disimpan'
         ]);
     }
+
 
     public function berangkat(Request $request)
     {
