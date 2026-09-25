@@ -122,7 +122,7 @@ class PengusulanController extends Controller
                     // $w->where('kdaset', 'like', "%{$q}%")
                     // ->orWhere('namaaset','like', "%{$q}%");
                     $w->where('kode108', 'like', "%{$q}%")
-                    ->orWhere('uraian108','like', "%{$q}%")
+                    ->orWhere('uraian108','like', "%{$q}%") 
                     ->orWhere('uraian50','like', "%{$q}%");
                 }
             });

@@ -41,10 +41,7 @@ class Tampungcopy extends Model
     public function contrapost(){
         return $this->hasMany(Contrapost::class,'idpp', 'idpp');
     }
-    public function jurnal()
-    {
-        return $this->hasOne(Akun_mapjurnal::class, 'kodeall', 'koderek50');
-    }
+    
     public function lvl1(){
         return $this->belongsTo(Akun50_2024::class,'kode1', 'kodeall3');
     }
@@ -65,7 +62,27 @@ class Tampungcopy extends Model
         return $this->hasOne(Mapping_Bidang_Ptk_Kegiatan::class, 'kodekegiatan', 'kodekegiatanblud');
     }
 
-    protected $appends = ['jenis'];
+    public function jurnal()
+    {
+        return $this->hasOne(Akun_mapjurnal::class, 'kodeall', 'koderek50');
+    }
+
+    public function jurnalkode50()
+    {
+        return $this->hasOne(Akun_mapjurnal::class, 'kode50', 'koderek50');
+    }
+
+     public function getDataJurnalAttribute()
+    {
+        return $this->jurnal ?? $this->jurnalkode50;
+    }
+
+    protected $appends = ['jenis', 'datajurnal'];
+    
+    protected $hidden = [
+        'jurnalkode50',
+    ];
+
 
     public function getJenisAttribute()
     {

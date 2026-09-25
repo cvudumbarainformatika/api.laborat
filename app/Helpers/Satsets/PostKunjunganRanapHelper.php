@@ -23,6 +23,11 @@ class PostKunjunganRanapHelper
         return (string) Str::orderedUuid();
     }
 
+    public static function sanitizeIcd10Code($code)
+    {
+        return PostKunjunganRajalHelper::sanitizeIcd10Code($code);
+    }
+
     public static function ranap($tgl = null)
     {
         $query = Kunjunganranap::query();
@@ -736,15 +741,18 @@ class PostKunjunganRanapHelper
         if ($bpjsPeserta) {
             $norm = trim((string)($pasien->norm ?? $pasien->rs1 ?? ''));
             $noreg = $pasien->noreg ?? ($pasien->rs1 ?? null);
-            $namaSimrs = trim((string)(!empty($pasien->nama) ? $pasien->nama : (!empty($pasien->rs2) ? $pasien->rs2 : '')));
+            $namaSimrs = trim((string)(!empty($pasien->nama_panggil) ? $pasien->nama_panggil : (!empty($pasien->rs2) ? $pasien->rs2 : (!empty($pasien->nama) ? $pasien->nama : ''))));
             $tglLahirSimrs = $pasien->tgllahir ?? $pasien->rs16 ?? null;
 
             $nikBpjs = trim((string)$bpjsPeserta->nik);
             $namaBpjs = trim((string)$bpjsPeserta->nama);
             $tglLahirBpjs = trim((string)$bpjsPeserta->tglLahir);
 
+            $cleanNamaSimrs = SatsetAuditDataLog::cleanNameForComparison($namaSimrs);
+            $cleanNamaBpjs = SatsetAuditDataLog::cleanNameForComparison($namaBpjs);
+
             $diffNik = empty($nik) || $nik !== $nikBpjs || str_starts_with($nik, '8888') || str_starts_with($nik, '9999') || strlen($nik) < 16;
-            $diffNama = !empty($namaSimrs) && strtolower($namaSimrs) !== strtolower($namaBpjs);
+            $diffNama = !empty($cleanNamaSimrs) && !empty($cleanNamaBpjs) && $cleanNamaSimrs !== $cleanNamaBpjs;
             $diffTgl = !empty($tglLahirSimrs) && trim((string)$tglLahirSimrs) !== $tglLahirBpjs;
 
             if ($diffNik || $diffNama || $diffTgl) {
@@ -805,7 +813,8 @@ class PostKunjunganRanapHelper
             $genderLower = strtolower($genderRaw);
             $gender = ($genderLower === 'l' || str_starts_with($genderLower, 'laki') || $genderLower === 'male') ? 'male' : 'female';
 
-            $nama = $bpjs ? trim((string)$bpjs->nama) : (!empty($pasien->nama) ? $pasien->nama : (!empty($pasien->rs2) ? $pasien->rs2 : ($pasien->nama_panggil ?? '-')));
+            $nama = $bpjs ? trim((string)$bpjs->nama) : (!empty($pasien->nama_panggil) ? $pasien->nama_panggil : (!empty($pasien->rs2) ? $pasien->rs2 : SatsetAuditDataLog::cleanNameForComparison($pasien->nama ?? '-')));
+            $nama = SatsetAuditDataLog::cleanNameForComparison($nama);
             $alamat = $pasien->alamatbarcode ?? $pasien->alamat ?? $pasien->rs4 ?? '-';
             $templahir = $pasien->templahir ?? $pasien->rs37 ?? '-';
             $nohp = ($bpjs && !empty($bpjs->mr->noTelepon)) ? trim((string)$bpjs->mr->noTelepon) : ($pasien->nohp ?? $pasien->rs55 ?? '-');
@@ -1192,6 +1201,18 @@ class PostKunjunganRanapHelper
             $form['entry'][] = $composition;
         }
 
+        // 14. NutritionOrder (Instruksi Gizi / Asuhan Gizi Terstandar Rawat Inap - Sesuai Juknis Kemenkes)
+        if (!empty($request->pagt) && count($request->pagt) > 0) {
+            $nutritionOrders = self::nutritionOrderRanap($request, $encounter_uuid, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id);
+            if (!empty($nutritionOrders) && is_array($nutritionOrders)) {
+                foreach ($nutritionOrders as $nutOrder) {
+                    if (!empty($nutOrder)) {
+                        $form['entry'][] = $nutOrder;
+                    }
+                }
+            }
+        }
+
         return ['message' => 'success', 'data' => $form];
     }
 
@@ -1220,6 +1241,17 @@ class PostKunjunganRanapHelper
                     'indonesia' => $diagAkhir,
                 ]
             ];
+        } else {
+            $uniqueRanapDiags = [];
+            $seenRanapCodes = [];
+            foreach ($diagnosas as $dVal) {
+                $sanitized = self::sanitizeIcd10Code($dVal['kode'] ?? '');
+                if (!isset($seenRanapCodes[$sanitized])) {
+                    $seenRanapCodes[$sanitized] = true;
+                    $uniqueRanapDiags[] = $dVal;
+                }
+            }
+            $diagnosas = $uniqueRanapDiags;
         }
 
         foreach ($diagnosas as $key => $val) {
@@ -1275,11 +1307,11 @@ class PostKunjunganRanapHelper
                         "coding" => [
                             [
                                 "system" => "http://hl7.org/fhir/sid/icd-10",
-                                "code" => $val['kode'],
+                                "code" => self::sanitizeIcd10Code($val['kode']),
                                 "display" => $diagName
                             ]
                         ],
-                        "text" => $val['indonesia'] ?? $diagName
+                        "text" => $val['indonesia'] ?? ($val['kode'] ?? $diagName)
                     ],
                     "subject" => [
                         "reference" => "Patient/$pasien_uuid",
@@ -2322,7 +2354,7 @@ class PostKunjunganRanapHelper
     {
         $namaPasien = $request->nama ?? $request->nama_panggil ?? 'Pasien';
         $tglEff = Carbon::parse($tgl_kunjungan)->toIso8601String();
-        $codeIcd10 = $diagPrimer['kode'] ?? ($request->diagakhir ?? 'Z00.0');
+        $codeIcd10 = self::sanitizeIcd10Code($diagPrimer['kode'] ?? ($request->diagakhir ?? 'Z00.0'));
         $displayDiag = $diagPrimer['inggris'] ?? $diagPrimer['indonesia'] ?? ($request->memodiagnosa ?? 'Pemeriksaan Rawat Inap');
 
         // Mapping Prognosis SNOMED
@@ -2408,7 +2440,7 @@ class PostKunjunganRanapHelper
         $namaPasien = $request->nama ?? $request->nama_panggil ?? 'Pasien';
         $tglAuthored = $request->tglkeluar ? Carbon::parse($request->tglkeluar)->toIso8601String() : Carbon::parse($tgl_kunjungan)->toIso8601String();
         $tglKontrol = $request->tglkeluar ? Carbon::parse($request->tglkeluar)->addDays(7)->toIso8601String() : Carbon::parse($tgl_kunjungan)->addDays(7)->toIso8601String();
-        $codeIcd10 = $diagPrimer['kode'] ?? ($request->diagakhir ?? 'Z00.0');
+        $codeIcd10 = self::sanitizeIcd10Code($diagPrimer['kode'] ?? ($request->diagakhir ?? 'Z00.0'));
         $displayDiag = $diagPrimer['inggris'] ?? $diagPrimer['indonesia'] ?? ($request->memodiagnosa ?? 'Pemeriksaan Rawat Inap');
 
         return [
@@ -2651,12 +2683,108 @@ class PostKunjunganRanapHelper
         ];
     }
 
+    public static function nutritionOrderRanap($request, $encounter_uuid, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    {
+        // HARD GUARD: Jika pagt kosong atau tidak ada data gizi, jangan ikutkan resource NutritionOrder
+        if (empty($request->pagt) || count($request->pagt) === 0) {
+            return [];
+        }
+
+        $results = [];
+        $namaPasien = $request->nama ?? $request->nama_panggil ?? 'Pasien';
+
+        foreach ($request->pagt as $pagt) {
+            if (empty($pagt)) continue;
+
+            $dietDetails = [];
+            if (!empty($pagt->energi)) {
+                $dietDetails[] = "Kebutuhan Energi: " . $pagt->energi;
+            }
+            if (!empty($pagt->status_gizi)) {
+                $dietDetails[] = "Status Gizi: " . trim(str_replace(["\r\n", "\r", "\n"], ", ", $pagt->status_gizi));
+            }
+            if (!empty($pagt->nafsu_makan_ket)) {
+                $dietDetails[] = "Asupan Makanan: " . $pagt->nafsu_makan_ket;
+            }
+            if (!empty($pagt->klinis_ket)) {
+                $dietDetails[] = "Kondisi Klinis: " . $pagt->klinis_ket;
+            }
+            if (!empty($pagt->rw_peny_dhl) && is_array($pagt->rw_peny_dhl)) {
+                $dietDetails[] = "Diet Penyakit: " . implode(', ', $pagt->rw_peny_dhl);
+            }
+            if (!empty($pagt->alergi_makanan_ket)) {
+                $dietDetails[] = "Alergi Makanan: " . $pagt->alergi_makanan_ket;
+            }
+
+            $instruction = !empty($dietDetails) ? implode('; ', $dietDetails) : 'Asuhan Gizi Terstandar Pasien Rawat Inap';
+
+            $dietText = 'Diet Terstandar Rawat Inap';
+            if (!empty($pagt->rw_peny_dhl) && is_array($pagt->rw_peny_dhl) && count($pagt->rw_peny_dhl) > 0) {
+                $dietText = "Diet: " . implode(', ', $pagt->rw_peny_dhl);
+            } elseif (!empty($pagt->energi)) {
+                $dietText = "Diet: " . $pagt->energi;
+            }
+
+            // Orderer: Prioritaskan practitioner_uuid DPJP yang valid (atau petugas gizi jika ada)
+            $ordererUuid = $practitioner_uuid;
+            if (!empty($pagt->petugas) && !empty($pagt->petugas->satset_uuid)) {
+                $ordererUuid = $pagt->petugas->satset_uuid;
+            }
+
+            $tglOrder = !empty($pagt->created_at) ? Carbon::parse($pagt->created_at)->toIso8601String() : Carbon::parse($tgl_kunjungan)->toIso8601String();
+
+            $results[] = [
+                "fullUrl" => "urn:uuid:" . self::generateUuid(),
+                "resource" => [
+                    "resourceType" => "NutritionOrder",
+                    "identifier" => [
+                        [
+                            "system" => "http://sys-ids.kemkes.go.id/nutrition-order/" . $organization_id,
+                            "value" => ($request->noreg ?? $request->rs1) . "-NUTRITION-" . ($pagt->id ?? self::generateUuid())
+                        ]
+                    ],
+                    "status" => "active",
+                    "intent" => "order",
+                    "patient" => [
+                        "reference" => "Patient/" . $pasien_uuid,
+                        "display" => $namaPasien
+                    ],
+                    "encounter" => [
+                        "reference" => "urn:uuid:" . $encounter_uuid
+                    ],
+                    "dateTime" => $tglOrder,
+                    "orderer" => [
+                        "reference" => "Practitioner/" . $ordererUuid
+                    ],
+                    "oralDiet" => [
+                        "type" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => "182922004",
+                                        "display" => "Dietary modification"
+                                    ]
+                                ],
+                                "text" => $dietText
+                            ]
+                        ],
+                        "instruction" => $instruction
+                    ]
+                ],
+                "request" => ["method" => "POST", "url" => "NutritionOrder"]
+            ];
+        }
+
+        return $results;
+    }
+
     public static function apotekRanap($request, $encounter_uuid, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $condPrimerUuid, $diagPrimer)
     {
         $entries = [];
         $resep = $request->apotek ?? [];
         $namaPasien = $request->nama ?? $request->nama_panggil ?? 'Pasien';
-        $codeIcd10 = $diagPrimer['kode'] ?? ($request->diagakhir ?? 'Z00.0');
+        $codeIcd10 = self::sanitizeIcd10Code($diagPrimer['kode'] ?? ($request->diagakhir ?? 'Z00.0'));
         $displayDiag = $diagPrimer['inggris'] ?? $diagPrimer['indonesia'] ?? ($request->memodiagnosa ?? 'Terapi Pasien Rawat Inap');
 
         $hasKajianResep = false;
@@ -3112,7 +3240,29 @@ class PostKunjunganRanapHelper
             $diagnosa_klinis = $rad['diagnosakerja'] ?? 'Permintaan Foto';
 
             foreach ($rad['rincians'] as $rincian) {
-                $modality = !empty($rincian['relmasterpemeriksaan']['modality']) ? $rincian['relmasterpemeriksaan']['modality'] : 'CR';
+                $modality = !empty(trim($rincian['relmasterpemeriksaan']['modality'] ?? '')) ? trim($rincian['relmasterpemeriksaan']['modality']) : null;
+                if (empty($modality)) {
+                    $jenisMaster = strtoupper($rincian['relmasterpemeriksaan']['rs3'] ?? '');
+                    $namaMaster = strtoupper($rincian['relmasterpemeriksaan']['rs2'] ?? ($rincian['pemeriksaan'] ?? ''));
+                    $loincText = strtoupper($rincian['relmasterpemeriksaan']['loinc_display'] ?? '');
+
+                    if (strpos($jenisMaster, 'CT SCAN') !== false || strpos($namaMaster, 'CT SCAN') !== false || strpos($loincText, 'CT') !== false) {
+                        $modality = 'CT';
+                    } elseif (strpos($jenisMaster, 'USG') !== false || strpos($jenisMaster, 'ULTRA SONO') !== false || strpos($namaMaster, 'USG') !== false || strpos($namaMaster, 'ULTRASONOGRAFI') !== false || strpos($loincText, 'US') !== false) {
+                        $modality = 'US';
+                    } elseif (strpos($jenisMaster, 'MRI') !== false || strpos($namaMaster, 'MRI') !== false || strpos($loincText, 'MR') !== false || strpos($loincText, 'MRI') !== false) {
+                        $modality = 'MR';
+                    } elseif (strpos($jenisMaster, 'MAMMOGRAFI') !== false || strpos($namaMaster, 'MAMMOGRAFI') !== false || strpos($loincText, 'MAMMOGRAM') !== false) {
+                        $modality = 'MG';
+                    } elseif (strpos($jenisMaster, 'C-ARM') !== false || strpos($namaMaster, 'C-ARM') !== false || strpos($loincText, 'FLUOROSCOPY') !== false) {
+                        $modality = 'XA';
+                    } elseif (strpos($jenisMaster, 'PANORAMIC') !== false || strpos($namaMaster, 'PANORAMIC') !== false || strpos($loincText, 'DENTAL') !== false) {
+                        $modality = 'DX';
+                    } else {
+                        $modality = 'CR';
+                    }
+                }
+
                 $nama_foto = !empty($rincian['relmasterpemeriksaan']['rs2']) ? $rincian['relmasterpemeriksaan']['rs2'] : ($rincian['pemeriksaan'] ?? 'Pemeriksaan Radiologi');
                 $study_uid = $rincian['study_instance_uid'] ?? null;
                 $hasil_expertise = $rincian['hasil'] ?? null;
@@ -3192,6 +3342,7 @@ class PostKunjunganRanapHelper
                             "subject" => ["reference" => "Patient/" . $pasien_uuid],
                             "encounter" => ["reference" => "urn:uuid:" . $encounter_uuid],
                             "effectiveDateTime" => Carbon::parse($rincian['updated_at'] ?? $rad['rs3'])->toIso8601String(),
+                            "issued" => Carbon::parse($rincian['updated_at'] ?? $rad['rs3'])->toIso8601String(),
                             "performer" => [["reference" => "Practitioner/" . ($request->datasimpeg['satset_uuid'] ?? '-')]],
                             "valueString" => $hasil_expertise
                         ],
@@ -3236,7 +3387,9 @@ class PostKunjunganRanapHelper
 
                 return str_contains($text, 'hb0')
                     || str_contains($text, 'hepatitis b')
-                    || str_contains($text, 'vaksin hb0');
+                    || str_contains($text, 'vaksin hb0')
+                    || str_contains($text, 'bcg')
+                    || str_contains($text, 'polio');
             });
 
         $form = [];
@@ -3246,6 +3399,27 @@ class PostKunjunganRanapHelper
         $practitioner_uuid = $request?->datasimpeg?->satset_uuid;
 
         if ($imunisasi) {
+            $textObat = strtolower(($imunisasi['nama_obat'] ?? '') . ' ' . ($imunisasi['kandungan'] ?? ''));
+            if (str_contains($textObat, 'bcg')) {
+                $kfaCode = 'VG17';
+                $kfaDisplay = 'BCG';
+                $cvxCode = '19';
+                $cvxDisplay = 'BCG';
+                $series = 'BCG';
+            } elseif (str_contains($textObat, 'polio')) {
+                $kfaCode = 'VG01';
+                $kfaDisplay = 'bOPV';
+                $cvxCode = '02';
+                $cvxDisplay = 'OPV';
+                $series = 'Polio';
+            } else {
+                $kfaCode = 'VG45';
+                $kfaDisplay = 'HepB';
+                $cvxCode = '93';
+                $cvxDisplay = 'Hepatitis B';
+                $series = 'Hepatitis B';
+            }
+
             $form = [
                 "fullUrl" => "urn:uuid:" . self::generateUuid(),
                 "resource" => [
@@ -3254,9 +3428,14 @@ class PostKunjunganRanapHelper
                     "vaccineCode" => [
                         "coding" => [
                             [
+                                "system" => "http://sys-ids.kemkes.go.id/kfa",
+                                "code" => $kfaCode,
+                                "display" => $kfaDisplay
+                            ],
+                            [
                                 "system" => "http://hl7.org/fhir/sid/cvx",
-                                "code" => "93",
-                                "display" => "Hepatitis B"
+                                "code" => $cvxCode,
+                                "display" => $cvxDisplay
                             ]
                         ]
                     ],
@@ -3278,7 +3457,7 @@ class PostKunjunganRanapHelper
                     "encounter" => [
                         "reference" => "urn:uuid:" . $encounter_uuid
                     ],
-                    "occurrenceDateTime" => Carbon::parse($imunisasi['created_at'])->toIso8601String(),
+                    "occurrenceDateTime" => Carbon::parse($imunisasi['created_at'] ?? now())->toIso8601String(),
                     "primarySource" => true,
                     "lotNumber" => $imunisasi['kdobat'] ?? 'LOT-HB0',
                     "expirationDate" => date('Y-m-d', strtotime('+18 months')),
@@ -3305,7 +3484,7 @@ class PostKunjunganRanapHelper
                     "protocolApplied" => [
                         [
                             "doseNumberPositiveInt" => 1,
-                            "series" => "Hepatitis B"
+                            "series" => $series
                         ]
                     ]
                 ],

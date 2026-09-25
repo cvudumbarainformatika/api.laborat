@@ -1,22 +1,21 @@
 <?php
 
-namespace App\Http\Controllers\Api\Siasik\Anggaran\Pergeseran;
+namespace App\Http\Controllers\Api\Siasik\Anggaran\RBAPerubahan_pergeseran;
 
 use App\Http\Controllers\Controller;
-use App\Models\Siasik\Anggaran\Penetapan\Penetapan_Rka;
 use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Header;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Anggaran\Perubahan_pak_header;
 use App\Models\Siasik\Anggaran\Perubahan_RincianBelanja;
 use App\Models\Siasik\Anggaran\Tampung_batasan;
-use App\Models\Siasik\Anggaran\Tampung_Pagu;
+use App\Models\Siasik\Anggaran\Tampung_Pagu_pak;
 use App\Models\Siasik\Anggaran\Tampungcopy;
 use App\Models\Sigarang\Pegawai;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
-class PergeseranAnggaranController extends Controller
+class PergeseranPerubahanAnggaranController extends Controller
 {
     public function index(){
         $perPage = request('per_page', 50);
@@ -26,25 +25,41 @@ class PergeseranAnggaranController extends Controller
         $pg= Pegawai::find($user);
         $pegawai= $pg->nip;
         $sebagai_sa = $pg->kdpegsimrs === '1215' || $pg->kdpegsimrs === 'sa';
-        $query = Penyesuaian_Prioritas_Header::with(['penetapancopy' => function($q) {
-            $q->with(['jurnal','realisasi_spjpanjar'=> function ($realisasi) {
-                    $realisasi->select('spjpanjar_rinci.iditembelanjanpd',
-                                        'spjpanjar_rinci.jumlahbelanjapanjar');
-                    },'realisasi'=> function ($realisasi) {
-                    $realisasi->select('npdls_rinci.idserahterima_rinci',
-                                        'npdls_rinci.nominalpembayaran')
-                                        // ->sum('nominalpembayaran')
-                                        // ->selectRaw('sum(nominalpembayaran) as total_realisasi')
-                                        ;
-                    },'contrapost'=> function ($realisasi) {
-                    $realisasi->select('contrapost.idpp',
-                                        'contrapost.nominalcontrapost');
+        $query = Perubahan_pak_header::with(['penetapancopy' => function($q) {
+            $q->with(['jurnal'  => function($jurnal){
+                            $jurnal->select('akun_mapjurnal.kodeall',
+                            'akun_mapjurnal.kode50',
+                            'akun_mapjurnal.kode_bast',
+                            'akun_mapjurnal.kode_bastx',
+                            'akun_mapjurnal.uraian50',
+                            'akun_mapjurnal.uraian_bast',
+                            'akun_mapjurnal.uraian_bastx');
+                        }, 'jurnalkode50' => function($jurnal){
+                            $jurnal->select('akun_mapjurnal.kodeall',
+                            'akun_mapjurnal.kode50',
+                            'akun_mapjurnal.kode_bast',
+                            'akun_mapjurnal.kode_bastx',
+                            'akun_mapjurnal.uraian50',
+                            'akun_mapjurnal.uraian_bast',
+                            'akun_mapjurnal.uraian_bastx');
+                        },  'realisasi_spjpanjar'=> function ($realisasi) {
+                            $realisasi->select('spjpanjar_rinci.iditembelanjanpd',
+                                            'spjpanjar_rinci.jumlahbelanjapanjar');
+                        },  'realisasi'=> function ($realisasi) {
+                            $realisasi->select('npdls_rinci.idserahterima_rinci',
+                                            'npdls_rinci.nominalpembayaran')
+                                            // ->sum('nominalpembayaran')
+                                            // ->selectRaw('sum(nominalpembayaran) as total_realisasi')
+                                            ;
+                        },  'contrapost'=> function ($realisasi) {
+                            $realisasi->select('contrapost.idpp',
+                                            'contrapost.nominalcontrapost');
                     }]);
         }])
-        ->withSum('penetapancopy as nilaipengusulan', 'pagu');
+        ->withSum('penetapancopy as nilaipengusulan', 'nilai');
 
         if ($tahun) {
-            $query->whereBetween('tgltrans', [
+            $query->whereBetween('tglTransaksi', [
                 $tahun . '-01-01',
                 $tahun . '-12-31',
             ]);
@@ -55,7 +70,7 @@ class PergeseranAnggaranController extends Controller
         if ($q) {
                 $query->where(function ($w) use ($q) {
                     $w->where('notrans', 'like', "%{$q}%")
-                    ->orWhere('namabidang', 'like', "%{$q}%")
+                    ->orWhere('ruangan', 'like', "%{$q}%")
                     ->orWhere('kegiatan', 'like', "%{$q}%")
                     ->orWhere('pptk', 'like', "%{$q}%");
                 })
@@ -143,7 +158,7 @@ class PergeseranAnggaranController extends Controller
 
             // $header = Penyesuaian_Prioritas_Header::where('notrans', $validated['notrans'])
             //     ->first();
-            $header = Tampung_Pagu::where('kodekegiatanblud', $validated['kodekegiatanblud'])
+            $header = Tampung_Pagu_pak::where('kodekegiatanblud', $validated['kodekegiatanblud'])
                 ->first();
             if (!$header) {
                 return response()->json([
@@ -217,10 +232,10 @@ class PergeseranAnggaranController extends Controller
                 // PergeseranPaguRinci::updateOrCreate(
                 Tampungcopy::updateOrCreate(
                     [
-                        'notrans' => $anggaran->notrans,
                         'idpp'    => $idpp,
                     ],
                     [
+                        'notrans' => $anggaran->notrans,
                         'volume' => $volumebaru,
                         'harga'  => $hargabaru,
                         'pagu'   => $totalbaru,
@@ -242,19 +257,35 @@ class PergeseranAnggaranController extends Controller
             }
 
             DB::commit();
-            $data = Penyesuaian_Prioritas_Header::with(['penetapancopy' => function($q) {
-            $q->with(['jurnal','realisasi_spjpanjar'=> function ($realisasi) {
-                    $realisasi->select('spjpanjar_rinci.iditembelanjanpd',
-                                        'spjpanjar_rinci.jumlahbelanjapanjar');
-                    },'realisasi'=> function ($realisasi) {
-                    $realisasi->select('npdls_rinci.idserahterima_rinci',
-                                        'npdls_rinci.nominalpembayaran')
-                                        // ->sum('nominalpembayaran')
-                                        // ->selectRaw('sum(nominalpembayaran) as total_realisasi')
-                                        ;
-                    },'contrapost'=> function ($realisasi) {
-                    $realisasi->select('contrapost.idpp',
-                                        'contrapost.nominalcontrapost');
+            $data = Perubahan_pak_header::with(['penetapancopy' => function($q) {
+            $q->with(['jurnal' => function($jurnal){
+                            $jurnal->select('akun_mapjurnal.kodeall',
+                            'akun_mapjurnal.kode50',
+                            'akun_mapjurnal.kode_bast',
+                            'akun_mapjurnal.kode_bastx',
+                            'akun_mapjurnal.uraian50',
+                            'akun_mapjurnal.uraian_bast',
+                            'akun_mapjurnal.uraian_bastx');
+                        }, 'jurnalkode50' => function($jurnal){
+                            $jurnal->select('akun_mapjurnal.kodeall',
+                            'akun_mapjurnal.kode50',
+                            'akun_mapjurnal.kode_bast',
+                            'akun_mapjurnal.kode_bastx',
+                            'akun_mapjurnal.uraian50',
+                            'akun_mapjurnal.uraian_bast',
+                            'akun_mapjurnal.uraian_bastx');
+                        },  'realisasi_spjpanjar'=> function ($realisasi) {
+                            $realisasi->select('spjpanjar_rinci.iditembelanjanpd',
+                                            'spjpanjar_rinci.jumlahbelanjapanjar');
+                        },  'realisasi'=> function ($realisasi) {
+                            $realisasi->select('npdls_rinci.idserahterima_rinci',
+                                            'npdls_rinci.nominalpembayaran')
+                                            // ->sum('nominalpembayaran')
+                                            // ->selectRaw('sum(nominalpembayaran) as total_realisasi')
+                                            ;
+                        },  'contrapost'=> function ($realisasi) {
+                            $realisasi->select('contrapost.idpp',
+                                            'contrapost.nominalcontrapost');
                         }]);
             }])
                 ->when($anggaran->notrans, function ($q) use ($anggaran) {
@@ -287,16 +318,11 @@ class PergeseranAnggaranController extends Controller
                 ->get();
 
             if ($datas->isEmpty()) {
-                DB::rollBack();
                 return response()->json([
                     'message' => 'Data tidak ditemukan'
                 ], 404);
             }
 
-           
-            /*
-            * Masuk ke t_tampung (untuk pengambilan Anggaran saat ini)
-            */
             foreach ($datas as $data) {
 
                 PergeseranPaguRinci::updateOrInsert(
@@ -337,161 +363,6 @@ class PergeseranAnggaranController extends Controller
             return response()->json([
                 'message' => 'Gagal',
                 'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-
-
-    public function penetapanrka(Request $request)
-    {
-        $request->validate([
-            'notrans' => 'required|array|min:1',
-            'notrans.*' => 'required|string',
-        ]);
-
-        DB::beginTransaction();
-
-        try {
-
-            // Hilangkan duplikat notrans dari request
-            $notransList = collect($request->notrans)
-                ->filter()
-                ->unique()
-                ->values();
-
-            if ($notransList->isEmpty()) {
-                return response()->json([
-                    'message' => 'Tidak ada notrans yang dikirim'
-                ], 422);
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | 1. Ambil semua data Tampungcopy sekaligus
-            |--------------------------------------------------------------------------
-            */
-            $datas = PergeseranPaguRinci::whereIn('notrans', $notransList)
-                ->get();
-
-            if ($datas->isEmpty()) {
-                DB::rollBack();
-
-                return response()->json([
-                    'message' => 'Data tidak ditemukan'
-                ], 404);
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | 2. Ambil verif_ke terakhir untuk semua notrans sekaligus
-            |--------------------------------------------------------------------------
-            */
-            $verifikasiTerakhir = Penetapan_Rka::select(
-                    'notrans',
-                    DB::raw('MAX(verif_ke) as verif_ke')
-                )
-                ->whereIn('notrans', $notransList)
-                ->groupBy('notrans')
-                ->get()
-                ->keyBy('notrans');
-
-            /*
-            |--------------------------------------------------------------------------
-            | 3. Kelompokkan data berdasarkan notrans
-            |--------------------------------------------------------------------------
-            */
-            $datasByNotrans = $datas->groupBy('notrans');
-
-            $insertData = [];
-            $hasil = [];
-
-            foreach ($datasByNotrans as $notrans => $items) {
-
-                /*
-                * Ambil verif_ke terakhir untuk notrans ini
-                */
-                $lastVerif = $verifikasiTerakhir
-                    ->get($notrans);
-
-                $verifikasiKe = $lastVerif
-                    ? ((int) $lastVerif->verif_ke + 1)
-                    : 1;
-
-                /*
-                |--------------------------------------------------------------------------
-                | 4. Buat snapshot history
-                |--------------------------------------------------------------------------
-                */
-                foreach ($items as $data) {
-
-                    $insertData[] = [
-                        'notrans' => $data->notrans,
-                        'verif_ke' => $verifikasiKe,
-
-                        'idpp' => $data->idpp,
-                        'usulan' => $data->usulan,
-                        'pagu' => $data->pagu,
-                        'koderek108' => $data->koderek108,
-                        'koderek50' => $data->koderek50,
-                        'kodekegiatanblud' => $data->kodekegiatanblud,
-                        'tgl' => $data->tgl,
-                        'volume' => $data->volume,
-                        'harga' => $data->harga,
-                        'satuan' => $data->satuan,
-                        'uraian50' => $data->uraian50,
-                        'uraian108' => $data->uraian108,
-                        'flag' => $data->flag,
-                        'bidang' => $data->bidang,
-                        'koders' => $data->koders,
-
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                }
-
-                $hasil[] = [
-                    'notrans' => $notrans,
-                    'verif_ke' => $verifikasiKe,
-                    'jumlah_data' => $items->count(),
-                ];
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | 5. Bulk INSERT
-            |--------------------------------------------------------------------------
-            |
-            | Jauh lebih cepat daripada:
-            |
-            | foreach (...) {
-            |     Penetapan_Rka::create(...)
-            | }
-            |
-            */
-            if (!empty($insertData)) {
-                Penetapan_Rka::insert($insertData);
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'message' => 'Berhasil Penetapan',
-
-                'jumlah_notrans' => count($hasil),
-
-                'jumlah_data' => count($insertData),
-
-                'data' => $hasil,
-            ], 200);
-
-        } catch (\Throwable $e) {
-
-            DB::rollBack();
-
-            return response()->json([
-                'message' => 'Gagal Penetapan',
-                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -1059,5 +930,4 @@ class PergeseranAnggaranController extends Controller
             ], 500);
         }
     }
-    
 }

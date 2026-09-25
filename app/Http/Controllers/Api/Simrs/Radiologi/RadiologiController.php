@@ -558,8 +558,13 @@ class RadiologiController extends Controller
         $data->hasilhtml = $request->hasilhtml;
         $data->kesimpulanhtml = $request->kesimpulanhtml;
         $data->save();
+        $data->tgl = $data->rs2;
 
-        return response()->json(['message' => 'Data berhasil disimpan'], 200);
+        return response()->json([
+            'message' => 'Data berhasil disimpan',
+            'data' => $data,
+            'tgl' => $data->rs2
+        ], 200);
     }
 
 

@@ -1,7 +1,5 @@
 <?php
 
-
-use App\Http\Controllers\Api\Siasik\Anggaran\PenyusunanAnggaran\PengusulanController;
 use App\Http\Controllers\Api\Siasik\Anggaran\PenyusunanAnggaran\PenyesuaianPrioritasController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,5 +16,8 @@ Route::group([
     Route::post('/updatedata', [PenyesuaianPrioritasController::class, 'updateData']);
     Route::get('/cetakdata', [PenyesuaianPrioritasController::class, 'cetakData']);
     Route::post('/penetapan', [PenyesuaianPrioritasController::class, 'PenetapanAnggaran']);
+
+    
+    Route::post('/penetapanrka', [PenyesuaianPrioritasController::class, 'penetapanrka']);
 
 });

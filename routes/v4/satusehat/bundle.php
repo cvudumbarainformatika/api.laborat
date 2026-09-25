@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Satusehat\AuditPasienGandaController;
 use App\Http\Controllers\Api\Satusehat\Bundle\KunjunganController;
 use App\Http\Controllers\Api\Satusehat\DashboardSatsetController;
 use Illuminate\Support\Facades\Route;
@@ -29,4 +30,9 @@ Route::group([
     Route::get('/dashboard/audit-stats', [DashboardSatsetController::class, 'auditStats']);
     Route::get('/dashboard/audit-list', [DashboardSatsetController::class, 'auditList']);
     Route::post('/dashboard/audit-update-status', [DashboardSatsetController::class, 'updateAuditStatus']);
+
+    // Audit Data Pasien Terindikasi Ganda
+    Route::get('/audit-ganda/stats', [AuditPasienGandaController::class, 'stats']);
+    Route::get('/audit-ganda/list', [AuditPasienGandaController::class, 'list']);
+    Route::post('/audit-ganda/update-status', [AuditPasienGandaController::class, 'updateStatus']);
 });

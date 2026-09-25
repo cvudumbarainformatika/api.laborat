@@ -88,6 +88,7 @@ class PostKunjunganHDHerlper
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
             'rs15.rs2 as nama',
+            'rs15.rs2 as nama_panggil',
             'rs15.rs49 as nik',
             'rs17.rs19 as status',
             'rs15.satset_uuid as pasien_uuid',
@@ -998,6 +999,14 @@ class PostKunjunganHDHerlper
         $episodeOfCare = self::episodeOfCare($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $firstConditionUuid);
         if ($episodeOfCare !== null) {
             array_push($body['entry'], $episodeOfCare);
+            // Tautkan referensi EpisodeOfCare ke dalam resource Encounter (wajib untuk modul Episode Perawatan SatuSehat)
+            if (!empty($episodeOfCare['fullUrl']) && isset($body['entry'][0]['resource']['resourceType']) && $body['entry'][0]['resource']['resourceType'] === 'Encounter') {
+                $body['entry'][0]['resource']['episodeOfCare'] = [
+                    [
+                        'reference' => $episodeOfCare['fullUrl']
+                    ]
+                ];
+            }
         }
 
         $send['message'] = 'success';
@@ -1008,6 +1017,29 @@ class PostKunjunganHDHerlper
 
     public static function episodeOfCare($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $firstConditionUuid = null)
     {
+        // Cek apakah pasien sudah memiliki riwayat EpisodeOfCare aktif untuk CKD/HD dari kunjungan sebelumnya
+        $norm = $request->norm ?? $request->rs2;
+        if (!empty($norm)) {
+            $hasPreviousActiveEoc = KunjunganPoli::where('rs17.rs2', $norm)
+                ->where('rs17.rs1', '!=', $request->noreg ?? $request->rs1)
+                ->where('rs17.rs3', '<', $request->tgl_kunjungan)
+                ->has('satset')
+                ->where(function ($q) {
+                    $q->where('rs17.rs8', 'POL033')
+                      ->orWhere('rs17.rs8', 'PEN005')
+                      ->orWhereHas('diagnosa.masterdiagnosa', function ($d) {
+                          $d->where('rs1', 'LIKE', 'N18%');
+                      });
+                })
+                ->exists();
+
+            if ($hasPreviousActiveEoc) {
+                // Pasien sudah memiliki EpisodeOfCare aktif pada kunjungan sebelumnya.
+                // Sesuai aturan SatuSehat Kemkes, pada sesi cuci darah berikutnya tidak membuat POST EpisodeOfCare baru lagi.
+                return null;
+            }
+        }
+
         $eocUuid = "urn:uuid:" . self::generateUuid();
         $tglMulai = Carbon::parse($request->tgl_kunjungan ?? now())->toIso8601String();
         $namaPractitioner = $request->datasimpeg['nama'] ?? 'Dokter Penanggung Jawab';
@@ -1677,19 +1709,40 @@ class PostKunjunganHDHerlper
         $carePlan = [];
 
         if (count($diagnosaKeperawatan) > 0) {
-            $intervensis = $diagnosaKeperawatan[0]['intervensi'];
+            $intervensis = collect($diagnosaKeperawatan[0]['intervensi'] ?? [])
+                ->filter(function ($iv) {
+                    return !empty($iv['masterintervensi']['nama']);
+                })
+                ->unique(function ($iv) {
+                    return trim($iv['masterintervensi']['nama']);
+                })
+                ->values()
+                ->all();
+
             if (count($intervensis) > 0) {
+                $title = "RENCANA RAWAT PASIEN " . ($diagnosaKeperawatan[0]['nama'] ?? 'HD');
 
-
-
-                $title = "RENCANA RAWAT PASIEN " . $diagnosaKeperawatan[0]['nama'];
-
-                // $terapeutik = $terapeutik ? $terapeutik->masterintervensi['nama'] : 'Rencana Rawat Pasien';
+                $authorUuid = !empty($diagnosaKeperawatan[0]['petugas']['satset_uuid'])
+                    ? $diagnosaKeperawatan[0]['petugas']['satset_uuid']
+                    : $practitioner_uuid;
+                $authorNama = !empty($diagnosaKeperawatan[0]['petugas']['nama'])
+                    ? $diagnosaKeperawatan[0]['petugas']['nama']
+                    : $nama_practitioner;
 
                 for ($i = 0; $i < count($intervensis); $i++) {
+                    $authorData = [];
+                    if (!empty($authorUuid)) {
+                        $authorData = [
+                            "author" => [
+                                "reference" => "Practitioner/" . $authorUuid,
+                                "display" => $authorNama,
+                            ]
+                        ];
+                    }
+
                     $plan = [
                         "fullUrl" => "urn:uuid:" . self::generateUuid(),
-                        "resource" => [
+                        "resource" => array_merge([
                             "resourceType" => "CarePlan",
                             "status" => "active",
                             "intent" => "plan",
@@ -1705,18 +1758,14 @@ class PostKunjunganHDHerlper
                                 ],
                             ],
                             "title" => $title,
-                            "description" => $intervensis[$i]['masterintervensi']['nama'],
+                            "description" => trim($intervensis[$i]['masterintervensi']['nama']),
                             "subject" => [
                                 "reference" => "Patient/$pasien_uuid",
                                 "display" => "$request->nama",
                             ],
                             "encounter" => ["reference" => "urn:uuid:$encounter"],
                             "created" => $created,
-                            "author" => [
-                                "reference" => "Practitioner/" . $diagnosaKeperawatan[0]['petugas']['satset_uuid'],
-                                "display" => $diagnosaKeperawatan[0]['petugas']['nama'],
-                            ],
-                        ],
+                        ], $authorData),
                         "request" => ["method" => "POST", "url" => "CarePlan"],
                     ];
 
@@ -1734,24 +1783,21 @@ class PostKunjunganHDHerlper
 
     static function procedure($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
     {
-        // $data = $request;
         $adaTindakan = [];
-        // foreach ($data as $key => $value) {
-
-        // $adaTindakan[] = $value->tindakan;
         $tindakan = $request->tindakan;
         if (count($tindakan) > 0) {
             foreach ($tindakan as $sub => $isi) {
                 if ($isi->maapingprocedure !== null && $isi->maapingsnowmed !== null) {
 
-                    // setlocale(LC_ALL, 'IND');
                     $dt = Carbon::parse($isi->rs3)->locale('id');
                     $dt->settings(['formatFunction' => 'translatedFormat']);
                     $waktuPerform = $dt->format('l, j F Y');
 
-                    $petugas_id = $isi->petugas['satset_uuid'] ?? null;
+                    $petugas_id = !empty($isi->petugas['satset_uuid']) ? $isi->petugas['satset_uuid'] : $practitioner_uuid;
+                    $petugas_nama = !empty($isi->petugas['nama']) ? $isi->petugas['nama'] : ($request->datasimpeg['nama'] ?? ($request->dokter ?? '-'));
+
                     $procedure = null;
-                    if ($petugas_id != null) {
+                    if (!empty($petugas_id)) {
                         $procedure =
                             [
                                 "fullUrl" => "urn:uuid:" . self::generateUuid(),
@@ -1762,20 +1808,21 @@ class PostKunjunganHDHerlper
                                         "coding" => [
                                             [
                                                 "system" => "http://snomed.info/sct",
-                                                "code" => $isi->maapingsnowmed['kdSnowmed'] ?? '-',
-                                                "display" => $isi->maapingsnowmed['display'] ?? '-',
+                                                "code" => $isi->maapingsnowmed['kdSnowmed'] ?? '103693007',
+                                                "display" => $isi->maapingsnowmed['display'] ?? 'Diagnostic procedure',
                                             ],
                                         ],
-                                        "text" => $isi->maapingsnowmed['display'] ?? '-'
+                                        "text" => $isi->maapingsnowmed['display'] ?? 'Diagnostic procedure'
                                     ],
                                     "code" => [
                                         "coding" => [
                                             [
                                                 "system" => "http://hl7.org/fhir/sid/icd-9-cm",
-                                                "code" => $isi->maapingprocedure['icd9'] ?? '-',
-                                                "display" => $isi->maapingprocedure['prosedur'] ?? '-',
+                                                "code" => !empty($isi->maapingprocedure['icd9']) ? $isi->maapingprocedure['icd9'] : '89.07',
+                                                "display" => $isi->maapingprocedure['prosedur'] ?? ($isi->keterangan ?? 'General physical examination'),
                                             ],
                                         ],
+                                        "text" => $isi->keterangan ?? ($isi->maapingprocedure['prosedur'] ?? 'Tindakan Medis')
                                     ],
                                     "subject" => [
                                         "reference" => "Patient/$pasien_uuid",
@@ -1792,47 +1839,19 @@ class PostKunjunganHDHerlper
                                     "performer" => [
                                         [
                                             "actor" => [
-                                                "reference" => "Practitioner/" . $isi->petugas['satset_uuid'],
-                                                "display" => $isi->petugas['nama'],
+                                                "reference" => "Practitioner/" . $petugas_id,
+                                                "display" => $petugas_nama,
                                             ],
                                         ],
                                     ],
-                                    // "reasonCode" => [
-                                    //     [
-                                    //         "coding" => [
-                                    //             [
-                                    //                 "system" => "http://hl7.org/fhir/sid/icd-10",
-                                    //                 "code" => "A15.0",
-                                    //                 "display" =>
-                                    //                     "Tuberculosis of lung, confirmed by sputum microscopy with or without culture",
-                                    //             ],
-                                    //         ],
-                                    //     ],
-                                    // ],
-                                    // "bodySite" => [
-                                    //     [
-                                    //         "coding" => [
-                                    //             [
-                                    //                 "system" => "http://snomed.info/sct",
-                                    //                 "code" => "74101002",
-                                    //                 "display" => "Both lungs",
-                                    //             ],
-                                    //         ],
-                                    //     ],
-                                    // ],
-                                    // "note" => [
-                                    //     ["text" => "Nebulisasi untuk melegakan sesak napas"],
-                                    // ],
                                 ],
                                 "request" => ["method" => "POST", "url" => "Procedure"],
                             ];
+
+                        $adaTindakan[] = $procedure;
                     }
-                    // $adaTindakan[] = $isi;
-                    $adaTindakan[] = $procedure;
                 }
             }
-            // }
-
         }
 
         return $adaTindakan;

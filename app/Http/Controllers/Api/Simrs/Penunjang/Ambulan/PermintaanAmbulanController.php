@@ -29,32 +29,62 @@ class PermintaanAmbulanController extends Controller
         }else{
             $jp_perawat1 = $tujuan->rs8;
         }
-        DB::select('call nota_ambulan(@nomor)');
-        $x = DB::table('rs1')->select('rs283')->get();
-        $wew = $x[0]->rs283;
-        $notatindakan = FormatingHelper::notatindakan($wew, 'AMB-RI');
-        $simpan = ReqAmbulan::create(
-            [
-                'rs1' => $request->noreg,
-                'rs2' => $request->norm,
-                'rs3' => date('Y-m-d H:i:s'),
-                'rs4' => $request->kdgroup_ruangan,
-                'rs5' => $request->kodepoli,
-                'rs6' => $request->kodesistembayar,
-                // 'rs7' => $request->noreg,
-                // 'rs8' => $request->noreg,
-                'rs9' => $request->kodedokter ?? '',
-                'rs10' => $request->tujuan,
-                'rs11' => $request->keterangan ?? '',
-                'rs12' => $request->layanansupir ?? '',
-                'rs13' => $request->perawat1 ?? '',
-                'rs14' => $request->perawat2 ?? '',
-                'rs15' => $request->layananperawat ?? '',
-                'rs16' => $jp_perawat1,
-                // 'rs17' => $request->noreg,
-                'nota' => $notatindakan
-            ]
-        );
+        $isEdit = !empty($request->id) || (!empty($request->nota) && $request->nota !== 'BARU' && $request->nota !== 'SEMUA');
+        
+        $dataSimpan = [
+            'rs1' => $request->noreg,
+            'rs2' => $request->norm,
+            'rs4' => $request->kdgroup_ruangan,
+            'rs5' => $request->kodepoli,
+            'rs6' => $request->kodesistembayar,
+            'rs9' => $request->kodedokter ?? '',
+            'rs10' => $request->tujuan,
+            'rs11' => $request->keterangan ?? '',
+            'rs12' => $request->layanansupir ?? '',
+            'rs13' => $request->perawat1 ?? '',
+            'rs14' => $request->perawat2 ?? '',
+            'rs15' => $request->layananperawat ?? '',
+            'kd_driver' => $request->kd_driver ?? '',
+            'alasan_keperluan' => $request->alasan_keperluan ?? '',
+            'indikasi_rujuk' => $request->indikasi_rujuk ?? '',
+            'jenis_ambulan' => $request->jenis_ambulan ?? '',
+            'skor_indeks' => $request->skor_indeks ?? 0,
+            'kategori_resiko' => $request->kategori_resiko ?? '0',
+            'kualifikasi_petugas' => $request->kualifikasi_petugas ?? '',
+            'penilaian_resiko' => is_array($request->penilaian_resiko) ? json_encode($request->penilaian_resiko) : ($request->penilaian_resiko ?? null),
+            'rs16' => $jp_perawat1,
+        ];
+
+        if ($isEdit) {
+            $existing = null;
+            if (!empty($request->id)) {
+                $existing = ReqAmbulan::find($request->id);
+            }
+            if (!$existing && !empty($request->nota)) {
+                $existing = ReqAmbulan::where('nota', $request->nota)->first();
+            }
+
+            if ($existing) {
+                $existing->update($dataSimpan);
+                $simpan = $existing;
+            } else {
+                DB::select('call nota_ambulan(@nomor)');
+                $x = DB::table('rs1')->select('rs283')->get();
+                $wew = $x[0]->rs283;
+                $notatindakan = FormatingHelper::notatindakan($wew, 'AMB-RI');
+                $dataSimpan['rs3'] = date('Y-m-d H:i:s');
+                $dataSimpan['nota'] = $notatindakan;
+                $simpan = ReqAmbulan::create($dataSimpan);
+            }
+        } else {
+            DB::select('call nota_ambulan(@nomor)');
+            $x = DB::table('rs1')->select('rs283')->get();
+            $wew = $x[0]->rs283;
+            $notatindakan = FormatingHelper::notatindakan($wew, 'AMB-RI');
+            $dataSimpan['rs3'] = date('Y-m-d H:i:s');
+            $dataSimpan['nota'] = $notatindakan;
+            $simpan = ReqAmbulan::create($dataSimpan);
+        }
 
         if (!$simpan) {
           return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);

@@ -96,6 +96,14 @@ class KamaroperasiController extends Controller
             'per_page' => request('per_page') ?? 25,
         ];
         $status = request('status') ?? '';
+
+        $daftartilikSub = DB::table('daftartilik as dt1')
+            ->select('dt1.noreg', 'dt1.id', 'dt1.pre_petugas_penerima')
+            ->join(DB::raw('(SELECT noreg, MAX(id) as max_id FROM daftartilik GROUP BY noreg) as dt2'), function ($join) {
+                $join->on('dt1.noreg', '=', 'dt2.noreg')
+                    ->on('dt1.id', '=', 'dt2.max_id');
+            });
+
         $listkamaroperasi = PermintaanOperasi::query()
             ->select(
                 'rs200.*',
@@ -176,7 +184,7 @@ class KamaroperasiController extends Controller
             ->leftjoin('rs24', 'rs24.rs1', '=', 'rs200.rs10') //ruangan ranap
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs200.rs8') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs200.rs14') //sistembayar
-            ->leftjoin('daftartilik', 'daftartilik.noreg', '=', 'rs200.rs1')
+            ->leftJoinSub($daftartilikSub, 'daftartilik', 'daftartilik.noreg', '=', 'rs200.rs1')
             ->where(function ($sts) use ($status) {
                 if ($status !== 'all') {
                     if ($status === '') {
