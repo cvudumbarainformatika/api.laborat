@@ -574,12 +574,11 @@ class DepoController extends Controller
                     $wew->where('tujuan', $gudang);
                 }
             })
-            ->when($flag || $flag === '0', function ($wew) use ($flag) {
-                $all = ['', '1', '2', '3', '4'];
+            ->when($flag !== null && $flag !== '', function ($wew) use ($flag) {
                 if ($flag === '0' || $flag === 0) {
                     $wew->where('flag', '');
-                } else if ($flag === '5' || $flag === 5) {
-                    $wew->whereIn('flag', $all);
+                } else if ($flag === 'all' || $flag === 'semua') {
+                    $wew->whereIn('flag', ['', '1', '2', '3', '4', '5']);
                 } else {
                     $wew->where('flag', $flag);
                 }
