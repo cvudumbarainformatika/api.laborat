@@ -195,13 +195,20 @@ class KamaroperasiController extends Controller
                 }
             })
             ->where(function ($x) {
+                if (request('history') === '1' && request('q')) {
+                    $x->where('rs200.rs1', request('q'));
+                    return;
+                }
+
                 $x->where('rs200.rs1', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs200.rs2', 'LIKE', '%' . request('q') . '%')
                     ->orWhere(DB::raw('coalesce(pasien17.rs46, pasien23.rs46)'), 'LIKE', '%' . request('q') . '%')
                     ->orWhere(DB::raw('coalesce(pasien17.rs2, pasien23.rs2)'), 'LIKE', '%' . request('q') . '%')
                     ->orWhere(DB::raw('coalesce(pasien17.rs1, pasien23.rs1)'), 'LIKE', '%' . request('q') . '%');
             })
-            ->whereBetween('rs200.rs3', [$tgl, $tglx]);
+            ->when(request('history') !== '1', function ($query) use ($tgl, $tglx) {
+                $query->whereBetween('rs200.rs3', [$tgl, $tglx]);
+            });
         // ->with(
         //     [
         //         'kunjunganranap.masterpasien',
