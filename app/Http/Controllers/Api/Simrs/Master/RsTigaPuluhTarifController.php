@@ -18,13 +18,87 @@ class RsTigaPuluhTarifController extends Controller
         return new JsonResponse($data);
     }
 
-    public function list()
+    public function list(Request $request)
     {
-        $data = TarifVisiteDanKamarSementara::where(function ($q) {
-            $q->where('rs2', 'like', '%' . request('q') . '%')
-                ->orWhere('rs1', 'like', '%' . request('q') . '%');
-        })
-            ->paginate(request('per_page'));
+        $today = today()->toDateString();
+        $status = $request->input('status', 'aktif');
+
+        $query = TarifVisiteDanKamarSementara::select(
+            'rs30tarif_sementara.*',
+            DB::raw('rs30tarif_sementara.rs6 + rs30tarif_sementara.rs7 as tarif_kelas3'),
+            DB::raw('rs30tarif_sementara.rs8 + rs30tarif_sementara.rs9 as tarif_kelas2'),
+            DB::raw('rs30tarif_sementara.rs10 + rs30tarif_sementara.rs11 as tarif_kelas1'),
+            DB::raw('rs30tarif_sementara.rs12 + rs30tarif_sementara.rs13 as tarif_utama'),
+            DB::raw('rs30tarif_sementara.rs14 + rs30tarif_sementara.rs15 as tarif_vip'),
+            DB::raw('rs30tarif_sementara.rs16 + rs30tarif_sementara.rs17 as tarif_vvip')
+        );
+
+        // Filter Status
+        if ($status === 'aktif') {
+            $sub = DB::table('rs30tarif_sementara')
+                ->select('rs1', DB::raw('MAX(id) as max_id'))
+                ->whereNull('tgl_hapus')
+                ->where(function ($q) use ($today) {
+                    $q->whereNull('tgl_mulai_berlaku')->orWhere('tgl_mulai_berlaku', '<=', $today);
+                })
+                ->groupBy('rs1');
+
+            $query->joinSub($sub, 'latest_aktif', function ($join) {
+                $join->on('rs30tarif_sementara.id', '=', 'latest_aktif.max_id');
+            });
+        } elseif ($status === 'aktif_draft') {
+            $sub = DB::table('rs30tarif_sementara')
+                ->select('rs1', DB::raw('MAX(id) as max_id'))
+                ->whereNull('tgl_hapus')
+                ->where(function ($q) use ($today) {
+                    $q->whereNull('tgl_mulai_berlaku')->orWhere('tgl_mulai_berlaku', '<=', $today);
+                })
+                ->groupBy('rs1');
+
+            $query->leftJoinSub($sub, 'latest_aktif', function ($join) {
+                $join->on('rs30tarif_sementara.id', '=', 'latest_aktif.max_id');
+            })
+            ->whereNull('rs30tarif_sementara.tgl_hapus')
+            ->where(function ($q) use ($today) {
+                $q->where('rs30tarif_sementara.tgl_mulai_berlaku', '>', $today)
+                    ->orWhereNotNull('latest_aktif.max_id');
+            });
+        } elseif ($status === 'draft') {
+            $query->whereNull('rs30tarif_sementara.tgl_hapus')
+                ->where('rs30tarif_sementara.tgl_mulai_berlaku', '>', $today);
+        } elseif ($status === 'history') {
+            $sub = DB::table('rs30tarif_sementara')
+                ->select('rs1', DB::raw('MAX(id) as max_id'))
+                ->whereNull('tgl_hapus')
+                ->where(function ($q) use ($today) {
+                    $q->whereNull('tgl_mulai_berlaku')->orWhere('tgl_mulai_berlaku', '<=', $today);
+                })
+                ->groupBy('rs1');
+
+            $query->leftJoinSub($sub, 'latest_aktif', function ($join) {
+                $join->on('rs30tarif_sementara.id', '=', 'latest_aktif.max_id');
+            })
+            ->whereNull('rs30tarif_sementara.tgl_hapus')
+            ->where(function ($q) use ($today) {
+                $q->whereNull('rs30tarif_sementara.tgl_mulai_berlaku')->orWhere('rs30tarif_sementara.tgl_mulai_berlaku', '<=', $today);
+            })
+            ->whereNull('latest_aktif.max_id');
+        } elseif ($status === 'dihapus') {
+            $query->whereNotNull('rs30tarif_sementara.tgl_hapus');
+        }
+
+        // Pencarian
+        if ($request->filled('q')) {
+            $keyword = $request->input('q');
+            $query->where(function ($q) use ($keyword) {
+                $q->where('rs30tarif_sementara.rs2', 'like', '%' . $keyword . '%')
+                    ->orWhere('rs30tarif_sementara.rs1', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        $data = $query->orderBy('rs30tarif_sementara.rs2', 'ASC')
+            ->paginate($request->input('per_page', 10));
+
         $rawRes = collect($data);
         $result['data'] = $rawRes['data'];
         $result['meta'] = $rawRes->except('data');

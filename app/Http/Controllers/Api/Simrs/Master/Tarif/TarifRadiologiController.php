@@ -18,13 +18,111 @@ class TarifRadiologiController extends Controller
 
         return new JsonResponse($data);
     }
-    public function list()
+    public function list(Request $request)
     {
-        $data = MasterPemeriksaanRadiologiSementara::where(function ($q) {
-            $q->where('rs2', 'like', '%' . request('q') . '%')
-                ->orWhere('rs1', 'like', '%' . request('q') . '%');
-        })
-            ->paginate(request('per_page'));
+        $today = today()->toDateString();
+        $status = $request->input('status', 'aktif');
+
+        $query = MasterPemeriksaanRadiologiSementara::select(
+            'rs47_sementara.*',
+            DB::raw('rs47_sementara.rs4 + rs47_sementara.rs5 as tarif_non_privat'),
+            DB::raw('rs47_sementara.rs6 + rs47_sementara.rs7 as tarif_privat'),
+            DB::raw('rs47_sementara.pss + rs47_sementara.psp as tarif_presidential')
+        );
+
+        // Filter Status
+        if ($status === 'aktif') {
+            $sub = DB::table('rs47_sementara')
+                ->select('rs1', DB::raw('MAX(id1) as max_id'))
+                ->whereNull('tgl_hapus')
+                ->where(function ($q) {
+                    $q->where('hidden', '!=', '1')->orWhereNull('hidden');
+                })
+                ->where(function ($q) use ($today) {
+                    $q->whereNull('tgl_mulai_berlaku')->orWhere('tgl_mulai_berlaku', '<=', $today);
+                })
+                ->groupBy('rs1');
+
+            $query->joinSub($sub, 'latest_aktif', function ($join) {
+                $join->on('rs47_sementara.id1', '=', 'latest_aktif.max_id');
+            });
+        } elseif ($status === 'aktif_draft') {
+            $sub = DB::table('rs47_sementara')
+                ->select('rs1', DB::raw('MAX(id1) as max_id'))
+                ->whereNull('tgl_hapus')
+                ->where(function ($q) {
+                    $q->where('hidden', '!=', '1')->orWhereNull('hidden');
+                })
+                ->where(function ($q) use ($today) {
+                    $q->whereNull('tgl_mulai_berlaku')->orWhere('tgl_mulai_berlaku', '<=', $today);
+                })
+                ->groupBy('rs1');
+
+            $query->leftJoinSub($sub, 'latest_aktif', function ($join) {
+                $join->on('rs47_sementara.id1', '=', 'latest_aktif.max_id');
+            })
+            ->whereNull('rs47_sementara.tgl_hapus')
+            ->where(function ($q) {
+                $q->where('rs47_sementara.hidden', '!=', '1')->orWhereNull('rs47_sementara.hidden');
+            })
+            ->where(function ($q) use ($today) {
+                $q->where('rs47_sementara.tgl_mulai_berlaku', '>', $today)
+                    ->orWhereNotNull('latest_aktif.max_id');
+            });
+        } elseif ($status === 'draft') {
+            $query->whereNull('rs47_sementara.tgl_hapus')
+                ->where(function ($q) {
+                    $q->where('rs47_sementara.hidden', '!=', '1')->orWhereNull('rs47_sementara.hidden');
+                })
+                ->where('rs47_sementara.tgl_mulai_berlaku', '>', $today);
+        } elseif ($status === 'history') {
+            $sub = DB::table('rs47_sementara')
+                ->select('rs1', DB::raw('MAX(id1) as max_id'))
+                ->whereNull('tgl_hapus')
+                ->where(function ($q) {
+                    $q->where('hidden', '!=', '1')->orWhereNull('hidden');
+                })
+                ->where(function ($q) use ($today) {
+                    $q->whereNull('tgl_mulai_berlaku')->orWhere('tgl_mulai_berlaku', '<=', $today);
+                })
+                ->groupBy('rs1');
+
+            $query->leftJoinSub($sub, 'latest_aktif', function ($join) {
+                $join->on('rs47_sementara.id1', '=', 'latest_aktif.max_id');
+            })
+            ->whereNull('rs47_sementara.tgl_hapus')
+            ->where(function ($q) {
+                $q->where('rs47_sementara.hidden', '!=', '1')->orWhereNull('rs47_sementara.hidden');
+            })
+            ->where(function ($q) use ($today) {
+                $q->whereNull('rs47_sementara.tgl_mulai_berlaku')->orWhere('rs47_sementara.tgl_mulai_berlaku', '<=', $today);
+            })
+            ->whereNull('latest_aktif.max_id');
+        } elseif ($status === 'dihapus') {
+            $query->where(function ($q) {
+                $q->whereNotNull('rs47_sementara.tgl_hapus')
+                    ->orWhere('rs47_sementara.hidden', '1');
+            });
+        }
+
+        // Filter Tipe Radiologi
+        if ($request->filled('tipe')) {
+            $query->where('rs47_sementara.rs3', $request->input('tipe'));
+        }
+
+        // Pencarian
+        if ($request->filled('q')) {
+            $keyword = $request->input('q');
+            $query->where(function ($q) use ($keyword) {
+                $q->where('rs47_sementara.rs2', 'like', '%' . $keyword . '%')
+                    ->orWhere('rs47_sementara.rs1', 'like', '%' . $keyword . '%')
+                    ->orWhere('rs47_sementara.rs3', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        $data = $query->orderBy('rs47_sementara.rs2', 'ASC')
+            ->paginate($request->input('per_page', 10));
+
         $rawRes = collect($data);
         $result['data'] = $rawRes['data'];
         $result['meta'] = $rawRes->except('data');
