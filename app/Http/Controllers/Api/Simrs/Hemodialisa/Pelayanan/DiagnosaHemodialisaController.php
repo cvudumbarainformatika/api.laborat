@@ -23,6 +23,10 @@ class DiagnosaHemodialisaController extends Controller
 
     public function simpandiagnosa(Request $request)
     {
+        if (!$request->kddiagnosa) {
+            return new JsonResponse(['message' => 'Kode diagnosa (ICD-10) tidak boleh kosong.'], 422);
+        }
+
         $user = Pegawai::find(auth()->user()->pegawai_id);
         $kdpegsimrs = $user->kdpegsimrs;
 
