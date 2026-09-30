@@ -56,7 +56,7 @@ class PergeseranPerubahanAnggaranController extends Controller
                                             'contrapost.nominalcontrapost');
                     }]);
         }])
-        ->withSum('penetapancopy as nilaipengusulan', 'nilai');
+        ->withSum('penetapancopy as nilaipengusulan', 'pagu');
 
         if ($tahun) {
             $query->whereBetween('tglTransaksi', [

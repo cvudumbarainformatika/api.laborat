@@ -488,6 +488,7 @@ class PerubahanBelanjaController extends Controller
             if ($anggaran) {
                 $exists = Perubahan_pak_rinci::where('notrans', $anggaran->notrans)
                     ->where('kode', $request->kode)
+                    ->where('koderek50', $request->koderek50)
                     ->when($request->filled('idpp'), function ($query) use ($idpp) {
                         $query->where('idpp', '!=', $idpp);
                     })
