@@ -1902,33 +1902,121 @@ class SetNewStokController extends Controller
 
     public function frontPerbaikanDataOpname(Request $request)
     {
-        $data = [];
-        try {
-            DB::connection('farmasi')->beginTransaction();
-            foreach ($request->all() as $key) {
-                if ($key['nobatch'] == null) $key['nobatch'] = '';
-                $temp = StokStokopname::updateOrCreate(
-                    [
-                        'id' => $key['id'],
-                    ],
-                    $key
+        $validated = $request->validate([
+            'tahun' => 'required|digits:4',
+            'bulan' => ['required', 'regex:/^0*(?:[1-9]|1[0-2])$/D'],
+            'kdruang' => 'required|string',
+            'kdobat' => 'required|string',
+            'opname' => 'required|array|min:1',
+            'opname.*.id' => 'nullable|integer',
+            'opname.*.jumlah' => 'required|numeric|min:0',
+            'opname.*.nopenerimaan' => 'required|string',
+            'opname.*.tglpenerimaan' => 'nullable|date',
+            'opname.*.tglexp' => 'nullable|date',
+            'opname.*.nobatch' => 'nullable|string',
+            'opname.*.harga' => 'nullable|numeric',
+        ]);
 
-                );
-                $data[] = $temp;
-            }
-            DB::connection('farmasi')->commit();
-            return new JsonResponse([
-                'req' => $request->all(),
-                'data' => $data,
+        $periode = Carbon::createFromDate((int) $validated['tahun'], (int) $validated['bulan'], 1)->startOfMonth();
+        if ($periode->greaterThanOrEqualTo(Carbon::now()->startOfMonth())) {
+            return new JsonResponse(['message' => 'Perbaikan opname hanya untuk bulan yang sudah lewat'], 422);
+        }
+
+        $rows = $validated['opname'];
+        $isBaru = collect($rows)->every(function ($row) {
+            return empty($row['id']);
+        });
+        if ($isBaru) {
+            $hasil = self::getDataToFixByTransV2([
+                'depo' => $validated['kdruang'],
+                'obat' => $validated['kdobat'],
+                'month' => sprintf('%02d', (int) $validated['bulan']),
+                'year' => $validated['tahun'],
+                'perbaiki' => false,
+                'tipe' => 'default',
             ]);
+            if (($hasil['status'] ?? 500) !== 200) {
+                return new JsonResponse(['message' => 'Sisa stok tidak dapat dihitung ulang'], 422);
+            }
+            $target = round((float) ($hasil['data']['sisa'] ?? 0), 2);
+            $jumlah = round(collect($rows)->sum('jumlah'), 2);
+            if ($target <= 0 || abs($target - $jumlah) > 0.001) {
+                return new JsonResponse(['message' => 'Jumlah opname tidak sesuai sisa stok bulan tersebut'], 422);
+            }
+        }
+
+        try {
+            return DB::connection('farmasi')->transaction(function () use ($validated, $rows, $periode) {
+                // Kunci obat agar dua perbaikan untuk obat yang sama tidak membuat rincian ganda.
+                $obat = Mobatnew::where('kd_obat', $validated['kdobat'])->lockForUpdate()->first(['kd_obat']);
+                if (!$obat) {
+                    return new JsonResponse(['message' => 'Obat tidak ditemukan'], 422);
+                }
+
+                $existing = StokStokopname::where('kdobat', $validated['kdobat'])
+                    ->where('kdruang', $validated['kdruang'])
+                    ->where('tglopname', '>=', $periode->format('Y-m-d'))
+                    ->where('tglopname', '<', $periode->copy()->addMonth()->format('Y-m-d'))
+                    ->lockForUpdate()->get();
+                $existingIds = $existing->pluck('id')->map(function ($id) {
+                    return (int) $id;
+                })->sort()->values()->all();
+                $submittedIds = collect($rows)->pluck('id')->filter(function ($id) {
+                    return !empty($id);
+                })->map(function ($id) {
+                    return (int) $id;
+                })->sort()->values()->all();
+                if ($existingIds !== $submittedIds) {
+                    return new JsonResponse(['message' => 'Data opname berubah; ambil ulang data sebelum menyimpan'], 409);
+                }
+
+                $tanggalOpname = $existing->isNotEmpty()
+                    ? $existing->first()->tglopname
+                    : $periode->copy()->endOfMonth()->format('Y-m-d') . ' 23:59:58';
+                $existingById = $existing->keyBy('id');
+                $sumber = [];
+                foreach ($rows as $row) {
+                    if (empty($row['id']) && ((float) $row['jumlah'] <= 0 || empty($row['tglpenerimaan']) || !isset($row['harga']))) {
+                        return new JsonResponse(['message' => 'Rincian opname baru harus memiliki jumlah dan informasi penerimaan'], 422);
+                    }
+                    $key = implode('|', [
+                        $row['nopenerimaan'],
+                        $row['nobatch'] ?? '',
+                        $row['tglpenerimaan'] ?? '',
+                        $row['harga'] ?? '',
+                    ]);
+                    if (empty($row['id']) && isset($sumber[$key])) {
+                        return new JsonResponse(['message' => 'Rincian penerimaan ganda; ambil ulang data'], 409);
+                    }
+                    $sumber[$key] = true;
+                }
+
+                $data = [];
+                foreach ($rows as $row) {
+                    $values = [
+                        'nopenerimaan' => $row['nopenerimaan'],
+                        'jumlah' => $row['jumlah'],
+                        'tglexp' => $row['tglexp'] ?? null,
+                        'nobatch' => $row['nobatch'] ?? '',
+                        'tglpenerimaan' => $row['tglpenerimaan'] ?? null,
+                        'harga' => $row['harga'] ?? null,
+                    ];
+                    if (!empty($row['id'])) {
+                        $record = $existingById->get($row['id']);
+                        $record->update($values);
+                    } else {
+                        $record = StokStokopname::create($values + [
+                            'kdobat' => $validated['kdobat'],
+                            'kdruang' => $validated['kdruang'],
+                            'tglopname' => $tanggalOpname,
+                        ]);
+                    }
+                    $data[] = $record;
+                }
+                return new JsonResponse(['data' => $data]);
+            });
         } catch (\Exception $e) {
-            DB::connection('farmasi')->rollBack();
-            return new JsonResponse([
-                'req' => $request->all(),
-                'message' => $e->getMessage(),
-                'line' => '' . $e->getLine(),
-                'file' =>  $e->getFile(),
-            ], 410);
+            return new JsonResponse(['message' => $e->getMessage()], 410);
         }
     }
 
@@ -4966,11 +5054,23 @@ class SetNewStokController extends Controller
         return $opnameAwal ? date('Y-m', strtotime($opnameAwal)) : '2024-05';
     }
 
+    private static function normalizeMonth($month)
+    {
+        $raw = (string) $month;
+        if (!preg_match('/^0*(?:[1-9]|1[0-2])$/D', $raw)) {
+            return null;
+        }
+        return sprintf('%02d', (int) $raw);
+    }
+
     public function frontPerbaikanDataV2(Request $request)
     {
         $depo = request('kdruang');
         $obat = request('kdobat');
-        $month = request('bulan');
+        $month = self::normalizeMonth(request('bulan'));
+        if ($month === null) {
+            return new JsonResponse(['message' => 'Bulan harus diisi angka 1 sampai 12'], 422);
+        }
         $year = request('tahun');
         $perbaiki = request('perbaiki') === 'ya';
         $tipe = request('tipe') ?? 'default';
@@ -4988,6 +5088,11 @@ class SetNewStokController extends Controller
 
     public static function getDataToFixByTransV2($head)
     {
+        $month = self::normalizeMonth($head['month'] ?? null);
+        if ($month === null) {
+            return ['status' => 422, 'data' => ['message' => 'Bulan harus diisi angka 1 sampai 12']];
+        }
+        $head['month'] = $month;
         try {
             DB::connection('farmasi')->beginTransaction();
             $data = [];
@@ -6035,7 +6140,10 @@ class SetNewStokController extends Controller
     public function frontPerbaikanDataPerDepoV2(Request $request)
     {
         $depo = request('kdruang');
-        $month = request('bulan');
+        $month = self::normalizeMonth(request('bulan'));
+        if ($month === null) {
+            return new JsonResponse(['message' => 'Bulan harus diisi angka 1 sampai 12'], 422);
+        }
         $year = request('tahun');
         $perbaiki = request('perbaiki') === 'ya';
         $limit = request('per_page');
@@ -6088,7 +6196,10 @@ class SetNewStokController extends Controller
     public function frontPerbaikanDataOpnameV2(Request $request)
     {
         $depo = request('kdruang');
-        $month = request('bulan');
+        $month = self::normalizeMonth(request('bulan'));
+        if ($month === null) {
+            return new JsonResponse(['message' => 'Bulan harus diisi angka 1 sampai 12'], 422);
+        }
         $year = request('tahun');
         $limit = request('per_page');
         $offset = (request('page') - 1) * $limit;
