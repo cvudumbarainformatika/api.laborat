@@ -317,11 +317,17 @@ class IgdController extends Controller
                                     ->on('rs48.rs1', '=', 'rs151.rs1')
                                     ->on('rs48.rs4', '=', 'rs151.kode');
                             })
+                                ->leftJoin('rs48_pacs', 'rs48.rs2', '=', 'rs48_pacs.nota')
                                 ->select(
                                     'rs48.*',
                                     'rs151.hasil',
                                     'rs151.rs3 as kesimpulan',
-                                    'rs151.rs4 as pelaksana'
+                                    'rs151.hasilhtml',
+                                    'rs151.kesimpulanhtml',
+                                    'rs151.rs4 as pelaksana',
+                                    'rs48_pacs.view_url as view_url',
+                                    'rs48_pacs.view_url_local as view_url_local',
+                                    'rs48_pacs.status as pacs_status'
                                 );
                         },
                         'rincians.relmasterpemeriksaan',
