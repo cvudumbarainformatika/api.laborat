@@ -101,14 +101,19 @@ class PerubahanBelanjaController extends Controller
     }
 
     public function index(){
-        $perPage = request('per_page', 50);
+        $perPage = max(1, min((int) request('per_page', 50), 100));
         $tahun = request('tahun', date('Y'));
         $user = auth()->user()->pegawai_id;
         $pg= Pegawai::find($user);
         $pegawai= $pg->nip;
         $sa = $pg->kdpegsimrs;
-        $q = request('q');
-        $query = Perubahan_pak_header::with('rincian')
+        $q = trim((string) request('q', ''));
+        $query = Perubahan_pak_header::
+        with([
+            'rincian.jurnal',
+            'rincian.jurnalkode50',
+        ])
+        // with('rincian')
         ->withSum('rincian as nilaipengusulan', 'nilai');
         if ($sa !== 'sa' && $sa !== '1619' && $sa !== '38' && $sa !== '39' && $sa !== '81_X' && $sa !== '86_X' && $sa !== '1215') {
                 $query->where('kodepptk', $pegawai);
@@ -132,10 +137,16 @@ class PerubahanBelanjaController extends Controller
                     ->orHavingRaw('nilaipengusulan = ?', [(float) $q]);
                 });
             }
-        return response()->json(
-            $query->orderBy('id', 'asc')->get()
-        );
+            $data = $query
+            ->orderBy('id', 'asc')
+            ->simplePaginate($perPage)
+            ->appends(request()->query());
+
+        return response()->json($data);
     }
+        // return response()->json(
+        //     $query->orderBy('id', 'asc')->get()
+        
     public function cetakData()
     {
         $tahun = request('tahun', date('Y'));
@@ -279,8 +290,7 @@ class PerubahanBelanjaController extends Controller
                 'idpp' => $idpp,
                 'notrans' => $awal['notrans'] ?? $pak['notrans'] ?? '',
                 'kodekegiatanblud' => $awal['kodekegiatanblud'] ?? $pak['kodeKegiatan'] ?? '',
-                'usulan' => $awal['usulan'] ?? '',
-                'usulanbaru' => $pak['usulan'] ?? '',
+                'usulan' => $pak['usulan'] ?? $awal['usulan'],
                 'volume' => (int) ($awal['volume'] ?? 0),
                 'harga' => (int) ($awal['harga'] ?? 0),
                 'total' => (int) ($awal['total'] ?? 0),
@@ -314,8 +324,7 @@ class PerubahanBelanjaController extends Controller
                     'idpp' => $idpp,
                     'notrans' => $pak['notrans'] ?? '',
                     'kodekegiatanblud' => '',
-                    'usulan' => '',
-                    'usulanbaru' => $pak['usulan'] ?? '',
+                    'usulan' => $pak['usulan'] ?? '',
                     'volume' => 0,
                     'harga' => 0,
                     'total' => 0,
@@ -488,6 +497,7 @@ class PerubahanBelanjaController extends Controller
             if ($anggaran) {
                 $exists = Perubahan_pak_rinci::where('notrans', $anggaran->notrans)
                     ->where('kode', $request->kode)
+                    ->where('koderek50', $request->koderek50)
                     ->when($request->filled('idpp'), function ($query) use ($idpp) {
                         $query->where('idpp', '!=', $idpp);
                     })

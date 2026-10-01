@@ -264,7 +264,6 @@ class RanapController extends Controller
             'mhambatan.hambatan',
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
-            // 'rs21.rs2 as namanakes',
             'kepegx.pegawai.nama as namanakes',
             'rs227.rs8 as sep',
             'rs227.kodedokterdpjp as kodedokterdpjp',
@@ -278,7 +277,9 @@ class RanapController extends Controller
             'rs23_nosurat.nosrtmeninggal',
             'rs23_nosurat.jamMeninggal',
             'rs23_nosurat.kddrygmenyatakan',
-            'memodiagnosadokter.diagnosa as memodiagnosa'
+            'memodiagnosadokter.diagnosa as memodiagnosa',
+            DB::raw("CASE WHEN listkirimcasmixranap.id IS NOT NULL THEN '1' ELSE '' END as kunjungancesmix"),
+            DB::raw("COALESCE(listkirimcasmixranap.flag_verif_rm, '0') as flag_verif_rm")
         )
 
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
@@ -296,6 +297,7 @@ class RanapController extends Controller
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->leftjoin('rs24 as rs24_titipan', 'rs24_titipan.rs1', 'rs23.titipan')
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
+            ->leftjoin('listkirimcasmixranap', 'listkirimcasmixranap.noreg', '=', 'rs23.rs1')
             // ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
             ->leftJoin('memodiagnosadokter', function ($join) {
                 $join->on('memodiagnosadokter.noreg', '=', 'rs23.rs1')
@@ -641,6 +643,8 @@ class RanapController extends Controller
                 'rs24_titipan.rs2 as dititipkanke',
                 'rs23_meta.kd_jeniskasus',
                 'memodiagnosadokter.diagnosa as memodiagnosa',
+                DB::raw("CASE WHEN listkirimcasmixranap.id IS NOT NULL THEN '1' ELSE '' END as kunjungancesmix"),
+                DB::raw("COALESCE(listkirimcasmixranap.flag_verif_rm, '0') as flag_verif_rm"),
                 // 'tflag_covid.flagcovid as flagcovid',
             )
 
@@ -653,10 +657,12 @@ class RanapController extends Controller
             //  }) // IGD
             ->leftjoin('rs9', 'rs9.rs1', 'rs23.rs19')
             ->leftjoin('rs21', 'rs21.rs1', 'rs23.rs10')
+            ->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs23.rs10')
             ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->leftjoin('rs24 as rs24_titipan', 'rs24_titipan.rs1', 'rs23.titipan')
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
+            ->leftjoin('listkirimcasmixranap', 'listkirimcasmixranap.noreg', '=', 'rs23.rs1')
             // ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
             ->leftJoin('memodiagnosadokter', function ($join) {
                 $join->on('memodiagnosadokter.noreg', '=', 'rs23.rs1')

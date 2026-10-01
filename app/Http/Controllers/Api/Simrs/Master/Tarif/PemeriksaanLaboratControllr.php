@@ -14,51 +14,143 @@ use PHPUnit\Event\Code\Throwable;
 class PemeriksaanLaboratControllr extends Controller
 {
     //
-    public function list()
+    public function list(Request $request)
     {
-        $data = MpemeriksaaanLabSementara::select(
-            'id',
-            'rs1',
-            'rs1 as kode',
-            'rs2 as nama',
-            'rs3 as hs1', // harga sarana 1
-            'rs4 as hp1', // harga pelayanan 1
-            DB::raw('rs3+rs4 as tf1'),
-            'rs5 as hs2', // harga sarana 2
-            'rs6 as hp2', // harga pelayanan 2
-            DB::raw('rs5+rs6 as tf2'),
-            'pss', // presiden suit sarana
-            'psp', // presiden suit pelayanan
-            DB::raw('pss+psp as tfps'),
-            'hcus', // HCU sarana
-            'hcup', // HCU pelayanan
-            DB::raw('hcus+hcup as tfhcu'),
-            'hcs', // Home Care sarana
-            'hcp', // Home Care pelayanan
-            DB::raw('hcs+hcp as tfhc'),
-            'rs21 as kelompok', // nama paket 
-            'rs22 as satuan',
-            'rs23 as flag',
-            'rs24',
-            'rs25 as cito',
-            'hidden',
-            'nilainormal',
-            'satuan',
-            'tampilanurut',
-            'jenislab',
-            'loinc',
-            'display_loinc',
-            'loinc_paket',
-            'display_loinc_paket',
-            'tgl_mulai_berlaku',
-            'tgl_hapus',
-            'dasar_perubahan',
-        )
-            ->where(function ($q) {
-                $q->where('rs2', 'like', '%' . request('q') . '%')
-                    ->orWhere('rs21', 'like', '%' . request('q') . '%');
+        $today = today()->toDateString();
+        $status = $request->input('status', 'aktif');
+
+        $query = MpemeriksaaanLabSementara::select(
+            'rs49_sementara.id',
+            'rs49_sementara.rs1',
+            'rs49_sementara.rs1 as kode',
+            'rs49_sementara.rs2 as nama',
+            'rs49_sementara.rs3 as hs1', // harga sarana 1
+            'rs49_sementara.rs4 as hp1', // harga pelayanan 1
+            DB::raw('rs49_sementara.rs3+rs49_sementara.rs4 as tf1'),
+            'rs49_sementara.rs5 as hs2', // harga sarana 2
+            'rs49_sementara.rs6 as hp2', // harga pelayanan 2
+            DB::raw('rs49_sementara.rs5+rs49_sementara.rs6 as tf2'),
+            'rs49_sementara.pss', // presiden suit sarana
+            'rs49_sementara.psp', // presiden suit pelayanan
+            DB::raw('rs49_sementara.pss+rs49_sementara.psp as tfps'),
+            'rs49_sementara.hcus', // HCU sarana
+            'rs49_sementara.hcup', // HCU pelayanan
+            DB::raw('rs49_sementara.hcus+rs49_sementara.hcup as tfhcu'),
+            'rs49_sementara.hcs', // Home Care sarana
+            'rs49_sementara.hcp', // Home Care pelayanan
+            DB::raw('rs49_sementara.hcs+rs49_sementara.hcp as tfhc'),
+            'rs49_sementara.rs21 as kelompok', // nama paket 
+            'rs49_sementara.rs22 as satuan',
+            'rs49_sementara.rs23 as flag',
+            'rs49_sementara.rs24',
+            'rs49_sementara.rs25 as cito',
+            'rs49_sementara.hidden',
+            'rs49_sementara.nilainormal',
+            'rs49_sementara.satuan',
+            'rs49_sementara.tampilanurut',
+            'rs49_sementara.jenislab',
+            'rs49_sementara.loinc',
+            'rs49_sementara.display_loinc',
+            'rs49_sementara.loinc_paket',
+            'rs49_sementara.display_loinc_paket',
+            'rs49_sementara.tgl_mulai_berlaku',
+            'rs49_sementara.tgl_hapus',
+            'rs49_sementara.dasar_perubahan'
+        );
+
+        // Filter Status
+        if ($status === 'aktif') {
+            $sub = DB::table('rs49_sementara')
+                ->select('rs1', DB::raw('MAX(id) as max_id'))
+                ->whereNull('tgl_hapus')
+                ->where(function ($q) {
+                    $q->where('hidden', '!=', '1')->orWhereNull('hidden');
+                })
+                ->where(function ($q) use ($today) {
+                    $q->whereNull('tgl_mulai_berlaku')->orWhere('tgl_mulai_berlaku', '<=', $today);
+                })
+                ->groupBy('rs1');
+
+            $query->joinSub($sub, 'latest_aktif', function ($join) {
+                $join->on('rs49_sementara.id', '=', 'latest_aktif.max_id');
+            });
+        } elseif ($status === 'aktif_draft') {
+            $sub = DB::table('rs49_sementara')
+                ->select('rs1', DB::raw('MAX(id) as max_id'))
+                ->whereNull('tgl_hapus')
+                ->where(function ($q) {
+                    $q->where('hidden', '!=', '1')->orWhereNull('hidden');
+                })
+                ->where(function ($q) use ($today) {
+                    $q->whereNull('tgl_mulai_berlaku')->orWhere('tgl_mulai_berlaku', '<=', $today);
+                })
+                ->groupBy('rs1');
+
+            $query->leftJoinSub($sub, 'latest_aktif', function ($join) {
+                $join->on('rs49_sementara.id', '=', 'latest_aktif.max_id');
             })
-            ->paginate(request('per_page'));
+            ->whereNull('rs49_sementara.tgl_hapus')
+            ->where(function ($q) {
+                $q->where('rs49_sementara.hidden', '!=', '1')->orWhereNull('rs49_sementara.hidden');
+            })
+            ->where(function ($q) use ($today) {
+                $q->where('rs49_sementara.tgl_mulai_berlaku', '>', $today)
+                    ->orWhereNotNull('latest_aktif.max_id');
+            });
+        } elseif ($status === 'draft') {
+            $query->whereNull('rs49_sementara.tgl_hapus')
+                ->where(function ($q) {
+                    $q->where('rs49_sementara.hidden', '!=', '1')->orWhereNull('rs49_sementara.hidden');
+                })
+                ->where('rs49_sementara.tgl_mulai_berlaku', '>', $today);
+        } elseif ($status === 'history') {
+            $sub = DB::table('rs49_sementara')
+                ->select('rs1', DB::raw('MAX(id) as max_id'))
+                ->whereNull('tgl_hapus')
+                ->where(function ($q) {
+                    $q->where('hidden', '!=', '1')->orWhereNull('hidden');
+                })
+                ->where(function ($q) use ($today) {
+                    $q->whereNull('tgl_mulai_berlaku')->orWhere('tgl_mulai_berlaku', '<=', $today);
+                })
+                ->groupBy('rs1');
+
+            $query->leftJoinSub($sub, 'latest_aktif', function ($join) {
+                $join->on('rs49_sementara.id', '=', 'latest_aktif.max_id');
+            })
+            ->whereNull('rs49_sementara.tgl_hapus')
+            ->where(function ($q) {
+                $q->where('rs49_sementara.hidden', '!=', '1')->orWhereNull('rs49_sementara.hidden');
+            })
+            ->where(function ($q) use ($today) {
+                $q->whereNull('rs49_sementara.tgl_mulai_berlaku')->orWhere('rs49_sementara.tgl_mulai_berlaku', '<=', $today);
+            })
+            ->whereNull('latest_aktif.max_id');
+        } elseif ($status === 'dihapus') {
+            $query->where(function ($q) {
+                $q->whereNotNull('rs49_sementara.tgl_hapus')
+                    ->orWhere('rs49_sementara.hidden', '1');
+            });
+        }
+
+        // Filter Kelompok / Paket
+        if ($request->filled('kelompok')) {
+            $query->where('rs49_sementara.rs21', $request->input('kelompok'));
+        }
+
+        // Pencarian
+        if ($request->filled('q')) {
+            $keyword = $request->input('q');
+            $query->where(function ($q) use ($keyword) {
+                $q->where('rs49_sementara.rs2', 'like', '%' . $keyword . '%')
+                    ->orWhere('rs49_sementara.rs1', 'like', '%' . $keyword . '%')
+                    ->orWhere('rs49_sementara.rs21', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        $data = $query->orderBy('rs49_sementara.rs2', 'ASC')
+            ->paginate($request->input('per_page', 10));
+
         $rawRes = collect($data);
         $result['data'] = $rawRes['data'];
         $result['meta'] = $rawRes->except('data');

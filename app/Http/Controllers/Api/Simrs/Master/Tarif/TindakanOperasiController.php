@@ -12,13 +12,106 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class TindakanOperasiController extends Controller
 {
-    public function list()
+    public function list(Request $request)
     {
-        $data = MasterOperasiSementara::where(function ($q) {
-            $q->where('rs2', 'like', '%' . request('q') . '%')
-                ->orWhere('rs1', 'like', '%' . request('q') . '%');
-        })
-            ->paginate(request('per_page'));
+        $today = today()->toDateString();
+        $status = $request->input('status', 'aktif');
+
+        $query = MasterOperasiSementara::select(
+            'rs53_sementara.*',
+            DB::raw('rs53_sementara.rs6 + rs53_sementara.rs7 + rs53_sementara.rs8 as tarif1'),
+            DB::raw('rs53_sementara.rs9 + rs53_sementara.rs10 + rs53_sementara.rs11 as tarif2'),
+            DB::raw('rs53_sementara.ssp + rs53_sementara.psp + rs53_sementara.asp as tarif_presidential'),
+            DB::raw('rs53_sementara.rs12 + rs53_sementara.rs13 + rs53_sementara.rs15 as tarif_poli')
+        );
+
+        // Filter Status
+        if ($status === 'aktif') {
+            $sub = DB::table('rs53_sementara')
+                ->select('rs1', DB::raw('MAX(idx) as max_idx'))
+                ->whereNull('tgl_hapus')
+                ->where(function ($q) {
+                    $q->where('rs14', '!=', '1')->orWhereNull('rs14');
+                })
+                ->where(function ($q) use ($today) {
+                    $q->whereNull('tgl_mulai_berlaku')->orWhere('tgl_mulai_berlaku', '<=', $today);
+                })
+                ->groupBy('rs1');
+
+            $query->joinSub($sub, 'latest_aktif', function ($join) {
+                $join->on('rs53_sementara.idx', '=', 'latest_aktif.max_idx');
+            });
+        } elseif ($status === 'aktif_draft') {
+            $sub = DB::table('rs53_sementara')
+                ->select('rs1', DB::raw('MAX(idx) as max_idx'))
+                ->whereNull('tgl_hapus')
+                ->where(function ($q) {
+                    $q->where('rs14', '!=', '1')->orWhereNull('rs14');
+                })
+                ->where(function ($q) use ($today) {
+                    $q->whereNull('tgl_mulai_berlaku')->orWhere('tgl_mulai_berlaku', '<=', $today);
+                })
+                ->groupBy('rs1');
+
+            $query->leftJoinSub($sub, 'latest_aktif', function ($join) {
+                $join->on('rs53_sementara.idx', '=', 'latest_aktif.max_idx');
+            })
+            ->whereNull('rs53_sementara.tgl_hapus')
+            ->where(function ($q) {
+                $q->where('rs53_sementara.rs14', '!=', '1')->orWhereNull('rs53_sementara.rs14');
+            })
+            ->where(function ($q) use ($today) {
+                $q->where('rs53_sementara.tgl_mulai_berlaku', '>', $today)
+                    ->orWhereNotNull('latest_aktif.max_idx');
+            });
+        } elseif ($status === 'draft') {
+            $query->whereNull('rs53_sementara.tgl_hapus')
+                ->where(function ($q) {
+                    $q->where('rs53_sementara.rs14', '!=', '1')->orWhereNull('rs53_sementara.rs14');
+                })
+                ->where('rs53_sementara.tgl_mulai_berlaku', '>', $today);
+        } elseif ($status === 'history') {
+            $sub = DB::table('rs53_sementara')
+                ->select('rs1', DB::raw('MAX(idx) as max_idx'))
+                ->whereNull('tgl_hapus')
+                ->where(function ($q) {
+                    $q->where('rs14', '!=', '1')->orWhereNull('rs14');
+                })
+                ->where(function ($q) use ($today) {
+                    $q->whereNull('tgl_mulai_berlaku')->orWhere('tgl_mulai_berlaku', '<=', $today);
+                })
+                ->groupBy('rs1');
+
+            $query->leftJoinSub($sub, 'latest_aktif', function ($join) {
+                $join->on('rs53_sementara.idx', '=', 'latest_aktif.max_idx');
+            })
+            ->whereNull('rs53_sementara.tgl_hapus')
+            ->where(function ($q) {
+                $q->where('rs53_sementara.rs14', '!=', '1')->orWhereNull('rs53_sementara.rs14');
+            })
+            ->where(function ($q) use ($today) {
+                $q->whereNull('rs53_sementara.tgl_mulai_berlaku')->orWhere('rs53_sementara.tgl_mulai_berlaku', '<=', $today);
+            })
+            ->whereNull('latest_aktif.max_idx');
+        } elseif ($status === 'dihapus') {
+            $query->where(function ($q) {
+                $q->whereNotNull('rs53_sementara.tgl_hapus')
+                    ->orWhere('rs53_sementara.rs14', '1');
+            });
+        }
+
+        // Pencarian
+        if ($request->filled('q')) {
+            $keyword = $request->input('q');
+            $query->where(function ($q) use ($keyword) {
+                $q->where('rs53_sementara.rs2', 'like', '%' . $keyword . '%')
+                    ->orWhere('rs53_sementara.rs1', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        $data = $query->orderBy('rs53_sementara.rs2', 'ASC')
+            ->paginate($request->input('per_page', 10));
+
         $rawRes = collect($data);
         $result['data'] = $rawRes['data'];
         $result['meta'] = $rawRes->except('data');

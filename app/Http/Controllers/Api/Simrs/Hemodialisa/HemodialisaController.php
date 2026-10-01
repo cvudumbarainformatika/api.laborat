@@ -81,7 +81,7 @@ class HemodialisaController extends Controller
 
             // DB::raw('CASE WHEN rs107.rs9 = "2" THEN "1" ELSE "" END as status'),
 
-            DB::raw('coalesce(pasien17.rs9, pasien23.rs10) as kddokter'),
+            DB::raw('coalesce(nullif(rs107.rs8, ""), nullif(rs23.rs10, ""), nullif(rs17.rs9, "")) as kddokter'),
             'rs21.rs2 as dokter',
             DB::raw(
                 'coalesce(
@@ -284,7 +284,7 @@ class HemodialisaController extends Controller
             'rs107.rs10 as kdgroup_ruangan',
             DB::raw('coalesce(rs17.rs14, rs23.rs19) as kodesistembayar'),
             DB::raw('CASE WHEN rs107.rs9 = "2" THEN "1" ELSE "" END as status'),
-            DB::raw('coalesce(pasien17.rs9, pasien23.rs10) as kodedokter'),
+            DB::raw('coalesce(nullif(rs107.rs8, ""), nullif(rs23.rs10, ""), nullif(rs17.rs9, "")) as kodedokter'),
             'rs21.rs2 as dokter',
 
             DB::raw(
@@ -385,6 +385,7 @@ class HemodialisaController extends Controller
             'rs17.rs1 as noreg',
             'rs17.rs2 as norm',
             'rs17.rs9 as kdpeg',
+            'rs17.rs9 as kodedokter',
             'rs23_meta.kd_jeniskasus',
             'memodiagnosadokter.diagnosa as memodiagnosa',
             'rs19.rs6 as kodepolibpjs',
@@ -405,6 +406,7 @@ class HemodialisaController extends Controller
             'rs23.rs2 as norm',
             'rs23.rs10 as kdpeg',
             'rs107.rs8 as kdpeghd',
+            DB::raw('coalesce(nullif(rs107.rs8, ""), nullif(rs23.rs10, "")) as kodedokter'),
             'rs23_meta.kd_jeniskasus',
             'memodiagnosadokter.diagnosa as memodiagnosa',
         )
@@ -757,6 +759,17 @@ class HemodialisaController extends Controller
             'pegsimhd:kdpegsimrs,nik,nama,id,nip',
         ]);
 
+        if ($data) {
+            $kdDokter = $data->pegsimhd->kdpegsimrs ?? $data->pegsim->kdpegsimrs ?? $data->kdpeghd ?? $data->kdpeg ?? $data->kodedokter ?? '';
+            if (!empty($kdDokter)) {
+                $data->kodedokter = $kdDokter;
+                $data->kddokter = $kdDokter;
+            }
+            if (empty($data->dokter)) {
+                $data->dokter = $data->pegsimhd->nama ?? $data->pegsim->nama ?? '';
+            }
+        }
+
         return new JsonResponse([
             'data' => $data,
             'kepHd' => $kepHd,
@@ -789,6 +802,7 @@ class HemodialisaController extends Controller
                 'rs23.rs2 as norm',
                 'rs23.rs10 as kdpeg',
                 'rs107.rs8 as kdpeghd',
+                DB::raw('coalesce(nullif(rs107.rs8, ""), nullif(rs23.rs10, "")) as kodedokter'),
                 'rs23_meta.kd_jeniskasus',
                 'memodiagnosadokter.diagnosa as memodiagnosa',
             )
@@ -1144,6 +1158,7 @@ class HemodialisaController extends Controller
                 'rs17.rs1 as noreg',
                 'rs17.rs2 as norm',
                 'rs17.rs9 as kdpeg',
+                'rs17.rs9 as kodedokter',
                 'rs23_meta.kd_jeniskasus',
                 'memodiagnosadokter.diagnosa as memodiagnosa',
                 'rs19.rs6 as kodepolibpjs',
@@ -1500,6 +1515,17 @@ class HemodialisaController extends Controller
 
 
 
+
+        if ($data) {
+            $kdDokter = $data->pegsimhd->kdpegsimrs ?? $data->pegsim->kdpegsimrs ?? $data->kdpeghd ?? $data->kdpeg ?? $data->kodedokter ?? '';
+            if (!empty($kdDokter)) {
+                $data->kodedokter = $kdDokter;
+                $data->kddokter = $kdDokter;
+            }
+            if (empty($data->dokter)) {
+                $data->dokter = $data->pegsimhd->nama ?? $data->pegsim->nama ?? '';
+            }
+        }
 
         return new JsonResponse([
             'data' => $data,
