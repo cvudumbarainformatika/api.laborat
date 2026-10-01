@@ -27,7 +27,13 @@ class HomecareController extends Controller
             ->groupBy('lab.rs2')
             ->get();
         $laborat = (float) $labPerNota->sum('nominal');
-        $rehab = (float) DB::table('rs73')->where('rs1', $noreg)
+        $tindakan = (float) DB::table('rs73')
+            ->where('rs1', $noreg)
+            ->where('rs22', 'PEN014')
+            ->selectRaw('COALESCE(SUM((COALESCE(rs7, 0) + COALESCE(rs13, 0)) * COALESCE(rs5, 1)), 0) as nominal')->value('nominal');
+        $rehab = (float) DB::table('rs73')
+            ->where('rs1', $noreg)
+            ->where('rs22', 'FISIO')
             ->selectRaw('COALESCE(SUM((COALESCE(rs7, 0) + COALESCE(rs13, 0)) * COALESCE(rs5, 1)), 0) as nominal')->value('nominal');
 
         $farmasi = DB::connection('farmasi');
@@ -41,6 +47,7 @@ class HomecareController extends Controller
         $rincian = [
             ['nama' => 'Admin', 'nominal' => $admin],
             ['nama' => 'Laborat', 'nominal' => $laborat, 'nota' => $labPerNota],
+            ['nama' => 'Tindakan', 'nominal' => $tindakan],
             ['nama' => 'Rehab Medik', 'nominal' => $rehab],
             ['nama' => 'Farmasi', 'nominal' => $farmasiTotal, 'reguler' => $reguler, 'racikan' => $racikan, 'retur' => $retur],
         ];
@@ -77,9 +84,9 @@ class HomecareController extends Controller
                 return new JsonResponse(['message' => 'Kunjungan Homecare sudah lunas.'], 422);
             }
 
-            $unit = ['Admin' => 'PEN014', 'Laborat' => 'PEN002', 'Rehab Medik' => 'REHABMEDIK', 'Farmasi' => 'FARMASI'];
+            $unit = ['Admin' => 'PEN014', 'Laborat' => 'PEN002', 'Tindakan' => 'PEN014', 'Rehab Medik' => 'REHABMEDIK', 'Farmasi' => 'FARMASI'];
             $jenisKwitansi = ['Admin' => 'Administrasi', 'Laborat' => 'Laboratorium'];
-            $kategori = ['Admin' => 'admin', 'Laborat' => 'laborat', 'Rehab Medik' => 'rehabmedik', 'Farmasi' => 'farmasi'];
+            $kategori = ['Admin' => 'admin', 'Laborat' => 'laborat', 'Tindakan' => 'tindakan', 'Rehab Medik' => 'rehabmedik', 'Farmasi' => 'farmasi'];
             $kwitansiD = $rincian->filter(fn ($item) => (float) ($item['nominal'] ?? 0) > 0)
                 ->map(function ($item) use ($unit, $kategori, $jenisKwitansi, $kunjungan) {
                     $idTrans = $item['nama'] === 'Admin' ? (string) $kunjungan->id : collect($item['nota'] ?? [])->pluck('nota')->implode(',');

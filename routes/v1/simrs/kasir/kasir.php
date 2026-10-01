@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\Simrs\Kasir\CariKarcisController;
 use App\Http\Controllers\Api\Simrs\Kasir\CariKwitansinonTunai;
 use App\Http\Controllers\Api\Simrs\Kasir\CreateTbpController;
 use App\Http\Controllers\Api\Simrs\Kasir\FlagingManualVaController;
+use App\Http\Controllers\Api\Simrs\Kasir\IgdController;
+use App\Http\Controllers\Api\Simrs\Kasir\IgdPaymentController;
 use App\Http\Controllers\Api\Simrs\Kasir\KasirrajalController;
 use App\Http\Controllers\Api\Simrs\Kasir\PasienLuarController;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +42,14 @@ Route::group([
 
     // kasir igd
     Route::get('/igd/billbynoreg', [BillingbynoregController::class, 'billbynoregigd']);
+    Route::get('/igd/pasien-pulang', [IgdController::class, 'pasienPulang']);
+    Route::get('/igd/rincian-pembayaran', [IgdPaymentController::class, 'rincianPembayaran']);
+    Route::get('/igd/riwayat-kwitansi', [IgdPaymentController::class, 'riwayatKwitansi']);
+    Route::get('/igd/cek-kwitansi-pembayaran', [IgdPaymentController::class, 'cekKwitansiPembayaran']);
+    Route::post('/igd/batal-kwitansi', [IgdPaymentController::class, 'batalKwitansi']);
+    Route::post('/igd/hapus-pembayaran', [IgdPaymentController::class, 'hapusPembayaran']);
+    Route::post('/igd/cetak-kwitansi', [IgdPaymentController::class, 'cetakKwitansi']);
+    Route::post('/igd/simpan-pembayaran', [IgdPaymentController::class, 'simpanPembayaran']);
 
     Route::get('/va/listva', [FlagingManualVaController::class, 'listva']);
     Route::post('/va/flagingmanualva', [FlagingManualVaController::class, 'flagingmanual']);

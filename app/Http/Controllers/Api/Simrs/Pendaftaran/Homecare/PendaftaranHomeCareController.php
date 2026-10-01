@@ -52,6 +52,7 @@ class PendaftaranHomeCareController extends Controller
                 'pasien.rs17 as kelamin',
                 'pasien.rs16 as tgllahir',
             ])
+            ->selectRaw("EXISTS (SELECT 1 FROM kwitansilog WHERE kwitansilog.noreg = home_care_kunjungans.noreg AND COALESCE(NULLIF(TRIM(kwitansilog.batal), ''), '0') <> '1') as kwitansi_aktif")
             ->when($req['q'], function ($q) use ($req) {
                 $q->where(function ($y) use ($req) {
                         $y->where('pasien.rs2', 'LIKE', '%' . $req['q'] . '%')
