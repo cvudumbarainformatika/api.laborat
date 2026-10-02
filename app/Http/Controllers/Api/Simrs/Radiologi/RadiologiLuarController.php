@@ -45,6 +45,8 @@ class RadiologiLuarController extends Controller
         'rs270.rs1',
         'rs270.rs1 as notrans',
         'rs270.rs8 as tglentri',
+        'rs270.trmtgl as trmtgl',
+        'rs270.updateststgl as updateststgl',
         'rs270.rs2 as nama',
         'rs270.rs3 as alamat',
         'rs270.rs4 as kelamin',
@@ -250,6 +252,7 @@ class RadiologiLuarController extends Controller
       $notrans = trim($request->notrans);
       DB::table('rs270')->where('rs1', $notrans)->update([
           'rs10' => '2',
+          'trmtgl' => Carbon::now(),
       ]);
       return new JsonResponse(['message' => 'Data berhasil disimpan'], 200);
   }
@@ -266,6 +269,8 @@ class RadiologiLuarController extends Controller
       $notrans = trim($request->notrans);
       DB::table('rs270')->where('rs1', $notrans)->update([
           'rs10' => '1',
+          'trmtgl' => DB::raw('coalesce(trmtgl, NOW())'),
+          'updateststgl' => Carbon::now(),
       ]);
       return new JsonResponse(['message' => 'Data berhasil disimpan'], 200);
   }
