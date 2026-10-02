@@ -484,6 +484,7 @@ class RadiologiController extends Controller
                             'rs47.rs2 as nama',
                             'rs47.rs1 as kode',
                             'rs47.rs3 as jenis',
+                            'rs47.alat as alat',
                             'rs48_pacs.status',
                             'rs48_pacs.view_url as view_url',
                             'rs48_pacs.view_url_local as view_url_local'
