@@ -148,6 +148,12 @@ class PengunjungController extends Controller
             'dokumenluar' => function ($neo) {
                 $neo->with(['pegawai:id,nama']);
             },
+            'pemeriksaanfisik' => function ($pf) {
+                $pf->orderBy('id', 'DESC');
+            },
+            'diagnosakeperawatan' => function ($dk) {
+                $dk->with(['intervensi.masterintervensi', 'masterperawat'])->orderBy('id', 'DESC');
+            },
         ]);
 
         return new JsonResponse($data);

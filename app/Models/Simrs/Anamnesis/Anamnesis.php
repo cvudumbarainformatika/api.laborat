@@ -14,9 +14,21 @@ class Anamnesis extends Model
     protected $connection = 'mysql';
     protected $table = 'rs209';
     protected $guarded = ['id'];
-    protected $casts = [
-        'riwayatalergi' => 'array',
-      ];
+
+    public function getRiwayatalergiAttribute($value)
+    {
+        if (empty($value)) {
+            return [];
+        }
+        $decoded = json_decode($value, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+        if (json_last_error() === JSON_ERROR_NONE && is_string($decoded)) {
+            return array_values(array_filter(array_map('trim', explode(',', $decoded))));
+        }
+        return array_values(array_filter(array_map('trim', explode(',', $value))));
+    }
 
 
     public function datasimpeg()

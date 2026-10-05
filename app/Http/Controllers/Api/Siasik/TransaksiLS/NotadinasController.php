@@ -44,7 +44,13 @@ class NotadinasController extends Controller
                  'notadinas_rinci.*',
                 //  'npdls_rinci.*'
                 )->with('npdlsrinci', function ($query) {
-                    $query->join('akun50_2024', 'akun50_2024.kodeall2', 'npdls_rinci.koderek50')
+                    $query
+                    // ->join('akun50_2024', 'akun50_2024.kodeall2', 'npdls_rinci.koderek50')
+                    ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('npdls_rinci.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('npdls_rinci.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
                     ->select(
                         'npdls_rinci.nonpdls',
                         'npdls_rinci.nominalpembayaran as pengajuan',
@@ -436,7 +442,12 @@ class NotadinasController extends Controller
         $anggaran = PergeseranPaguRinci::where('tgl', $tahun)
         ->where('kodekegiatanblud', request('kodekegiatan'))
         ->where('pagu', '!=', '0')
-        ->join('akun50_2024', 'akun50_2024.kodeall2', 't_tampung.koderek50')
+        // ->join('akun50_2024', 'akun50_2024.kodeall2', 't_tampung.koderek50')
+        ->leftJoin('akun50_2024', function ($join) {
+                        $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+                            ->orOn('t_tampung.koderek50', '=', 'akun50_2024.kodeall3');
+                            
+                    })
         ->select('t_tampung.kodekegiatanblud',
                 't_tampung.tgl',
                 't_tampung.notrans',
@@ -449,7 +460,7 @@ class NotadinasController extends Controller
                 't_tampung.harga',
                 't_tampung.pagu',
                 't_tampung.idpp',
-                'akun50_2024.kodeall3 as koderek50',)
+                'akun50_2024.kodeall3 as koderek50')
                 ->with(['jurnal','realisasi_spjpanjar'=> function ($realisasi) {
                     $realisasi->select('spjpanjar_rinci.iditembelanjanpd',
                                         'spjpanjar_rinci.jumlahbelanjapanjar as realisasi',);

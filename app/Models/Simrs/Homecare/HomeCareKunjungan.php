@@ -15,6 +15,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
+use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
+use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Tindakan\Tindakan;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -85,5 +87,20 @@ class HomeCareKunjungan extends Model
     public function dokumenluar()
     {
         return $this->hasMany(DokumenUpload::class, 'noreg', 'noreg');
+    }
+
+    public function pegawai()
+    {
+        return $this->hasOne(Petugas::class, 'kdpegsimrs', 'dpjp');
+    }
+
+    public function pemeriksaanfisik()
+    {
+        return $this->hasMany(Pemeriksaanfisik::class, 'rs1', 'noreg');
+    }
+
+    public function diagnosakeperawatan()
+    {
+        return $this->hasMany(Diagnosakeperawatan::class, 'noreg', 'noreg');
     }
 }

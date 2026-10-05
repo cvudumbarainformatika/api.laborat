@@ -55,12 +55,23 @@ class AsesmenUlangController extends Controller
                 return $item;
             });
 
+        $indikasiIntensif = DB::table('asesmen_indikasi_intensif')
+            ->where('noreg', $noreg)
+            ->orderBy('tanggal', 'DESC')
+            ->orderBy('created_at', 'DESC')
+            ->get()
+            ->map(function ($item) {
+                $item->pilihan_indikasi = $item->pilihan_indikasi ? json_decode($item->pilihan_indikasi, true) : [];
+                return $item;
+            });
+
         return new JsonResponse([
             'jatuh' => $jatuh,
             'nyeri' => $nyeri,
             'pasca_jatuh' => $pascaJatuh,
             'penyakit_menular' => $penyakitMenular,
-            'monitoring_restrain' => $monitoringRestrain
+            'monitoring_restrain' => $monitoringRestrain,
+            'indikasi_intensif' => $indikasiIntensif
         ], 200);
     }
 
@@ -614,6 +625,75 @@ class AsesmenUlangController extends Controller
             return new JsonResponse([
                 'success' => true,
                 'message' => 'Data monitoring restrain berhasil dihapus'
+            ], 200);
+        } catch (\Throwable $th) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Gagal menghapus data',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function simpanIndikasiIntensif(Request $request)
+    {
+        $kdpegsimrs = auth()->user()->pegawai->kdpegsimrs ?? $request->kdpegsimrs;
+        $petugas = auth()->user()->pegawai->nama ?? $request->petugas;
+
+        $data = [
+            'noreg' => $request->noreg,
+            'norm' => $request->norm,
+            'kdruangan' => $request->kdruangan,
+            'sumber' => $request->sumber ?? 'ranap',
+            'jenis_ruangan' => $request->jenis_ruangan ?? 'ICCU',
+            'kategori' => $request->kategori ?? 'masuk',
+            'dx_medis' => $request->dx_medis,
+            'tanggal' => $request->tanggal ?? date('Y-m-d H:i:s'),
+            'pilihan_indikasi' => is_array($request->pilihan_indikasi) ? json_encode($request->pilihan_indikasi) : null,
+            'indikasi_lain' => $request->indikasi_lain,
+            'kddokter_dpjp' => $request->kddokter_dpjp,
+            'dokter_dpjp' => $request->dokter_dpjp,
+            'kddokter_pj' => $request->kddokter_pj,
+            'dokter_pj' => $request->dokter_pj,
+            'kdpegsimrs' => $kdpegsimrs,
+            'petugas' => $petugas,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        DB::beginTransaction();
+        try {
+            if ($request->filled('id')) {
+                DB::table('asesmen_indikasi_intensif')
+                    ->where('id', $request->id)
+                    ->update($data);
+            } else {
+                $data['created_at'] = date('Y-m-d H:i:s');
+                DB::table('asesmen_indikasi_intensif')->insert($data);
+            }
+
+            DB::commit();
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Data Indikasi Ruang Intensif Berhasil Disimpan'
+            ], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Gagal menyimpan data',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function hapusIndikasiIntensif(Request $request)
+    {
+        $id = $request->id;
+        try {
+            DB::table('asesmen_indikasi_intensif')->where('id', $id)->delete();
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Data berhasil dihapus'
             ], 200);
         } catch (\Throwable $th) {
             return new JsonResponse([

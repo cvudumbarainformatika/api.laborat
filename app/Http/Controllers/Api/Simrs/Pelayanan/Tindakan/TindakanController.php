@@ -314,56 +314,47 @@ class TindakanController extends Controller
         $wew = $x->rs14;
         $notatindakan = FormatingHelper::notatindakan($wew, 'T-HC');
 
-
         $wew = FormatingHelper::session_user();
-        $kdpegsimrs = $wew['kodesimrs'];
+        $kdpegsimrs = $wew['kodesimrs'] ?? null;
         if ($kdpegsimrs === '' || $kdpegsimrs === null) {
             return new JsonResponse([
                 'message' => 'Data Kepegawaian Anda Belum Termaping...!!!'
             ], 410);
         }
-        $nota = $request->nota ?? $notatindakan;
+        $nota = (!empty($request->nota) && $request->nota !== 'BARU' && $request->nota !== 'SEMUA') ? $request->nota : $notatindakan;
 
-        $simpantindakan = Tindakan::where(['rs1' => $request->noreg, 'rs4' => $request->kdtindakan, 'rs2' => $nota])->first();
-        if (!$simpantindakan) {
-            $simpantindakan = new Tindakan();
-            $simpantindakan->rs5 = $request->jmltindakan ?? '';
-        } else {
-            $simpantindakan->rs5 = (int)$simpantindakan->rs5 + (int)$request->jmltindakan;
-        }
-
+        $simpantindakan = new Tindakan();
+        $simpantindakan->rs5 = $request->jmltindakan ?? 1;
         $simpantindakan->rs2 = $nota;
         $simpantindakan->rs1 = $request->noreg ?? '';
         $simpantindakan->rs3 = date('Y-m-d H:i:s');
         $simpantindakan->rs4 = $request->kdtindakan ?? '';
-        $simpantindakan->rs6 = $request->hargasarana ?? '';
-        $simpantindakan->rs7 = $request->hargasarana ?? '';
-        $simpantindakan->rs8 = $request->kodedokter ?? '';
-        $simpantindakan->rs9 = $kdpegsimrs ?? '';
-        $simpantindakan->rs13 = $request->hargapelayanan ?? '';
-        $simpantindakan->rs14 = $request->hargapelayanan ?? '';
+        $simpantindakan->rs6 = $request->hargasarana ?? 0;
+        $simpantindakan->rs7 = $request->hargasarana ?? 0;
+        $simpantindakan->rs8 = $request->pelaksanaSatu ?? '';
+        $simpantindakan->rs9 = $request->kddpjp ?? $request->kodedokter ?? $kdpegsimrs ?? '';
+        $simpantindakan->rs13 = $request->hargapelayanan ?? 0;
+        $simpantindakan->rs14 = $request->hargapelayanan ?? 0;
         $simpantindakan->rs20 = $request->keterangan ?? '';
-        $simpantindakan->rs22 = $request->kdpoli  ?? 'PEN014';
-        // $simpantindakan->rs23 = $request->pelaksanaDua ?? '';
+        $simpantindakan->rs22 = $request->kdpoli ?? 'PEN014';
+        $simpantindakan->rs23 = $request->pelaksanaDua ?? '';
         $simpantindakan->rs24 = $request->kdsistembayar ?? 'UMUM';
+        $simpantindakan->rs25 = $request->kdpoli ?? 'PEN014';
         $simpantindakan->save();
 
         if (!$simpantindakan) {
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
 
-        TindakanSambung::updateOrCreate(
-            ['nota' => $request->nota ?? $notatindakan, 'noreg' => $request->noreg, 'kd_tindakan' => $request->kdtindakan],
-            ['ket' => $request->keterangan, 'rs73_id' => $simpantindakan->id]
-        );
+        $idTindakan = $simpantindakan->id;
 
-        // $simpantindakan->rs5 = (int)$simpantindakan->rs5 + (int)$request->jmltindakan;
-        // $simpantindakan->save();
+        TindakanSambung::updateOrCreate(
+            ['nota' => $nota, 'noreg' => $request->noreg, 'kd_tindakan' => $request->kdtindakan],
+            ['ket' => $request->keterangan, 'rs73_id' => $idTindakan]
+        );
 
         $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
-
-        // EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
 
         $simpantindakan->load('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'sambungan:rs73_id,ket', 'mpoli:rs1,rs2');
         return new JsonResponse(
