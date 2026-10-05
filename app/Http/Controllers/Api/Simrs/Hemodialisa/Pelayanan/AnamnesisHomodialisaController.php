@@ -119,25 +119,32 @@ class AnamnesisHomodialisaController extends Controller
     public function simpananamnesis(Request $request)
     {
         $data = self::storeAnamnesis($request);
-        return new JsonResponse($data);
+        $status = (!empty($data['success']) && $data['success'] === true) ? 200 : 500;
+        return new JsonResponse($data, $status);
     }
 
     public static function storeAnamnesis($request)
     {
         $user = Pegawai::find(auth()->user()->pegawai_id);
-        $kdpegsimrs = $user->kdpegsimrs;
+        $kdpegsimrs = $user?->kdpegsimrs ?? '';
+        $groupnakes = $user?->kdgroupnakes ?? '';
+
+        $riwayatalergi = $request->form['rwAlergi'] ?? '';
+        if (is_array($riwayatalergi)) {
+            $riwayatalergi = json_encode($riwayatalergi);
+        }
 
         DB::beginTransaction();
         try {
             if ($request->id !== null) {
-                $hasil = Anamnesis::where('id', $request->id)->update(
+                Anamnesis::where('id', $request->id)->update(
                     [
                         'rs1' => $request->noreg,
                         'rs2' => $request->norm,
                         'rs3' => date('Y-m-d H:i:s'),
                         'rs4' => $request->form['keluhanUtama'] ?? '',
                         'riwayatpenyakit' => $request->form['rwPenyDhl'] ?? '',
-                        'riwayatalergi' => $request->form['rwAlergi'] ?? '', // array
+                        'riwayatalergi' => $riwayatalergi,
                         'keteranganalergi' => $request->form['ketRwAlergi'] ?? '',
                         'riwayatpengobatan' => $request->form['rwPengobatan'] ?? '',
                         'riwayatpenyakitsekarang' => $request->form['rwPenySkr'] ?? '',
@@ -154,11 +161,7 @@ class AnamnesisHomodialisaController extends Controller
                         'user'  => $kdpegsimrs,
                     ]
                 );
-                if ($hasil === 1) {
-                    $simpananamnesis = Anamnesis::where('id', $request->id)->first();
-                } else {
-                    $simpananamnesis = null;
-                }
+                $simpananamnesis = Anamnesis::find($request->id);
             } else {
                 $simpananamnesis = Anamnesis::create(
                     [
@@ -167,7 +170,7 @@ class AnamnesisHomodialisaController extends Controller
                         'rs3' => date('Y-m-d H:i:s'),
                         'rs4' => $request->form['keluhanUtama'] ?? '',
                         'riwayatpenyakit' => $request->form['rwPenyDhl'] ?? '',
-                        'riwayatalergi' => $request->form['rwAlergi'] ?? '', // array
+                        'riwayatalergi' => $riwayatalergi,
                         'keteranganalergi' => $request->form['ketRwAlergi'] ?? '',
                         'riwayatpengobatan' => $request->form['rwPengobatan'] ?? '',
                         'riwayatpenyakitsekarang' => $request->form['rwPenySkr'] ?? '',
@@ -180,8 +183,9 @@ class AnamnesisHomodialisaController extends Controller
                 );
             }
 
-
-
+            if (!$simpananamnesis) {
+                throw new \Exception('Data Anamnesis tidak dapat ditemukan atau gagal disimpan.');
+            }
 
             // save nyeri
             $skorNyeri = 0;
@@ -202,7 +206,7 @@ class AnamnesisHomodialisaController extends Controller
                     'skor' => $skorNyeri,
                     'keluhan' => $ketNyeri,
                     'user_input' => $kdpegsimrs,
-                    'group_nakes' => $user->kdgroupnakes
+                    'group_nakes' => $groupnakes
 
                 ]
             );
@@ -226,7 +230,7 @@ class AnamnesisHomodialisaController extends Controller
                     'skor' => $skor,
                     'keterangan' => $ket,
                     'user_input' => $kdpegsimrs,
-                    'group_nakes' => $user->kdgroupnakes
+                    'group_nakes' => $groupnakes
                 ]
             );
 
@@ -257,7 +261,7 @@ class AnamnesisHomodialisaController extends Controller
             // return new JsonResponse(['message' => 'GAGAL DISIMPAN','err'=>$th], 500);
             $data = [
                 'success' => false,
-                'message' => 'GAGAL DISIMPAN',
+                'message' => 'GAGAL DISIMPAN: ' . $th->getMessage(),
                 'result' => $th->getMessage(),
             ];
 

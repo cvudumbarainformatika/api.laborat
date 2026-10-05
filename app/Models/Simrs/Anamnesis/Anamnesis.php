@@ -30,6 +30,15 @@ class Anamnesis extends Model
         return array_values(array_filter(array_map('trim', explode(',', $value))));
     }
 
+    public function setRiwayatalergiAttribute($value)
+    {
+        if (is_array($value)) {
+            $this->attributes['riwayatalergi'] = json_encode($value);
+        } else {
+            $this->attributes['riwayatalergi'] = $value ?? '';
+        }
+    }
+
 
     public function datasimpeg()
     {
