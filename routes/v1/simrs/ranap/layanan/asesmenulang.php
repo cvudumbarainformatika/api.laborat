@@ -18,4 +18,6 @@ Route::group([
     Route::post('/hapus-penyakit-menular', [AsesmenUlangController::class, 'hapusPenyakitMenular']);
     Route::post('/simpan-monitoring-restrain', [AsesmenUlangController::class, 'simpanMonitoringRestrain']);
     Route::post('/hapus-monitoring-restrain', [AsesmenUlangController::class, 'hapusMonitoringRestrain']);
+    Route::post('/simpan-indikasi-intensif', [AsesmenUlangController::class, 'simpanIndikasiIntensif']);
+    Route::post('/hapus-indikasi-intensif', [AsesmenUlangController::class, 'hapusIndikasiIntensif']);
 });
