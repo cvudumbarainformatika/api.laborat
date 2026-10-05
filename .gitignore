@@ -4,6 +4,7 @@
 /public/.htaccess
 /vendor
 .env
+.env.local
 .env.backup
 .env.11
 .env.200

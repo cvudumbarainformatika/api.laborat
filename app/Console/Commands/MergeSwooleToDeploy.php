@@ -19,6 +19,9 @@ class MergeSwooleToDeploy extends Command
         $this->info('Checkout ke branch deploy...');
         if (!$this->executeCommand(['git', 'checkout', 'deploy'])) return;
 
+        $this->info('Sinkronisasi branch deploy dengan origin/deploy...');
+        if (!$this->executeCommand(['git', 'merge', 'origin/deploy', '--no-edit'])) return;
+
         $this->info('Merge dari origin/swoole...');
         if (!$this->executeCommand(['git', 'merge', 'origin/swoole', '--no-edit'])) return;
 
