@@ -19,7 +19,7 @@ class HomecareController extends Controller
         $noreg = $request->noreg;
         $kunjungan = HomeCareKunjungan::where('noreg', $noreg)->firstOrFail();
 
-        $admin = (float) $kunjungan->administrasi + (float) $kunjungan->js + (float) $kunjungan->jp;
+        $admin = (float) $kunjungan->administrasi;
         $labPerNota = DB::table('rs51 as lab')
             ->join('rs51_meta as meta', 'meta.nota', '=', 'lab.rs2')
             ->where('lab.rs1', $noreg)
@@ -27,14 +27,22 @@ class HomecareController extends Controller
             ->groupBy('lab.rs2')
             ->get();
         $laborat = (float) $labPerNota->sum('nominal');
-        $tindakan = (float) DB::table('rs73')
+        $tindakanItems = DB::table('rs73')
             ->where('rs1', $noreg)
             ->where('rs22', 'PEN014')
-            ->selectRaw('COALESCE(SUM((COALESCE(rs7, 0) + COALESCE(rs13, 0)) * COALESCE(rs5, 1)), 0) as nominal')->value('nominal');
-        $rehab = (float) DB::table('rs73')
+            ->select('id', 'rs7', 'rs13', 'rs5')
+            ->get();
+        $tindakan = (float) $tindakanItems->sum(fn ($item) =>
+            (float) (($item->rs7 ?? 0) + ($item->rs13 ?? 0)) * (float) ($item->rs5 ?? 1)
+        );
+        $rehabItems = DB::table('rs73')
             ->where('rs1', $noreg)
             ->where('rs22', 'FISIO')
-            ->selectRaw('COALESCE(SUM((COALESCE(rs7, 0) + COALESCE(rs13, 0)) * COALESCE(rs5, 1)), 0) as nominal')->value('nominal');
+            ->select('id', 'rs7', 'rs13', 'rs5')
+            ->get();
+        $rehab = (float) $rehabItems->sum(fn ($item) =>
+            (float) (($item->rs7 ?? 0) + ($item->rs13 ?? 0)) * (float) ($item->rs5 ?? 1)
+        );
 
         $farmasi = DB::connection('farmasi');
         $reguler = (float) $farmasi->table('resep_keluar_h as h')->join('resep_keluar_r as r', 'r.noresep', '=', 'h.noresep')
@@ -47,8 +55,8 @@ class HomecareController extends Controller
         $rincian = [
             ['nama' => 'Admin', 'nominal' => $admin],
             ['nama' => 'Laborat', 'nominal' => $laborat, 'nota' => $labPerNota],
-            ['nama' => 'Tindakan', 'nominal' => $tindakan],
-            ['nama' => 'Rehab Medik', 'nominal' => $rehab],
+            ['nama' => 'Tindakan', 'nominal' => $tindakan, 'id_trans' => $tindakanItems->pluck('id')->all()],
+            ['nama' => 'Rehab Medik', 'nominal' => $rehab, 'id_trans' => $rehabItems->pluck('id')->all()],
             ['nama' => 'Farmasi', 'nominal' => $farmasiTotal, 'reguler' => $reguler, 'racikan' => $racikan, 'retur' => $retur],
         ];
         return new JsonResponse(['data' => $rincian, 'total' => array_sum(array_column($rincian, 'nominal'))]);
@@ -84,12 +92,17 @@ class HomecareController extends Controller
                 return new JsonResponse(['message' => 'Kunjungan Homecare sudah lunas.'], 422);
             }
 
-            $unit = ['Admin' => 'PEN014', 'Laborat' => 'PEN002', 'Tindakan' => 'PEN014', 'Rehab Medik' => 'REHABMEDIK', 'Farmasi' => 'FARMASI'];
-            $jenisKwitansi = ['Admin' => 'Administrasi', 'Laborat' => 'Laboratorium'];
+            $unit = ['Admin' => 'PEN014', 'Laborat' => 'PEN002', 'Tindakan' => 'PEN014', 'Rehab Medik' => 'PEN004', 'Farmasi' => 'FARMASI'];
+            $jenisKwitansi = ['Admin' => 'Administrasi', 'Laborat' => 'Laboratorium', 'Rehab Medik' => 'Fisioterapi'];
             $kategori = ['Admin' => 'admin', 'Laborat' => 'laborat', 'Tindakan' => 'tindakan', 'Rehab Medik' => 'rehabmedik', 'Farmasi' => 'farmasi'];
             $kwitansiD = $rincian->filter(fn ($item) => (float) ($item['nominal'] ?? 0) > 0)
                 ->map(function ($item) use ($unit, $kategori, $jenisKwitansi, $kunjungan) {
-                    $idTrans = $item['nama'] === 'Admin' ? (string) $kunjungan->id : collect($item['nota'] ?? [])->pluck('nota')->implode(',');
+                    $idTrans = $item['nama'] === 'Admin'
+                        ? (string) $kunjungan->id
+                        : collect($item['id_trans'] ?? $item['nota'] ?? [])->pluck('nota')->implode(',');
+                    if (in_array($item['nama'], ['Tindakan', 'Rehab Medik'])) {
+                        $idTrans = collect($item['id_trans'] ?? [])->implode(',');
+                    }
                     return implode('|', [
                         $kategori[$item['nama']] ?? strtolower(str_replace(' ', '', $item['nama'])),
                         round($item['nominal']),
