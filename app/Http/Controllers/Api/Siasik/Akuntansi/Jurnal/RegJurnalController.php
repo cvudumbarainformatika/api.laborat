@@ -54,7 +54,12 @@ class RegJurnalController extends Controller
             'akun_mapjurnal.uraian_bastx'
         )
         ->join('serahterima50', 'serahterima50.noserahterimapekerjaan', 'serahterima_heder.noserahterimapekerjaan')
-        ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', 'serahterima50.koderek50')
+        // ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', 'serahterima50.koderek50')
+         ->leftJoin('akun_mapjurnal', function ($join) {
+                        $join->on('serahterima50.koderek50', '=', 'akun_mapjurnal.kodeall')
+                            ->orOn('serahterima50.koderek50', '=', 'akun_mapjurnal.kode50');
+                            
+                    })
         ->when(request('q'),function ($query) {
             $query
             ->where('serahterima_heder.noserahterimapekerjaan', 'LIKE', '%' . request('q') . '%')
@@ -314,7 +319,12 @@ class RegJurnalController extends Controller
         ->groupBy('npdls_rinci.koderek50','npdls_rinci.nonpdls')
         ->join('npdls_heder', 'npdls_heder.nonpk', '=','npkls_heder.nonpk')
         ->join('npdls_rinci', 'npdls_rinci.nonpdls', '=','npdls_heder.nonpdls')
-        ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', '=','npdls_rinci.koderek50')
+        // ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', '=','npdls_rinci.koderek50')
+        ->leftJoin('akun_mapjurnal', function ($join) {
+                        $join->on('npdls_rinci.koderek50', '=', 'akun_mapjurnal.kodeall')
+                            ->orOn('npdls_rinci.koderek50', '=', 'akun_mapjurnal.kode50');
+                            
+                    })
         ->where('npdls_heder.nopencairan', '!=', '')
         ->whereIn('npdls_heder.serahterimapekerjaan',['1', '3'])
         ->whereBetween('npkls_heder.tglpindahbuku', [$awal, $akhir])
@@ -345,7 +355,12 @@ class RegJurnalController extends Controller
         ->groupBy('npdls_rinci.koderek50','npdls_rinci.nonpdls')
         ->join('npdls_heder', 'npdls_heder.nonpk', '=','npkls_heder.nonpk')
         ->join('npdls_rinci', 'npdls_rinci.nonpdls', '=','npdls_heder.nonpdls')
-        ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', '=','npdls_rinci.koderek50')
+        // ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', '=','npdls_rinci.koderek50')
+        ->leftJoin('akun_mapjurnal', function ($join) {
+                        $join->on('npdls_rinci.koderek50', '=', 'akun_mapjurnal.kodeall')
+                            ->orOn('npdls_rinci.koderek50', '=', 'akun_mapjurnal.kode50');
+                            
+                    })
         ->where('npdls_heder.nopencairan', '!=', '')
         ->whereIn('npdls_heder.serahterimapekerjaan',['2'])
         ->whereBetween('npkls_heder.tglpindahbuku', [$awal, $akhir])
@@ -387,7 +402,11 @@ class RegJurnalController extends Controller
                     'akun_mapjurnal.uraian_cair2',
                     'akun_mapjurnal.kd_blud',
                     'akun_mapjurnal.ur_blud')
-        ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', '=','contrapost.koderek50')
+        ->leftJoin('akun_mapjurnal', function ($join) {
+                        $join->on('contrapost.koderek50', '=', 'akun_mapjurnal.kodeall')
+                            ->orOn('contrapost.koderek50', '=', 'akun_mapjurnal.kode50');
+                            
+                    })
         ->whereBetween('contrapost.tglcontrapost', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
         ->orderBy('contrapost.tglcontrapost', 'asc')
         ->get();
@@ -424,7 +443,12 @@ class RegJurnalController extends Controller
                     'akun_mapjurnal.kode_cair2',
                     'akun_mapjurnal.uraian_cair2')
         ->join('spjpanjar_rinci', 'spjpanjar_rinci.nospjpanjar', '=','spjpanjar_heder.nospjpanjar')
-        ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', '=','spjpanjar_rinci.koderek50')
+        // ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', '=','spjpanjar_rinci.koderek50')
+        ->leftJoin('akun_mapjurnal', function ($join) {
+                        $join->on('spjpanjar_rinci.koderek50', '=', 'akun_mapjurnal.kodeall')
+                            ->orOn('spjpanjar_rinci.koderek50', '=', 'akun_mapjurnal.kode50');
+                            
+                    })
         ->whereBetween('spjpanjar_heder.tglspjpanjar', [$awal, $akhir])
         ->groupBy('spjpanjar_rinci.id')
         ->get();
