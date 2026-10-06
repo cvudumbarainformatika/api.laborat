@@ -236,6 +236,9 @@ class LaboratController extends Controller
 
 
             $data = $request->details;
+            $tarifs = MasterLaborat::whereIn('rs1', collect($data)->pluck('kode')->filter()->unique())
+                ->get(['rs1', 'rs5', 'rs6'])
+                ->keyBy('rs1');
             // $rs51 = [];
             // foreach ($data as $row => $val) {
             //     $param = [
@@ -263,6 +266,19 @@ class LaboratController extends Controller
              * simpan rincian baru
              */
             foreach ($data as $row => $val) {
+                $tarif = $tarifs->get($val['kode']);
+                $biayaSarana = $val['biaya_sarana'] ?? null;
+                $biayaLayanan = $val['biaya_layanan'] ?? null;
+                if ($biayaSarana === null || $biayaSarana === '') {
+                    $biayaSarana = $tarif?->rs5;
+                }
+                if ($biayaLayanan === null || $biayaLayanan === '') {
+                    $biayaLayanan = $tarif?->rs6;
+                }
+                if ($biayaSarana === null || $biayaLayanan === null) {
+                    throw new \RuntimeException('Tarif pemeriksaan laborat tidak ditemukan untuk kode ' . $val['kode']);
+                }
+
                 Laboratpemeriksaan::firstOrCreate(
                     [
                         'rs2' => $simpanpermintaanlaborat->nota,
@@ -272,13 +288,13 @@ class LaboratController extends Controller
                     [
                         'rs3' => date('Y-m-d H:i:s'),
                         'rs5' => $request->jumlah ?? '',
-                        'rs6' => $val['biaya_sarana'] ?? '',
-                        'rs7' => $val['biaya_sarana'] ?? '',
+                        'rs6' => $biayaSarana,
+                        'rs7' => $biayaSarana,
                         'rs8' => $request->kodedokter ?? '',
                         'rs9' => $user,
                         'rs12' => $request->prioritas_pemeriksaan === 'Iya' ? '1' : '',
-                        'rs13' => $val['biaya_layanan'] ?? '',
-                        'rs14' => $val['biaya_layanan'] ?? '',
+                        'rs13' => $biayaLayanan,
+                        'rs14' => $biayaLayanan,
                         'rs23'  => $ruangan,
                         'rs24'  => $request->kdsistembayar ?? ''
                     ]
