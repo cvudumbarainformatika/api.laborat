@@ -245,7 +245,6 @@ class PengunjungController extends Controller
             'rs15.rs46 as noka',
             'rs15.rs49 as noktp',
             'rs15.rs55 as nohp',
-            'rs15.rs46 as noka',
             'rs222.rs8 as sep',
             // 'permintaan.rs2 as nota_permintaan',
             DB::raw('(CASE WHEN permintaan.rs2 ="" THEN NULL ELSE permintaan.rs2 END) as nota_permintaan'),
@@ -302,12 +301,12 @@ class PengunjungController extends Controller
         $select = $data->select(
             'rs201.rs1 as noreg',
             // 'rs201.rs2 as norm',
-            DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
+            DB::raw('coalesce(rs17.rs2, rs23.rs2, homecare.norm) as norm'),
             'rs201.rs3 as tgl_kunjungan',
             'rs201.rs10 as kdruangan',
             'rs201.rs10 as koderuangan',
-            'rs201.rs10 as kodepoli',
             'rs24.rs4 as kdgroup_ruangan',
+            'rs201.rs10 as kodepoli',
             DB::raw('coalesce(rs17.rs14, rs23.rs19) as kodesistembayar'),
             // DB::raw('coalesce(rs17.rs19, rs23.rs22) as status'),
             // 'rs201.rs9 as status',
@@ -316,12 +315,14 @@ class PengunjungController extends Controller
             DB::raw(
                 'coalesce(
           concat(pasien17.rs3," ",pasien17.gelardepan," ",pasien17.rs2," ",pasien17.gelarbelakang),
-          concat(pasien23.rs3," ",pasien23.gelardepan," ",pasien23.rs2," ",pasien23.gelarbelakang)
+          concat(pasien23.rs3," ",pasien23.gelardepan," ",pasien23.rs2," ",pasien23.gelarbelakang),
+          concat(pasien_homecare.rs3," ",pasien_homecare.gelardepan," ",pasien_homecare.rs2," ",pasien_homecare.gelarbelakang)
         ) as nama'
             ),
             DB::raw('coalesce(
           concat(pasien17.rs4," KEL ",pasien17.rs5," RT ",pasien17.rs7," RW ",pasien17.rs8," ",pasien17.rs6," ",pasien17.rs11," ",pasien17.rs10),
-          concat(pasien23.rs4," KEL ",pasien23.rs5," RT ",pasien23.rs7," RW ",pasien23.rs8," ",pasien23.rs6," ",pasien23.rs11," ",pasien23.rs10)
+          concat(pasien23.rs4," KEL ",pasien23.rs5," RT ",pasien23.rs7," RW ",pasien23.rs8," ",pasien23.rs6," ",pasien23.rs11," ",pasien23.rs10),
+          concat(pasien_homecare.rs4," KEL ",pasien_homecare.rs5," RT ",pasien_homecare.rs7," RW ",pasien_homecare.rs8," ",pasien_homecare.rs6," ",pasien_homecare.rs11," ",pasien_homecare.rs10)
         )
         as alamat'),
             DB::raw('coalesce(
@@ -330,21 +331,23 @@ class PengunjungController extends Controller
           TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, pasien17.rs16, CURDATE()), pasien17.rs16), CURDATE()), " Hari"),
           concat(TIMESTAMPDIFF(YEAR, pasien23.rs16, CURDATE())," Tahun ",
           TIMESTAMPDIFF(MONTH, pasien23.rs16, CURDATE()) % 12," Bulan ",
-          TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, pasien23.rs16, CURDATE()), pasien23.rs16), CURDATE()), " Hari")
+          TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, pasien23.rs16, CURDATE()), pasien23.rs16), CURDATE()), " Hari"),
+          concat(TIMESTAMPDIFF(YEAR, pasien_homecare.rs16, CURDATE())," Tahun ",
+          TIMESTAMPDIFF(MONTH, pasien_homecare.rs16, CURDATE()) % 12," Bulan ",
+          TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, pasien_homecare.rs16, CURDATE()), pasien_homecare.rs16), CURDATE()), " Hari")
         )
         AS usia'),
-            DB::raw('coalesce(pasien17.rs2, pasien23.rs2) as nama_panggil'),
-            DB::raw('coalesce(pasien17.rs16, pasien23.rs16) as tgllahir'),
-            DB::raw('coalesce(pasien17.rs17, pasien23.rs17) as kelamin'),
-            DB::raw('coalesce(pasien17.rs18, pasien23.rs18) as pendidikan'),
-            DB::raw('coalesce(pasien17.rs22, pasien23.rs22) as agama'),
-            DB::raw('coalesce(pasien17.rs37, pasien23.rs37) as templahir'),
-            DB::raw('coalesce(pasien17.rs39, pasien23.rs39) as suku'),
-            DB::raw('coalesce(pasien17.rs40, pasien23.rs40) as jenispasien'),
-            DB::raw('coalesce(pasien17.rs46, pasien23.rs46) as noka'),
-            DB::raw('coalesce(pasien17.rs49, pasien23.rs49) as noktp'),
-            DB::raw('coalesce(pasien17.rs55, pasien23.rs55) as nohp'),
-            DB::raw('coalesce(pasien17.rs46, pasien23.rs46) as noka'),
+            DB::raw('coalesce(pasien17.rs2, pasien23.rs2, pasien_homecare.rs2) as nama_panggil'),
+            DB::raw('coalesce(pasien17.rs16, pasien23.rs16, pasien_homecare.rs16) as tgllahir'),
+            DB::raw('coalesce(pasien17.rs17, pasien23.rs17, pasien_homecare.rs17) as kelamin'),
+            DB::raw('coalesce(pasien17.rs18, pasien23.rs18, pasien_homecare.rs18) as pendidikan'),
+            DB::raw('coalesce(pasien17.rs22, pasien23.rs22, pasien_homecare.rs22) as agama'),
+            DB::raw('coalesce(pasien17.rs37, pasien23.rs37, pasien_homecare.rs37) as templahir'),
+            DB::raw('coalesce(pasien17.rs39, pasien23.rs39, pasien_homecare.rs39) as suku'),
+            DB::raw('coalesce(pasien17.rs40, pasien23.rs40, pasien_homecare.rs40) as jenispasien'),
+            DB::raw('coalesce(pasien17.rs46, pasien23.rs46, pasien_homecare.rs46) as noka'),
+            DB::raw('coalesce(pasien17.rs49, pasien23.rs49, pasien_homecare.rs49) as noktp'),
+            DB::raw('coalesce(pasien17.rs55, pasien23.rs55, pasien_homecare.rs55) as nohp'),
             DB::raw('coalesce(rs222.rs8, rs227.rs8) as sep'),
             DB::raw('(CASE WHEN rs201.rs2 ="" THEN NULL ELSE rs201.rs2 END) as nota_permintaan'),
             DB::raw('(CASE WHEN rs19.rs1 IS NOT NULL THEN "rjl" ELSE "rnp" END) as flagdepo'),
@@ -357,11 +360,13 @@ class PengunjungController extends Controller
         )
             ->leftjoin('rs17', 'rs201.rs1', '=', 'rs17.rs1') //rajal
             ->leftjoin('rs23', 'rs201.rs1', '=', 'rs23.rs1') //ranap
+            ->leftjoin('home_care_kunjungans as homecare', 'homecare.noreg', '=', 'rs201.rs1')
             ->leftjoin('rs222', 'rs201.rs1', '=', 'rs222.rs1') //rajal
             ->leftjoin('rs227', 'rs201.rs1', '=', 'rs227.rs1') //ranap
             ->leftjoin('rs24', 'rs24.rs1', '=', 'rs201.rs10') //ruangan ranap
             ->leftjoin('rs15 as pasien17', 'pasien17.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs15 as pasien23', 'pasien23.rs1', '=', 'rs23.rs2') //pasien
+            ->leftjoin('rs15 as pasien_homecare', 'pasien_homecare.rs1', '=', 'homecare.norm') //pasien homecare
             ->leftJoin('kepegx.pegawai as pegawai', 'rs201.rs16', '=', 'pegawai.kdpegsimrs')
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs201.rs10') //poli
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs201.rs14') //sistembayar
@@ -390,6 +395,9 @@ class PengunjungController extends Controller
                     ->orWhere('pasien17.rs1', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('pasien23.rs2', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('pasien23.rs1', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pasien_homecare.rs46', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pasien_homecare.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pasien_homecare.rs1', 'LIKE', '%' . request('q') . '%')
                 ;
             })
 
@@ -410,7 +418,7 @@ class PengunjungController extends Controller
         $data = $cekx->select(
             'rs201.rs1',
             'rs201.rs1 as noreg',
-            DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
+            DB::raw('coalesce(rs17.rs2, rs23.rs2, homecare.norm) as norm'),
             'rs201.rs3 as tgl_kunjungan',
             'rs201.rs10 as kdruangan',
             'rs201.rs10 as koderuangan',
@@ -424,10 +432,12 @@ class PengunjungController extends Controller
         )
             ->leftjoin('rs17', 'rs201.rs1', '=', 'rs17.rs1') //rajal
             ->leftjoin('rs23', 'rs201.rs1', '=', 'rs23.rs1') //ranap
+            ->leftjoin('home_care_kunjungans as homecare', 'homecare.noreg', '=', 'rs201.rs1')
             ->leftjoin('rs24', 'rs24.rs1', '=', 'rs201.rs10') //ruangan ranap
             // ->leftjoin('rs15 as pasien', 'rs15.rs1', '=', 'rs201.rs2') //pasien
             ->leftjoin('rs15 as pasien17', 'pasien17.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs15 as pasien23', 'pasien23.rs1', '=', 'rs23.rs2') //pasien
+            ->leftjoin('rs15 as pasien_homecare', 'pasien_homecare.rs1', '=', 'homecare.norm') //pasien homecare
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs201.rs10') //poli
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs201.rs14') //sistembayar
             ->leftjoin('memodiagnosadokter as memodiagnosadokter_rajal', 'memodiagnosadokter_rajal.noreg', '=', 'rs17.rs1')

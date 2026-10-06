@@ -640,10 +640,16 @@ class AsesmenUlangController extends Controller
         $kdpegsimrs = auth()->user()->pegawai->kdpegsimrs ?? $request->kdpegsimrs;
         $petugas = auth()->user()->pegawai->nama ?? $request->petugas;
 
+        $kdruangan = $request->kdruangan;
+        if (empty($kdruangan) && $request->filled('noreg')) {
+            $ranap = DB::table('rs23')->where('rs1', $request->noreg)->first();
+            $kdruangan = $ranap ? $ranap->rs5 : null;
+        }
+
         $data = [
             'noreg' => $request->noreg,
             'norm' => $request->norm,
-            'kdruangan' => $request->kdruangan,
+            'kdruangan' => $kdruangan,
             'sumber' => $request->sumber ?? 'ranap',
             'jenis_ruangan' => $request->jenis_ruangan ?? 'ICCU',
             'kategori' => $request->kategori ?? 'masuk',

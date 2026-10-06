@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Simrs\Homecare\HomeCareKunjungan;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Mpyw\EloquentHasByJoin\EloquentHasByJoinServiceProvider;
 
 class TransaksiLaborat extends Model
@@ -27,6 +27,10 @@ class TransaksiLaborat extends Model
     public function kunjungan_rawat_inap()
     {
         return $this->belongsTo(KunjunganRawatInap::class, 'rs1', 'rs1');
+    }
+    public function homecare_kunjungan()
+    {
+        return $this->belongsTo(HomeCareKunjungan::class, 'rs1', 'noreg');
     }
     public function poli()
     {
@@ -99,37 +103,21 @@ class TransaksiLaborat extends Model
 
         $search->when($reqs['q'] ?? false, function ($search, $query) use ($reqs) {
             $filterBy = $reqs['filter_by'];
-            //search by nama pasien
-            if ($filterBy == 1) {
-                $search->hasByNonDependentSubquery('kunjungan_poli',function ($a) use ($query) {
-                        $a->hasByNonDependentSubquery('pasien',fn (BelongsTo $q) => $q->where('rs2', 'LIKE', '%' . $query . '%'));
-                    }
-                )->orHasByNonDependentSubquery(
-                    'kunjungan_rawat_inap',
-                    function ($b) use ($query) {
-                        $b->hasByNonDependentSubquery(
-                            'pasien',
-                            fn (BelongsTo $q) => $q->where('rs2', 'LIKE', '%' . $query . '%')
-                        );
-                    }
-                );
-                //search by norm
-            } elseif ($filterBy == 2) {
-                $search->hasByNonDependentSubquery('kunjungan_poli',function ($a) use ($query) {
-                        $a->hasByNonDependentSubquery('pasien',fn (BelongsTo $q) => $q->orWhere('rs1', 'LIKE', '%' . $query . '%'));
-                    }
-                )->orHasByNonDependentSubquery(
-                    'kunjungan_rawat_inap',
-                    function ($b) use ($query) {
-                        $b->hasByNonDependentSubquery(
-                            'pasien',
-                            fn (BelongsTo $q) => $q->orWhere('rs1', 'LIKE', '%' . $query . '%')
-                        );
-                    }
-                );
-                //search by nota
+            if ($filterBy == 1 || $filterBy == 2) {
+                $column = $filterBy == 1 ? 'rs2' : 'rs1';
+                $search->where(function ($visits) use ($column, $query) {
+                    $visits->hasByNonDependentSubquery('kunjungan_poli', function ($visit) use ($column, $query) {
+                        $visit->hasByNonDependentSubquery('pasien', fn ($patient) => $patient->where($column, 'LIKE', '%' . $query . '%'));
+                    })
+                        ->orHasByNonDependentSubquery('kunjungan_rawat_inap', function ($visit) use ($column, $query) {
+                            $visit->hasByNonDependentSubquery('pasien', fn ($patient) => $patient->where($column, 'LIKE', '%' . $query . '%'));
+                        })
+                        ->orHasByNonDependentSubquery('homecare_kunjungan', function ($visit) use ($column, $query) {
+                            $visit->hasByNonDependentSubquery('masterpasien', fn ($patient) => $patient->where($column, 'LIKE', '%' . $query . '%'));
+                        });
+                });
             } else {
-                return $search->where('rs2', 'LIKE', '%' . $query . '%');
+                $search->where('rs2', 'LIKE', '%' . $query . '%');
             }
         });
         $search->when($reqs['periode'] ?? false, function ($search, $query) {
