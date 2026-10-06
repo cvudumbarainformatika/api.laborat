@@ -52,12 +52,18 @@ class HomecareController extends Controller
         $retur = (float) $farmasi->table('retur_penjualan_h as h')->join('retur_penjualan_r as r', 'r.noretur', '=', 'h.noretur')
             ->where('h.noreg', $noreg)->selectRaw('COALESCE(SUM((r.jumlah_retur * r.harga_jual) + COALESCE(r.nilai_r, 0)), 0) as nominal')->value('nominal');
         $farmasiTotal = $reguler + $racikan - $retur;
+        $resepFarmasi = $farmasi->table('resep_keluar_h')
+            ->where('noreg', $noreg)
+            ->select('noresep', 'depo')
+            ->get();
         $rincian = [
             ['nama' => 'Admin', 'nominal' => $admin],
             ['nama' => 'Laborat', 'nominal' => $laborat, 'nota' => $labPerNota],
             ['nama' => 'Tindakan', 'nominal' => $tindakan, 'id_trans' => $tindakanItems->pluck('id')->all()],
             ['nama' => 'Rehab Medik', 'nominal' => $rehab, 'id_trans' => $rehabItems->pluck('id')->all()],
-            ['nama' => 'Farmasi', 'nominal' => $farmasiTotal, 'reguler' => $reguler, 'racikan' => $racikan, 'retur' => $retur],
+            ['nama' => 'Farmasi', 'nominal' => $farmasiTotal, 'reguler' => $reguler, 'racikan' => $racikan, 'retur' => $retur,
+                'id_trans' => $resepFarmasi->pluck('noresep')->filter()->unique()->values()->all(),
+                'unit' => $resepFarmasi->pluck('depo')->filter()->unique()->implode(',')],
         ];
         return new JsonResponse(['data' => $rincian, 'total' => array_sum(array_column($rincian, 'nominal'))]);
     }
@@ -92,15 +98,15 @@ class HomecareController extends Controller
                 return new JsonResponse(['message' => 'Kunjungan Homecare sudah lunas.'], 422);
             }
 
-            $unit = ['Admin' => 'PEN014', 'Laborat' => 'PEN002', 'Tindakan' => 'PEN014', 'Rehab Medik' => 'PEN004', 'Farmasi' => 'FARMASI'];
-            $jenisKwitansi = ['Admin' => 'Administrasi', 'Laborat' => 'Laboratorium', 'Rehab Medik' => 'Fisioterapi'];
+            $unit = ['Admin' => 'PEN014', 'Laborat' => 'PEN002', 'Tindakan' => 'PEN014', 'Rehab Medik' => 'PEN004'];
+            $jenisKwitansi = ['Admin' => 'Administrasi', 'Laborat' => 'Laboratorium', 'Rehab Medik' => 'Fisioterapi', 'Farmasi' => 'Farmasi_new'];
             $kategori = ['Admin' => 'admin', 'Laborat' => 'laborat', 'Tindakan' => 'tindakan', 'Rehab Medik' => 'rehabmedik', 'Farmasi' => 'farmasi'];
             $kwitansiD = $rincian->filter(fn ($item) => (float) ($item['nominal'] ?? 0) > 0)
                 ->map(function ($item) use ($unit, $kategori, $jenisKwitansi, $kunjungan) {
                     $idTrans = $item['nama'] === 'Admin'
                         ? (string) $kunjungan->id
                         : collect($item['id_trans'] ?? $item['nota'] ?? [])->pluck('nota')->implode(',');
-                    if (in_array($item['nama'], ['Tindakan', 'Rehab Medik'])) {
+                    if (in_array($item['nama'], ['Tindakan', 'Rehab Medik', 'Farmasi'])) {
                         $idTrans = collect($item['id_trans'] ?? [])->implode(',');
                     }
                     return implode('|', [
@@ -108,7 +114,7 @@ class HomecareController extends Controller
                         round($item['nominal']),
                         $idTrans,
                         'HOMECARE',
-                        $unit[$item['nama']] ?? 'HOMECARE',
+                        $item['unit'] ?? $unit[$item['nama']] ?? 'HOMECARE',
                         $jenisKwitansi[$item['nama']] ?? $item['nama'],
                     ]);
                 })->implode(';');
