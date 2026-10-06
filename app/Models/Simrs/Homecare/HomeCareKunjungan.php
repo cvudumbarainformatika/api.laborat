@@ -60,6 +60,12 @@ class HomeCareKunjungan extends Model
     {
         return $this->hasMany(Fisioterapipermintaan::class, 'rs1', 'noreg');
     }
+
+    public function informConcerns()
+    {
+        return $this->hasMany(InformConcern::class, 'noreg', 'noreg');
+    }
+
     public function anamnesis()
     {
         return $this->hasMany(Anamnesis::class, 'rs1', 'noreg');
