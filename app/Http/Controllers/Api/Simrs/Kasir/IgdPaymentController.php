@@ -32,9 +32,18 @@ class IgdPaymentController extends Controller
         return $details->all();
     }
 
-    private function paidKeys(string $noreg): array
+    private function paidKeys(string $noreg, bool $activeReceiptOnly = true): array
     {
-        return DB::table('rs35')->where('rs1', $noreg)->where('rs3', self::TYPE)->pluck('kwitansi_d')
+        $query = DB::table('rs35 as payment')
+            ->where('payment.rs1', $noreg)
+            ->where('payment.rs3', self::TYPE);
+        if ($activeReceiptOnly) {
+            $query->join('kwitansilog as kwitansi', function ($join) {
+                $join->on('kwitansi.noreg', '=', 'payment.rs1')
+                    ->on('kwitansi.no_pembayaran', '=', 'payment.rs2');
+            })->whereRaw("COALESCE(NULLIF(TRIM(kwitansi.batal), ''), '0') <> '1'");
+        }
+        return $query->pluck('payment.kwitansi_d')
             ->flatMap(function ($details) {
                 return collect(explode(';', (string) $details))->map(function ($detail) {
                     $parts = explode('|', $detail);
@@ -54,10 +63,12 @@ class IgdPaymentController extends Controller
     {
         $request->validate(['noreg' => 'required|string']);
         $paidKeys = $this->paidKeys($request->noreg);
-        $details = collect($this->details($request->noreg))->map(function ($item) use ($paidKeys) {
+        $paymentKeys = $this->paidKeys($request->noreg, false);
+        $details = collect($this->details($request->noreg))->map(function ($item) use ($paidKeys, $paymentKeys) {
             $item['terbayar'] = in_array($item['key'], $paidKeys, true) ? $item['nominal'] : 0;
             $item['sisa'] = $item['nominal'] - $item['terbayar'];
             $item['sudah_dibayar'] = $item['terbayar'] > 0;
+            $item['sudah_dibayar_rs35'] = in_array($item['key'], $paymentKeys, true);
             return $item;
         });
         $history = DB::table('rs35')->where('rs1', $request->noreg)->where('rs3', self::TYPE)
