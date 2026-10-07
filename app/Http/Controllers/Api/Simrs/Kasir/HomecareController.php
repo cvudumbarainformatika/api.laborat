@@ -139,6 +139,42 @@ class HomecareController extends Controller
             return new JsonResponse(['message' => 'Pembayaran Homecare berhasil disimpan.', 'total' => $total]);
         });
     }
+    public function selesaikanLayanan(Request $request)
+    {
+        $request->validate(['noreg' => 'required|string']);
+
+        return DB::transaction(function () use ($request) {
+            $kunjungan = HomeCareKunjungan::where('noreg', $request->noreg)->lockForUpdate()->firstOrFail();
+            if (!in_array((string) $kunjungan->flag, ['', '1'], true)) {
+                return new JsonResponse(['message' => 'Status kunjungan tidak memungkinkan layanan diselesaikan.'], 422);
+            }
+
+            $rincian = $this->rincianPembayaran($request)->getData(true);
+            $tagihan = (float) ($rincian['total'] ?? 0);
+            $terbayar = (float) DB::table('rs35')
+                ->where('rs1', $request->noreg)
+                ->where('rs3', 'LU#')
+                ->sum('rs7');
+            $selisih = round($tagihan - $terbayar, 2);
+
+            if ($selisih !== 0.0) {
+                return new JsonResponse([
+                    'message' => 'Layanan belum dapat diselesaikan. Total tagihan Rp ' . number_format($tagihan, 2, ',', '.') . ', sedangkan pembayaran tercatat Rp ' . number_format($terbayar, 2, ',', '.') . '.',
+                    'tagihan' => $tagihan,
+                    'terbayar' => $terbayar,
+                    'selisih' => $selisih,
+                ], 422);
+            }
+
+            $kunjungan->update(['flag' => '2', 'tgl_selesai' => now()]);
+
+            return new JsonResponse([
+                'message' => 'Layanan HomeCare berhasil diselesaikan.',
+                'tagihan' => $tagihan,
+                'terbayar' => $terbayar,
+            ]);
+        });
+    }
     public function hapusPembayaran(Request $request)
     {
         $request->validate([
@@ -147,6 +183,11 @@ class HomecareController extends Controller
         ]);
 
         return DB::transaction(function () use ($request) {
+            $kunjungan = HomeCareKunjungan::where('noreg', $request->noreg)->lockForUpdate()->firstOrFail();
+            if ((string) $kunjungan->flag === '2') {
+                return new JsonResponse(['message' => 'Pembayaran tidak dapat dihapus karena layanan HomeCare sudah selesai.'], 422);
+            }
+
             $payment = DB::table('rs35')
                 ->where('rs1', $request->noreg)
                 ->where('rs2', $request->no_pembayaran)

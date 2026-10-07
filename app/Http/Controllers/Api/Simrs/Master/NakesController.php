@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Master;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Master\Dokter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,8 +34,8 @@ class NakesController extends Controller
 
     public function perawat()
     {
-        $perawat = Cache::remember('perawat_all_eswl_v3', now()->addDays(7), function () {
-            return Pegawai::select('nama', 'kdpegsimrs', 'kdgroupnakes', 'nip', 'nik')
+        $perawat = Cache::remember('perawat_all_eswl_v4', now()->addDays(7), function () {
+            return Petugas::select('nama', 'kdpegsimrs', 'kdgroupnakes', 'nip', 'nik')
                 ->whereIn('kdgroupnakes', ['2', '3'])
                 ->where('aktif', 'AKTIF')
                 ->get();

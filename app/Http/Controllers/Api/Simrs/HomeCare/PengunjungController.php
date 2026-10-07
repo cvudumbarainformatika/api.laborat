@@ -34,6 +34,7 @@ class PengunjungController extends Controller
                 'rs15.rs16 as tgllahir',
                 'rs15.rs49 as nktp',
                 'rs15.rs17 as kelamin',
+                'rs15.rs55 as nohp',
                 'rs19.rs2 as poli',
                 'home_care_kunjungans.dpjp as kddokter',
                 'home_care_kunjungans.dpjp as kodedokter',
