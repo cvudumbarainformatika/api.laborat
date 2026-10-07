@@ -52,12 +52,18 @@ class HomecareController extends Controller
         $retur = (float) $farmasi->table('retur_penjualan_h as h')->join('retur_penjualan_r as r', 'r.noretur', '=', 'h.noretur')
             ->where('h.noreg', $noreg)->selectRaw('COALESCE(SUM((r.jumlah_retur * r.harga_jual) + COALESCE(r.nilai_r, 0)), 0) as nominal')->value('nominal');
         $farmasiTotal = $reguler + $racikan - $retur;
+        $resepFarmasi = $farmasi->table('resep_keluar_h')
+            ->where('noreg', $noreg)
+            ->select('noresep', 'depo')
+            ->get();
         $rincian = [
             ['nama' => 'Admin', 'nominal' => $admin],
             ['nama' => 'Laborat', 'nominal' => $laborat, 'nota' => $labPerNota],
             ['nama' => 'Tindakan', 'nominal' => $tindakan, 'id_trans' => $tindakanItems->pluck('id')->all()],
             ['nama' => 'Rehab Medik', 'nominal' => $rehab, 'id_trans' => $rehabItems->pluck('id')->all()],
-            ['nama' => 'Farmasi', 'nominal' => $farmasiTotal, 'reguler' => $reguler, 'racikan' => $racikan, 'retur' => $retur],
+            ['nama' => 'Farmasi', 'nominal' => $farmasiTotal, 'reguler' => $reguler, 'racikan' => $racikan, 'retur' => $retur,
+                'id_trans' => $resepFarmasi->pluck('noresep')->filter()->unique()->values()->all(),
+                'unit' => $resepFarmasi->pluck('depo')->filter()->unique()->implode(',')],
         ];
         return new JsonResponse(['data' => $rincian, 'total' => array_sum(array_column($rincian, 'nominal'))]);
     }
@@ -92,15 +98,15 @@ class HomecareController extends Controller
                 return new JsonResponse(['message' => 'Kunjungan Homecare sudah lunas.'], 422);
             }
 
-            $unit = ['Admin' => 'PEN014', 'Laborat' => 'PEN002', 'Tindakan' => 'PEN014', 'Rehab Medik' => 'PEN004', 'Farmasi' => 'FARMASI'];
-            $jenisKwitansi = ['Admin' => 'Administrasi', 'Laborat' => 'Laboratorium', 'Rehab Medik' => 'Fisioterapi'];
+            $unit = ['Admin' => 'PEN014', 'Laborat' => 'PEN002', 'Tindakan' => 'PEN014', 'Rehab Medik' => 'PEN004'];
+            $jenisKwitansi = ['Admin' => 'Administrasi', 'Laborat' => 'Laboratorium', 'Rehab Medik' => 'Fisioterapi', 'Farmasi' => 'Farmasi_new'];
             $kategori = ['Admin' => 'admin', 'Laborat' => 'laborat', 'Tindakan' => 'tindakan', 'Rehab Medik' => 'rehabmedik', 'Farmasi' => 'farmasi'];
             $kwitansiD = $rincian->filter(fn ($item) => (float) ($item['nominal'] ?? 0) > 0)
                 ->map(function ($item) use ($unit, $kategori, $jenisKwitansi, $kunjungan) {
                     $idTrans = $item['nama'] === 'Admin'
                         ? (string) $kunjungan->id
                         : collect($item['id_trans'] ?? $item['nota'] ?? [])->pluck('nota')->implode(',');
-                    if (in_array($item['nama'], ['Tindakan', 'Rehab Medik'])) {
+                    if (in_array($item['nama'], ['Tindakan', 'Rehab Medik', 'Farmasi'])) {
                         $idTrans = collect($item['id_trans'] ?? [])->implode(',');
                     }
                     return implode('|', [
@@ -108,7 +114,7 @@ class HomecareController extends Controller
                         round($item['nominal']),
                         $idTrans,
                         'HOMECARE',
-                        $unit[$item['nama']] ?? 'HOMECARE',
+                        $item['unit'] ?? $unit[$item['nama']] ?? 'HOMECARE',
                         $jenisKwitansi[$item['nama']] ?? $item['nama'],
                     ]);
                 })->implode(';');
@@ -133,6 +139,42 @@ class HomecareController extends Controller
             return new JsonResponse(['message' => 'Pembayaran Homecare berhasil disimpan.', 'total' => $total]);
         });
     }
+    public function selesaikanLayanan(Request $request)
+    {
+        $request->validate(['noreg' => 'required|string']);
+
+        return DB::transaction(function () use ($request) {
+            $kunjungan = HomeCareKunjungan::where('noreg', $request->noreg)->lockForUpdate()->firstOrFail();
+            if (!in_array((string) $kunjungan->flag, ['', '1'], true)) {
+                return new JsonResponse(['message' => 'Status kunjungan tidak memungkinkan layanan diselesaikan.'], 422);
+            }
+
+            $rincian = $this->rincianPembayaran($request)->getData(true);
+            $tagihan = (float) ($rincian['total'] ?? 0);
+            $terbayar = (float) DB::table('rs35')
+                ->where('rs1', $request->noreg)
+                ->where('rs3', 'LU#')
+                ->sum('rs7');
+            $selisih = round($tagihan - $terbayar, 2);
+
+            if ($selisih !== 0.0) {
+                return new JsonResponse([
+                    'message' => 'Layanan belum dapat diselesaikan. Total tagihan Rp ' . number_format($tagihan, 2, ',', '.') . ', sedangkan pembayaran tercatat Rp ' . number_format($terbayar, 2, ',', '.') . '.',
+                    'tagihan' => $tagihan,
+                    'terbayar' => $terbayar,
+                    'selisih' => $selisih,
+                ], 422);
+            }
+
+            $kunjungan->update(['flag' => '2', 'tgl_selesai' => now()]);
+
+            return new JsonResponse([
+                'message' => 'Layanan HomeCare berhasil diselesaikan.',
+                'tagihan' => $tagihan,
+                'terbayar' => $terbayar,
+            ]);
+        });
+    }
     public function hapusPembayaran(Request $request)
     {
         $request->validate([
@@ -141,6 +183,11 @@ class HomecareController extends Controller
         ]);
 
         return DB::transaction(function () use ($request) {
+            $kunjungan = HomeCareKunjungan::where('noreg', $request->noreg)->lockForUpdate()->firstOrFail();
+            if ((string) $kunjungan->flag === '2') {
+                return new JsonResponse(['message' => 'Pembayaran tidak dapat dihapus karena layanan HomeCare sudah selesai.'], 422);
+            }
+
             $payment = DB::table('rs35')
                 ->where('rs1', $request->noreg)
                 ->where('rs2', $request->no_pembayaran)

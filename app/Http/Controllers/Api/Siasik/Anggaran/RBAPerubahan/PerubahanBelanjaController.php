@@ -778,7 +778,7 @@ class PerubahanBelanjaController extends Controller
     //         'total'   => count($insert)
     //     ]);
     // }
-    public function PenetapanPAK(Request $request)
+    public function PenetapanAnggaran(Request $request)
     {
         $kodeKegiatan = $request->kodekegiatanblud;
 

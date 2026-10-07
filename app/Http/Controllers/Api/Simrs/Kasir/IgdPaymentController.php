@@ -32,9 +32,21 @@ class IgdPaymentController extends Controller
         return $details->all();
     }
 
-    private function paidKeys(string $noreg): array
+    private function paidKeys(string $noreg, bool $activeReceiptOnly = true): array
     {
-        return DB::table('rs35')->where('rs1', $noreg)->where('rs3', self::TYPE)->pluck('kwitansi_d')
+        $query = DB::table('rs35 as payment')
+            ->where('payment.rs1', $noreg)
+            ->where('payment.rs3', self::TYPE);
+        if ($activeReceiptOnly) {
+            $query->join('kwitansilog as kwitansi', function ($join) {
+                $join->on('kwitansi.noreg', '=', 'payment.rs1')
+                    ->where(function ($query) {
+                        $query->whereColumn('kwitansi.no_pembayaran', 'payment.rs2')
+                            ->orWhereColumn('kwitansi.no_pembayaran', 'payment.id');
+                    });
+            })->whereRaw("COALESCE(NULLIF(TRIM(kwitansi.batal), ''), '0') <> '1'");
+        }
+        return $query->pluck('payment.kwitansi_d')
             ->flatMap(function ($details) {
                 return collect(explode(';', (string) $details))->map(function ($detail) {
                     $parts = explode('|', $detail);
@@ -54,15 +66,18 @@ class IgdPaymentController extends Controller
     {
         $request->validate(['noreg' => 'required|string']);
         $paidKeys = $this->paidKeys($request->noreg);
-        $details = collect($this->details($request->noreg))->map(function ($item) use ($paidKeys) {
-            $item['terbayar'] = in_array($item['key'], $paidKeys, true) ? $item['nominal'] : 0;
+        $paymentKeys = $this->paidKeys($request->noreg, false);
+        $details = collect($this->details($request->noreg))->map(function ($item) use ($paidKeys, $paymentKeys) {
+            $item['terbayar'] = in_array($item['key'], $paymentKeys, true) ? $item['nominal'] : 0;
             $item['sisa'] = $item['nominal'] - $item['terbayar'];
             $item['sudah_dibayar'] = $item['terbayar'] > 0;
+            $item['sudah_dibayar_rs35'] = in_array($item['key'], $paymentKeys, true);
+            $item['sudah_kwitansi_aktif'] = in_array($item['key'], $paidKeys, true);
             return $item;
         });
         $history = DB::table('rs35')->where('rs1', $request->noreg)->where('rs3', self::TYPE)
             ->select('id', 'rs2 as no_pembayaran', 'rs4 as tanggal', 'rs7 as nominal', 'jenis_pembayaran', 'kwitansi_d')
-            ->selectRaw("EXISTS(SELECT 1 FROM kwitansilog k WHERE k.noreg = rs35.rs1 AND k.no_pembayaran = rs35.rs2 AND COALESCE(NULLIF(TRIM(k.batal), ''), '0') <> '1') as sudah_kwitansi")
+            ->selectRaw("EXISTS(SELECT 1 FROM kwitansilog k WHERE k.noreg = rs35.rs1 AND (k.no_pembayaran = rs35.rs2 OR k.no_pembayaran = rs35.id) AND COALESCE(NULLIF(TRIM(k.batal), ''), '0') <> '1') as sudah_kwitansi")
             ->orderByDesc('rs4')->get();
         return new JsonResponse(['data' => $details, 'total_tagihan' => $details->sum('nominal'), 'total_terbayar' => $details->sum('terbayar'), 'total_sisa' => $details->sum('sisa'), 'riwayat_pembayaran' => $history]);
     }
@@ -155,8 +170,8 @@ class IgdPaymentController extends Controller
     {
         $request->validate(['noreg' => 'required|string']);
         $data = DB::table('kwitansilog as k')
-            ->join('rs35 as p', 'p.rs2', '=', 'k.no_pembayaran')
-            ->where('k.noreg', $request->noreg)->where('p.rs3', self::TYPE)
+            ->where('k.noreg', $request->noreg)
+            ->where('k.flag', 'Kasir IGD')
             ->select('k.id', 'k.nokwitansi as nomor', 'k.tglx as tanggal', 'k.total as nominal', 'k.batal', 'k.tgl_batal', 'k.no_pembayaran')
             ->orderByDesc('k.tglx')->get();
         $totalTerbayar = $data->filter(fn ($item) => !($item->batal === '1' || $item->batal === 1))->sum('nominal');
@@ -167,7 +182,7 @@ class IgdPaymentController extends Controller
         $request->validate(['noreg' => 'required|string', 'jenis_pembayaran' => 'required|string|max:50', 'rincian' => 'required|array|min:1', 'rincian.*' => 'required|string']);
         return DB::transaction(function () use ($request) {
             $requested = collect($request->rincian)->unique()->values();
-            $paidKeys = $this->paidKeys($request->noreg);
+            $paidKeys = $this->paidKeys($request->noreg, false);
             $details = collect($this->details($request->noreg))->keyBy('key');
             $invalid = $requested->filter(fn ($key) => !isset($details[$key]) || (float) $details[$key]['nominal'] <= 0 || in_array($key, $paidKeys, true));
             if ($invalid->isNotEmpty()) return new JsonResponse(['message' => 'Ada rincian yang sudah terbayar atau tidak valid.'], 422);

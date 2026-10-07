@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Planing;
 
+use App\Models\Simrs\Ranap\Mruangranap;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -24,5 +25,10 @@ class Planing_Igd_Lama extends Model
     public function planpulang()
     {
         return $this->hasOne(Planing_Igd_Pulang::class, 'id_heder', 'id');
+    }
+
+    public function ruangkeluar()
+    {
+        return $this->hasOne(Mruangranap::class, 'rs1', 'rs5');
     }
 }

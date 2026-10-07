@@ -124,6 +124,7 @@ class IgdController extends Controller
                                 );
                             },
                             'planrujukan',
+                            'ruangkeluar',
                             'planpulang'
                         ]);
                     },
@@ -268,6 +269,7 @@ class IgdController extends Controller
                             );
                         },
                         'planrujukan',
+                        'ruangkeluar',
                         'planpulang' => function ($planpulang) {
                             $planpulang->with(
                                 [

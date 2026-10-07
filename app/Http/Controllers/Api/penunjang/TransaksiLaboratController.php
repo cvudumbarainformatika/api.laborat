@@ -24,6 +24,8 @@ class TransaksiLaboratController extends Controller
                 'kunjungan_poli',
                 // 'kunjungan_poli.pasien',
                 'kunjungan_rawat_inap',
+                'homecare_kunjungan.masterpasien',
+                'homecare_kunjungan.poli',
                 // 'kunjungan_rawat_inap.pasien',
                 // 'kunjungan_poli.sistem_bayar',
                 // 'kunjungan_rawat_inap.sistem_bayar',

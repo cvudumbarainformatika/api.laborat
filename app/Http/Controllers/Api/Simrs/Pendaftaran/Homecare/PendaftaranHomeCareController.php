@@ -65,10 +65,14 @@ class PendaftaranHomeCareController extends Controller
             })
             ->when($req['flag'], function ($q) use ($req) {
                 $flag = strtolower($req['flag']);
-                if ($flag == 'terlayani') $q->where('flag', '1');
-                else if ($flag == 'belum terlayani') $q->where(function ($y) {
-                    $y->whereNull('flag')->orWhere('flag', '');
+                if ($flag == 'sudah berangkat') $q->whereNotNull('tgl_berangkat');
+                else if ($flag == 'selesai') $q->where(function ($y) {
+                    $y->where('flag', '2')->orWhereNotNull('tgl_selesai');
                 });
+                else if ($flag == 'belum berangkat') $q->whereNull('tgl_berangkat')
+                    ->where(function ($y) {
+                        $y->whereNull('flag')->orWhere('flag', '!=', '2');
+                    })->whereNull('tgl_selesai');
             })
             ->when($req['from'], function ($q) use ($req) {
                 $q->whereBetween('tgl_kunjungan', [$req['from'] . ' 00:00:00', $req['to'] . ' 23:59:59']);
