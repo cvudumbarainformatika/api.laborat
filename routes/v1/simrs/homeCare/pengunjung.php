@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\HomeCare\PengunjungController;
+use App\Http\Controllers\Api\Simrs\Kasir\HomecareController as KasirHomecareController;
 use App\Http\Controllers\Api\Simrs\HomeCare\InformConcernController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,7 @@ Route::group([
   Route::get('/list', [PengunjungController::class, 'listKunjungan']);
   Route::post('/berangkat', [PengunjungController::class, 'berangkat']);
   Route::post('/bukalayanan', [PengunjungController::class, 'bukalayanan']);
+  Route::post('/selesaikan-layanan', [KasirHomecareController::class, 'selesaikanLayanan']);
   Route::get('/inform-concern', [InformConcernController::class, 'show']);
   Route::post('/inform-concern', [InformConcernController::class, 'save']);
 });
