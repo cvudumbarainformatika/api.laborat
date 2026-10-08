@@ -122,10 +122,16 @@ class PersediaanFiFoController extends Controller
     public function getMutasi()
     {
         $tglAwal = request('tahun') . '-' . request('bulan') . '-01';
-        $dateAwal = Carbon::parse($tglAwal);
-        $blnLalu = $dateAwal->subMonth()->format('Y-m');
+        $dateAwal = Carbon::parse($tglAwal)->startOfMonth();
+        $monthStart = $dateAwal->toDateTimeString();
+        $monthEndExclusive = $dateAwal->copy()->addMonth()->toDateTimeString();
+        $previousMonth = $dateAwal->copy()->subMonth();
+        $previousMonthStart = $previousMonth->copy()->startOfMonth()->toDateTimeString();
+        $previousMonthEndExclusive = $dateAwal->toDateTimeString();
+        $blnLalu = $previousMonth->format('Y-m');
 
         $rwobat = Mobatnew::select(
+            'id',
             'kd_obat',
             'nama_obat',
             'satuan_k',
@@ -136,13 +142,16 @@ class PersediaanFiFoController extends Controller
             ->when(request('kode_ruang') !== 'all', function ($q) {
                 $q->whereIn('gudang', ['', request('kode_ruang')]);
             })
-            ->where(function ($q) {
-                $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('kd_obat', 'LIKE', '%' . request('q') . '%');
+            ->when(trim((string) request('q', '')) !== '', function ($q) {
+                $term = trim((string) request('q'));
+                $q->where(function ($search) use ($term) {
+                    $search->where('nama_obat', 'LIKE', '%' . $term . '%')
+                        ->orWhere('kd_obat', 'LIKE', '%' . $term . '%');
+                });
             });
 
         $rwobat->with([
-            'saldoawal' => function ($st) use ($blnLalu) {
+            'saldoawal' => function ($st) use ($previousMonthStart, $previousMonthEndExclusive) {
                 $st->select(
                     'stokopname.kdobat',
                     'stokopname.nopenerimaan',
@@ -154,7 +163,8 @@ class PersediaanFiFoController extends Controller
                 )
 
                     ->where('stokopname.jumlah', '!=', 0)
-                    ->where('stokopname.tglopname', 'LIKE', $blnLalu . '%')
+                    ->where('stokopname.tglopname', '>=', $previousMonthStart)
+                    ->where('stokopname.tglopname', '<', $previousMonthEndExclusive)
                     ->whereIn('stokopname.kdruang', ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104']);
                 if (request('jenis') == 'rekap') {
                     $st->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.nobatch');
@@ -162,7 +172,7 @@ class PersediaanFiFoController extends Controller
                     $st->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.tglopname', 'stokopname.nobatch');
                 }
             },
-            'penerimaanrinci' => function ($trm) {
+            'penerimaanrinci' => function ($trm) use ($monthStart, $monthEndExclusive) {
                 $trm->select(
                     'penerimaan_r.kdobat',
                     'penerimaan_r.nopenerimaan',
@@ -178,14 +188,15 @@ class PersediaanFiFoController extends Controller
                     ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
                     ->with('pbf:kode,nama')
                     ->where('penerimaan_h.kunci', '1')
-                    ->where('penerimaan_h.tglpenerimaan', 'LIKE', '%' .  request('tahun') . '-' . request('bulan') . '%');
+                    ->where('penerimaan_h.tglpenerimaan', '>=', $monthStart)
+                    ->where('penerimaan_h.tglpenerimaan', '<', $monthEndExclusive);
                 // if (request('jenis') == 'rekap') {
                 //     $trm->groupBy('penerimaan_r.kdobat');
                 // } else {
                 $trm->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan', 'penerimaan_r.no_batch');
                 // }
             },
-            'resepkeluar' => function ($kel) {
+            'resepkeluar' => function ($kel) use ($monthStart, $monthEndExclusive) {
                 $kel->select(
                     'resep_keluar_r.noresep',
                     'resep_keluar_r.kdobat',
@@ -198,7 +209,8 @@ class PersediaanFiFoController extends Controller
                 )
                     ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
                     ->havingRaw('jumlah > 0')
-                    ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
+                    ->where('resep_keluar_h.tgl_selesai', '>=', $monthStart)
+                    ->where('resep_keluar_h.tgl_selesai', '<', $monthEndExclusive)
                     ->whereIn('resep_keluar_h.depo', ['Gd-04010102', 'Gd-05010101', 'Gd-02010104']) // ambil yang selain OK
                     ->with(
                         'header:noresep,norm',
@@ -211,7 +223,7 @@ class PersediaanFiFoController extends Controller
                 }
             },
             //// tambahan Ok
-            'resepkeluarok' => function ($kel) {
+            'resepkeluarok' => function ($kel) use ($monthStart, $monthEndExclusive) {
                 $kel->select(
                     'resep_keluar_r.noresep',
                     'resep_keluar_r.kdobat',
@@ -229,7 +241,8 @@ class PersediaanFiFoController extends Controller
                     })
                     ->whereNull('persiapan_operasi_rincis.noresep')
                     ->havingRaw('jumlah > 0')
-                    ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
+                    ->where('resep_keluar_h.tgl_selesai', '>=', $monthStart)
+                    ->where('resep_keluar_h.tgl_selesai', '<', $monthEndExclusive)
                     ->whereIn('resep_keluar_h.depo', ['Gd-04010103'])
                     ->with(
                         'header:noresep,norm',
@@ -243,7 +256,7 @@ class PersediaanFiFoController extends Controller
                 // ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'resep_keluar_r.noresep');
             },
 
-            'distribusipersiapan' => function ($dist) {
+            'distribusipersiapan' => function ($dist) use ($monthStart, $monthEndExclusive) {
                 $dist->select(
                     'persiapan_operasi_distribusis.kd_obat as kdobat',
                     'persiapan_operasi_distribusis.kd_obat',
@@ -265,7 +278,8 @@ class PersediaanFiFoController extends Controller
                         $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
                             ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                     })
-                    ->where('persiapan_operasis.tgl_distribusi', 'LIKE', '%' .  request('tahun') . '-' . request('bulan') . '%')
+                    ->where('persiapan_operasis.tgl_distribusi', '>=', $monthStart)
+                    ->where('persiapan_operasis.tgl_distribusi', '<', $monthEndExclusive)
                     ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
                     ->with([
                         'pasien:rs1,rs2',
@@ -277,7 +291,7 @@ class PersediaanFiFoController extends Controller
                 }
                 // ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
             },
-            'persiapanretur' => function ($dist) {
+            'persiapanretur' => function ($dist) use ($monthStart, $monthEndExclusive) {
                 $dist->select(
                     'persiapan_operasi_distribusis.kd_obat as kdobat',
                     'persiapan_operasi_distribusis.kd_obat',
@@ -302,7 +316,8 @@ class PersediaanFiFoController extends Controller
                         $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
                             ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                     })
-                    ->where('persiapan_operasis.tgl_retur', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
+                    ->where('persiapan_operasis.tgl_retur', '>=', $monthStart)
+                    ->where('persiapan_operasis.tgl_retur', '<', $monthEndExclusive)
                     ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
                     ->havingRaw('sum(persiapan_operasi_distribusis.jumlah_retur) > 0')
                     ->with([
@@ -316,7 +331,7 @@ class PersediaanFiFoController extends Controller
                 // ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
             },
             //// akhir OK ////
-            'resepkeluarracikan' => function ($kel) {
+            'resepkeluarracikan' => function ($kel) use ($monthStart, $monthEndExclusive) {
                 $kel->select(
                     'resep_keluar_racikan_r.noresep',
                     'resep_keluar_racikan_r.kdobat',
@@ -330,7 +345,8 @@ class PersediaanFiFoController extends Controller
                 )
                     ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_racikan_r.noresep')
                     ->havingRaw('jumlah > 0')
-                    ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' .  request('tahun') . '-' . request('bulan') . '%')
+                    ->where('resep_keluar_h.tgl_selesai', '>=', $monthStart)
+                    ->where('resep_keluar_h.tgl_selesai', '<', $monthEndExclusive)
                     ->with(
                         'header:noresep,norm',
                         'header.datapasien:rs1,rs2',
@@ -342,7 +358,7 @@ class PersediaanFiFoController extends Controller
                 }
                 // ->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan', 'resep_keluar_racikan_r.noresep');
             },
-            'returpenjualan' => function ($kel) {
+            'returpenjualan' => function ($kel) use ($monthStart, $monthEndExclusive) {
                 $kel->select(
                     'retur_penjualan_r.noresep',
                     'retur_penjualan_r.kdobat',
@@ -355,7 +371,8 @@ class PersediaanFiFoController extends Controller
                 )
                     ->join('retur_penjualan_h', 'retur_penjualan_h.noretur', '=', 'retur_penjualan_r.noretur')
                     ->havingRaw('jumlah > 0')
-                    ->where('retur_penjualan_h.tgl_retur', 'LIKE', '%' .  request('tahun') . '-' . request('bulan') . '%')
+                    ->where('retur_penjualan_h.tgl_retur', '>=', $monthStart)
+                    ->where('retur_penjualan_h.tgl_retur', '<', $monthEndExclusive)
                     ->with(
                         'header:noresep,norm',
                         'header.datapasien:rs1,rs2',
@@ -367,7 +384,7 @@ class PersediaanFiFoController extends Controller
                 }
                 // ->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan', 'retur_penjualan_r.noresep');
             },
-            'mutasikeluar' => function ($mut) {
+            'mutasikeluar' => function ($mut) use ($monthStart, $monthEndExclusive) {
                 $mut->select(
                     'mutasi_gudangdepo.no_permintaan',
                     'mutasi_gudangdepo.kd_obat',
@@ -383,7 +400,8 @@ class PersediaanFiFoController extends Controller
                     ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
                     ->havingRaw('jumlah > 0')
                     ->where('permintaan_h.dari', 'LIKE', 'R-%')
-                    ->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' .  request('tahun') . '-' . request('bulan') . '%')
+                    ->where('permintaan_h.tgl_kirim_depo', '>=', $monthStart)
+                    ->where('permintaan_h.tgl_kirim_depo', '<', $monthEndExclusive)
                     ->with([
                         'ruangan:kode,uraian',
                     ]);
@@ -394,7 +412,7 @@ class PersediaanFiFoController extends Controller
                 }
                 // ->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan');
             },
-            'penyesuaian' => function ($pak) {
+            'penyesuaian' => function ($pak) use ($monthStart, $monthEndExclusive) {
                 $pak->select(
                     'penyesuaian_stoks.kdobat',
                     'penyesuaian_stoks.nopenerimaan',
@@ -405,12 +423,13 @@ class PersediaanFiFoController extends Controller
 
                 )
                     ->join('stokreal', 'stokreal.id', '=', 'penyesuaian_stoks.stokreal_id')
-                    ->where('penyesuaian_stoks.tgl_penyesuaian', 'LIKE', '%' .  request('tahun') . '-' . request('bulan') . '%')
+                    ->where('penyesuaian_stoks.tgl_penyesuaian', '>=', $monthStart)
+                    ->where('penyesuaian_stoks.tgl_penyesuaian', '<', $monthEndExclusive)
                     ->where('penyesuaian_stoks.penyesuaian', '!=', 0)
                     ->groupBy('penyesuaian_stoks.kdobat', 'penyesuaian_stoks.nopenerimaan');
             },
 
-            'barangrusak' => function ($pak) {
+            'barangrusak' => function ($pak) use ($monthStart, $monthEndExclusive) {
                 $pak->select(
                     'kd_obat',
                     'kd_obat as kdobat',
@@ -422,12 +441,13 @@ class PersediaanFiFoController extends Controller
                     DB::raw('sum(jumlah * harga_net_default) as sub'),
 
                 )
-                    ->where('tgl_kunci', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                    ->where('tgl_kunci', '>=', $monthStart)
+                    ->where('tgl_kunci', '<', $monthEndExclusive)
                     ->where('kunci', '1')
                     ->whereIn('gudang', ['Gd-05010100', 'Gd-03010100'])
                     ->groupBy('kdobat', 'nopenerimaan_default');
             },
-            'returpbf' => function ($kel) {
+            'returpbf' => function ($kel) use ($monthStart, $monthEndExclusive) {
                 $kel->select(
                     'retur_penyedia_r.no_retur',
                     'retur_penyedia_r.kd_obat',
@@ -441,7 +461,8 @@ class PersediaanFiFoController extends Controller
                 )
                     ->join('retur_penyedia_h', 'retur_penyedia_h.no_retur', '=', 'retur_penyedia_r.no_retur')
                     ->havingRaw('jumlah > 0')
-                    ->where('retur_penyedia_h.tgl_kunci', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                    ->where('retur_penyedia_h.tgl_kunci', '>=', $monthStart)
+                    ->where('retur_penyedia_h.tgl_kunci', '<', $monthEndExclusive)
                     ->with(
                         'header.penyedia:kode,nama',
                     );
@@ -452,7 +473,7 @@ class PersediaanFiFoController extends Controller
                 }
                 // ->groupBy('retur_penyedia_r.kdobat', 'retur_penyedia_r.nopenerimaan', 'retur_penyedia_r.noresep');
             },
-            'pengembalianrincififo' => function ($kel) {
+            'pengembalianrincififo' => function ($kel) use ($monthStart, $monthEndExclusive) {
                 $kel->select(
                     'pengembalian_rinci_fifos.nopengembalian',
                     'pengembalian_rinci_fifos.kdobat',
@@ -466,7 +487,8 @@ class PersediaanFiFoController extends Controller
                 )
                     ->join('pengembalians', 'pengembalians.nopengembalian', '=', 'pengembalian_rinci_fifos.nopengembalian')
                     ->havingRaw('jumlah > 0')
-                    ->where('pengembalians.tgl_kunci', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                    ->where('pengembalians.tgl_kunci', '>=', $monthStart)
+                    ->where('pengembalians.tgl_kunci', '<', $monthEndExclusive)
                     ->with(
                         'header.penyedia:kode,nama',
                     );
@@ -478,8 +500,9 @@ class PersediaanFiFoController extends Controller
                 // ->groupBy('retur_penyedia_r.kdobat', 'retur_penyedia_r.nopenerimaan', 'retur_penyedia_r.noresep');
             },
             'daftarharga:kd_obat,nopenerimaan,harga',
-            'mutasikeluarngambang' => function ($kel) {
-                $kel->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' .  request('tahun') . '-' . request('bulan') . '%')
+            'mutasikeluarngambang' => function ($kel) use ($monthStart, $monthEndExclusive) {
+                $kel->where('permintaan_h.tgl_kirim_depo', '>=', $monthStart)
+                    ->where('permintaan_h.tgl_kirim_depo', '<', $monthEndExclusive)
                     ->with([
                         'depo:kode,nama',
                     ]);
@@ -489,8 +512,9 @@ class PersediaanFiFoController extends Controller
                     $kel->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan', 'mutasi_gudangdepo.no_permintaan');
                 }
             },
-            'mutasimasukngambang' => function ($kel) {
-                $kel->where('permintaan_h.tgl_terima_depo', 'LIKE', '%' .  request('tahun') . '-' . request('bulan') . '%')
+            'mutasimasukngambang' => function ($kel) use ($monthStart, $monthEndExclusive) {
+                $kel->where('permintaan_h.tgl_terima_depo', '>=', $monthStart)
+                    ->where('permintaan_h.tgl_terima_depo', '<', $monthEndExclusive)
                     ->with([
                         'depo:kode,nama',
                     ]);
@@ -506,9 +530,6 @@ class PersediaanFiFoController extends Controller
         // }
         $kirim = [];
         if (request('action') === 'download') {
-            // $obat = $rwobat->offset(0)
-            //     ->limit(300)
-            //     ->get();
             $obat = $rwobat->get();
             $obat->map(function ($it) {
                 $it->saldo = $it->saldoawal;
