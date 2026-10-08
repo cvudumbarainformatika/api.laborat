@@ -41,12 +41,7 @@ class NPK_LSController extends Controller
                 //  'npdls_rinci.*'
                 )->with('npdlsrinci', function ($query) {
                     $query
-                    // ->join('akun50_2024', 'akun50_2024.kodeall2', 'npdls_rinci.koderek50')
-                    ->leftJoin('akun50_2024', function ($join) {
-                        $join->on('npdls_rinci.koderek50', '=', 'akun50_2024.kodeall2')
-                            ->orOn('npdls_rinci.koderek50', '=', 'akun50_2024.kodeall3');
-                            
-                    })
+                    ->join('akun50_2024', 'akun50_2024.kodeall2', 'npdls_rinci.koderek50')
                     ->select(
                         'npdls_rinci.nonpdls',
                         'npdls_rinci.nominalpembayaran as pengajuan',
