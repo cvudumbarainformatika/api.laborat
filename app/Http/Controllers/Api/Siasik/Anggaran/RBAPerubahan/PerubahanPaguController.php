@@ -33,8 +33,8 @@ class PerubahanPaguController extends Controller
         if ($q) {
             $query->where(function ($w) use ($q) {
                 $w->where('kegiatan_blud.nomenklatur', 'like', "%{$q}%")
-                ->orWhere('penetapan_pagu.namaorganisasi', 'like', "%{$q}%")
-                ->orWhere('penetapan_pagu.total', 'like', "%{$q}%");
+                ->orWhere('penetapan_pagu_pak.namaorganisasi', 'like', "%{$q}%")
+                ->orWhere('penetapan_pagu_pak.total', 'like', "%{$q}%");
             });
         }
 
