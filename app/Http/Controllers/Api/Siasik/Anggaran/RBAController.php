@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Header;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Anggaran\Perubahan_pak_header;
-use App\Models\Siasik\Anggaran\Perubahan_pak_rinci;
+// use App\Models\Siasik\Anggaran\Perubahan_pak_rinci;
 use App\Models\Siasik\Anggaran\Tampungcopy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -83,6 +83,7 @@ class RBAController extends Controller
                 'penyesesuaianperioritas_rinci.satuan as satuanawal',
                 'akun50_2024.kodeall3 as kode',
                 'akun50_2024.uraian as uraian',
+                'mappingpptkkegiatan.kegiatan',
                 DB::raw('0 as pagu'),
                 DB::raw('0 as harga'),
                 DB::raw('0 as volume'),
@@ -97,7 +98,7 @@ class RBAController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(penyesesuaianperioritas_rinci.koderek50, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(penyesesuaianperioritas_rinci.koderek50, ".", 5) LIMIT 1) as uraian5'),
             )
-            
+            ->join('mappingpptkkegiatan', 'mappingpptkkegiatan.kodekegiatan', '=', 'penyesesuaianperioritas_heder.kodekegiatan')
             ->get();
 
 
@@ -168,7 +169,7 @@ class RBAController extends Controller
                 'usulanHonor_h_pak.kodeKegiatan as kodekegiatan',
                 'usulanHonor_h_pak.ruangan as bidang',
                 'usulanHonor_h_pak.kodebagian as kodebidang',
-                
+                'mappingpptkkegiatan.kegiatan',
                 'akun50_2024.kodeall3 as kode',
                 'akun50_2024.uraian as uraian',
                 DB::raw('0 as paguawal'),
@@ -185,6 +186,7 @@ class RBAController extends Controller
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(usulanHonor_r_pak.koderek50, ".", 4) LIMIT 1) as uraian4'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(usulanHonor_r_pak.koderek50, ".", 5) LIMIT 1) as uraian5')
             )
+            ->join('mappingpptkkegiatan', 'mappingpptkkegiatan.kodekegiatan', '=', 'usulanHonor_h_pak.kodeKegiatan')
             // ->where('r.koderek50', $request->koderek50)
             ->orderBy('kode', 'asc')
             ->get();
