@@ -11,6 +11,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Faktur;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliR;
@@ -22,6 +23,18 @@ use Illuminate\Support\Facades\DB;
 
 class PenerimaanController extends Controller
 {
+    private static function hitungUlangTotalFaktur($nopenerimaan)
+    {
+        $total = PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->sum('subtotal');
+
+        PenerimaanHeder::where('nopenerimaan', $nopenerimaan)
+            ->update(['total_faktur_pbf' => $total]);
+        Faktur::where('nopenerimaan', $nopenerimaan)
+            ->update(['total_faktur' => $total]);
+
+        return $total;
+    }
+
     public function listpemesananfix()
     {
         $supl = [];
@@ -152,16 +165,8 @@ class PenerimaanController extends Controller
                 PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
                 return new JsonResponse(['message' => 'Data Heder Gagal Disimpan...!!!'], 500);
             }
-            if ($request->jenissurat === 'Faktur') {
-                $sub = PenerimaanRinci::selectRaw('sum(subtotal) as total')->where('nopenerimaan', $nopenerimaan)->groupBy('nopenerimaan')->first();
-                if ($sub) {
-                    $head = PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first();
-                    if ($head) {
-                        $head->total_faktur_pbf = $sub->total;
-                        $head->save();
-                    }
-                }
-            }
+            $total = self::hitungUlangTotalFaktur($nopenerimaan);
+            $simpanheder->total_faktur_pbf = $total;
             $stokrealsimpan = StokrealController::stokreal($nopenerimaan, $request);
             if ($stokrealsimpan !== 200) {
 
@@ -613,6 +618,9 @@ class PenerimaanController extends Controller
                 return new JsonResponse(['message' => 'Gagal Tersimpan Ke Stok...!!!'], 410);
             }
 
+            $total = self::hitungUlangTotalFaktur($nopenerimaan);
+            $simpanheder->total_faktur_pbf = $total;
+
             DB::connection('farmasi')->commit();
             $simpanrinci->load('masterobat:kd_obat,nama_obat,satuan_b');
             return new JsonResponse([
@@ -687,60 +695,62 @@ class PenerimaanController extends Controller
     }
     public function batalRinci(Request $request)
     {
-        $penerimaanH = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first();
-        $penerimaanR = PenerimaanRinci::find($request->id);
-        if (!$penerimaanR) {
-            return new JsonResponse(['message' => 'gagal dihapus, data tidak ditemukan'], 410);
-        }
-        $pemesananH = PemesananHeder::where('nopemesanan', $penerimaanH->nopemesanan)->first();
+        try {
+            return DB::connection('farmasi')->transaction(function () use ($request) {
+                $penerimaanH = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)
+                    ->lockForUpdate()->first();
+                $penerimaanR = PenerimaanRinci::where('nopenerimaan', $request->nopenerimaan)
+                    ->where('id', $request->id)->first();
+                if (!$penerimaanH || !$penerimaanR) {
+                    return new JsonResponse(['message' => 'gagal dihapus, data tidak ditemukan'], 410);
+                }
 
-        $pemesananR = PemesananRinci::where('nopemesanan', $penerimaanH->nopemesanan)
-            ->where('kdobat', $penerimaanR->kdobat)
-            ->get();
+                $pemesananH = PemesananHeder::where('nopemesanan', $penerimaanH->nopemesanan)->first();
+                $pemesananR = PemesananRinci::where('nopemesanan', $penerimaanH->nopemesanan)
+                    ->where('kdobat', $penerimaanR->kdobat)->get();
 
-        if (count($pemesananR) > 0) {
-            if (count($pemesananR) > 1) {
                 foreach ($pemesananR as $it) {
                     $it->flag = '';
                     $it->save();
-                    $pemesananR[] = $it;
                 }
-            } else {
-                $pemesananR[0]->flag = '';
-                $pemesananR[0]->save();
-            }
+
+                if ($pemesananH) {
+                    $pemesananH->flag = '1';
+                    $pemesananH->save();
+                }
+
+                $stok = Stokreal::where('nopenerimaan', $request->nopenerimaan)
+                    ->where('kdobat', $penerimaanR->kdobat)
+                    ->where('nobatch', $penerimaanR->no_batch)
+                    ->where('flag', '1')->get();
+                foreach ($stok as $st) {
+                    $st->delete();
+                }
+
+                $penerimaanR->delete();
+
+                $total = self::hitungUlangTotalFaktur($request->nopenerimaan);
+                $penerimaanH->total_faktur_pbf = $total;
+                $allRinci = PenerimaanRinci::where('nopenerimaan', $request->nopenerimaan)->get();
+                if ($allRinci->isEmpty()) {
+                    $penerimaanH->delete();
+                }
+
+                return new JsonResponse([
+                    'message' => 'Data Berhasil dihapus',
+                    'pemesanan header' => $pemesananH,
+                    'pemesanan rinci' => $pemesananR,
+                    'penerimaan header' => $penerimaanH,
+                    'penerimaan rinci' => $penerimaanR,
+                    'all rinci' => $allRinci,
+                    'total' => $total,
+                ]);
+            });
+        } catch (\Throwable $e) {
+            return new JsonResponse([
+                'message' => 'Gagal menghapus rincian: ' . $e->getMessage(),
+            ], 500);
         }
-
-        if ($pemesananH) {
-            $pemesananH->flag = '1';
-            $pemesananH->save();
-        }
-
-        $stok = Stokreal::where('nopenerimaan', $request->nopenerimaan)
-            ->where('kdobat', $penerimaanR->kdobat)
-            ->where('nobatch', $penerimaanR->no_batch)
-            ->where('flag', '1')->get();
-        if (count($stok)) {
-            foreach ($stok as $st) {
-                $st->delete();
-            }
-        }
-
-        $penerimaanR->delete();
-
-        $allRinci = PenerimaanRinci::where('nopenerimaan', $request->nopenerimaan)->get();
-        if (count($allRinci) <= 0) {
-            $penerimaanH->delete();
-        }
-        return new JsonResponse([
-            'message' => 'Data Berhasil dihapus',
-            'pemesanan header' => $pemesananH,
-            'pemesanan rinci' => $pemesananR,
-            'penerimaan header' => $penerimaanH,
-            'penerimaan rinci' => $penerimaanR,
-            'all rinci' => $allRinci,
-
-        ]);
     }
 
     public function listepenerimaanBynomor()

@@ -40,7 +40,7 @@ class PemakaianObatController extends Controller
                         'kdobat',
                         DB::raw('sum(jumlah) as jumlah')
                     )
-                        ->where('tglopname', 'LIKE', '%' . $blnLaluAkhir . '%')
+                        ->where('tglopname', 'LIKE', $blnLaluAkhir . '%')
                         ->whereIn('kdruang', $gudangdepo)
                         ->groupBy('tglopname', 'kdobat');
                 },
@@ -102,9 +102,8 @@ class PemakaianObatController extends Controller
                         ->whereBetween('retur_penjualan_h.tgl_retur', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
                         ->groupBy('resep_keluar_h.sistembayar', 'retur_penjualan_r.kdobat');
                 }
-            ])
-            // ->where('nama_obat', 'LIKE', '%oksi%')
-            ->get();
+            ]);
+        $obat = $obat->get();
         $obat->append('harga');
         return new JsonResponse([
             'data' => $obat,
