@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Simrs\Kasir\IgdController;
 use App\Http\Controllers\Api\Simrs\Kasir\IgdPaymentController;
 use App\Http\Controllers\Api\Simrs\Kasir\KasirrajalController;
 use App\Http\Controllers\Api\Simrs\Kasir\PasienLuarController;
+use App\Http\Controllers\Api\Simrs\Kasir\UangJaminanController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -54,6 +55,10 @@ Route::group([
     Route::get('/va/listva', [FlagingManualVaController::class, 'listva']);
     Route::post('/va/flagingmanualva', [FlagingManualVaController::class, 'flagingmanual']);
     Route::post('/va/batal-va', [FlagingManualVaController::class, 'batalva']);
+
+    Route::get('/uang-jaminan', [UangJaminanController::class, 'index']);
+    Route::get('/uang-jaminan/pasien', [UangJaminanController::class, 'pasien']);
+    Route::post('/uang-jaminan', [UangJaminanController::class, 'simpan']);
 
     Route::post('/rajal/batalkwitansi', [KasirrajalController::class, 'batalkwitansi']);
 
