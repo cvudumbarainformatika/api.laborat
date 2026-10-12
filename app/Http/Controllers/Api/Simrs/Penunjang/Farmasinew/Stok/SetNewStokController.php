@@ -671,6 +671,7 @@ class SetNewStokController extends Controller
                 //     'sisa' => $sisa,
                 // ];
                 $err = [];
+                $hasil = [];
                 if ((float)$sisa != (float)$tts) {
                     $ada = $sisa;
                     $index = 0;
@@ -816,7 +817,7 @@ class SetNewStokController extends Controller
                     'mutkel' => $mutkel,
                     'rus' => $rus,
                     'retG' => $retG,
-                    'hasil' => $hasil,
+                    'hasil' => $hasil ?? [],
                     // 'stok' => $stok ?? [],
                     'message' => $message
                 ];
@@ -1491,7 +1492,9 @@ class SetNewStokController extends Controller
             return [
                 'result' => '' . $e,
                 'err' =>  $e,
-                'data' => $data,
+                'data' => array_merge($data ?? [], [
+                    'message' => $e->getMessage() ?: 'Terjadi kesalahan saat perbaikan stok'
+                ]),
                 'status' => 410
             ];
         }
