@@ -482,15 +482,15 @@ class AsesmenUlangController extends Controller
             'penyakit_penyerta' => $request->penyakit_penyerta ?? 'tidak',
             'ket_penyakit_penyerta' => $request->ket_penyakit_penyerta,
 
-            // Section B
-            'b_tahu_penyakit' => $request->b_tahu_penyakit ?? 'tahu',
-            'b_sumber_info' => $request->b_sumber_info ?? 'dokter',
-            'b_info_jangka' => $request->b_info_jangka ?? 'tidak',
-            'b_durasi_pengobatan' => $request->b_durasi_pengobatan,
-            'b_pemeriksaan_rutin' => $request->b_pemeriksaan_rutin ?? 'tidak',
-            'b_tempat_rutin' => $request->b_tempat_rutin,
-            'b_dirawat_terpisah' => $request->b_dirawat_terpisah ?? 'tidak',
-            'b_tempat_terpisah' => $request->b_tempat_terpisah,
+            // Section B (hanya simpan jika diisi, jika kosong simpan null)
+            'b_tahu_penyakit' => $request->filled('b_tahu_penyakit') ? $request->b_tahu_penyakit : null,
+            'b_sumber_info' => $request->filled('b_sumber_info') ? $request->b_sumber_info : null,
+            'b_info_jangka' => $request->filled('b_info_jangka') ? $request->b_info_jangka : null,
+            'b_durasi_pengobatan' => $request->filled('b_durasi_pengobatan') ? $request->b_durasi_pengobatan : null,
+            'b_pemeriksaan_rutin' => $request->filled('b_pemeriksaan_rutin') ? $request->b_pemeriksaan_rutin : null,
+            'b_tempat_rutin' => $request->filled('b_tempat_rutin') ? $request->b_tempat_rutin : null,
+            'b_dirawat_terpisah' => $request->filled('b_dirawat_terpisah') ? $request->b_dirawat_terpisah : null,
+            'b_tempat_terpisah' => $request->filled('b_tempat_terpisah') ? $request->b_tempat_terpisah : null,
 
             // Section C & D
             'analisa_masalah' => $request->analisa_masalah,
