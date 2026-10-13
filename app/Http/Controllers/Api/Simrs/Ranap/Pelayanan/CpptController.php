@@ -1036,34 +1036,34 @@ class CpptController extends Controller
 
   public function simpanNotasiDpjp(Request $request)
   {
+    $petugas = Petugas::find(auth()->user()->pegawai_id);
+    $kdpegsimrs = $petugas->kdpegsimrs ?? auth()->user()->username;
 
-    // return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'data' => $request->all()], 200);
-    $user = Pegawai::find(auth()->user()->pegawai_id);
-    $kdpegsimrs = $user->kdpegsimrs;
+    $notasi = $request->notasi;
+    if ($notasi === null || trim($notasi) === '') {
+      $notasi = 'Terverifikasi oleh DPJP';
+    }
 
     // Cek apakah record sudah ada
     $existingRecord = NotasiDpjp::where('cppt_id', $request->cppt_id)->first();
     $data = null;
     if ($existingRecord) {
-      // Jika record sudah ada, jangan update tanggal dan jam
+      // Jika record sudah ada, update notasi dan user DPJP pengubah/verifikator
       $data = NotasiDpjp::updateOrCreate(
         ['cppt_id' => $request->cppt_id],
         [
-          // 'noreg' => $request->noreg,
-          // 'norm' => $request->norm,
-          'notasi' => $request->notasi,
-          // 'user' => $kdpegsimrs
+          'notasi' => $notasi,
+          'user' => $kdpegsimrs
         ]
       );
     } else {
       // Jika record belum ada, buat dengan tanggal dan jam saat ini
       $data = NotasiDpjp::create(
-        // ['cppt_id' => $request->cppt_id],
         [
           'cppt_id' => $request->cppt_id,
           'noreg' => $request->noreg,
           'norm' => $request->norm,
-          'notasi' => $request->notasi,
+          'notasi' => $notasi,
           'tanggal' => date('Y-m-d'),
           'jam' => date('H:i:s'),
           'user' => $kdpegsimrs

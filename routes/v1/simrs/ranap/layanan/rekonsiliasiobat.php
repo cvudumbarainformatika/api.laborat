@@ -12,4 +12,5 @@ Route::group([
     Route::post('/simpanpersetujuan', [RekonsiliasiObatController::class, 'simpanpersetujuan']);
     Route::post('/hapuspersetujuan', [RekonsiliasiObatController::class, 'hapuspersetujuan']);
     Route::get('/list', [RekonsiliasiObatController::class, 'list']);
+    Route::get('/riwayat-anamnesis', [RekonsiliasiObatController::class, 'riwayatPengobatanAnamnesis']);
 });
