@@ -674,7 +674,10 @@ class PoliController extends Controller
                         ->orderBy('id', 'DESC');
                 },
                 'prmrjflag',
-                'prmrjhis'
+                'prmrjhis',
+                'informconcern' => function ($informconcern) {
+                    $informconcern->orderBy('id', 'DESC');
+                }
                 // ini buat satset
                 // resep keluar fix
                 // 'apotek' => function ($apot) {
