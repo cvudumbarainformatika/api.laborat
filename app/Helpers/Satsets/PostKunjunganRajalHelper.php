@@ -4350,10 +4350,8 @@ class PostKunjunganRajalHelper
             "resource" => [
                 "resourceType" => "Composition",
                 "identifier" => [
-                    [
-                        "system" => "http://sys-ids.kemkes.go.id/composition/" . $organization_id,
-                        "value" => "RESUME-RAJAL-" . ($request->noreg ?? $request->rs1)
-                    ]
+                    "system" => "http://sys-ids.kemkes.go.id/composition/" . $organization_id,
+                    "value" => "RESUME-RAJAL-" . ($request->noreg ?? $request->rs1)
                 ],
                 "status" => "final",
                 "type" => [
