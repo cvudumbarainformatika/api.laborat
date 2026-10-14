@@ -1149,7 +1149,7 @@ class RanapController extends Controller
                     $q->with([
                         'petugas:kdpegsimrs,nik,nama,kdgroupnakes',
                         'notasiDpjp' => function ($query) {
-                            $query->select('cppt_notasi.cppt_id', 'cppt_notasi.notasi', 'cppt_notasi.tanggal', 'cppt_notasi.jam', 'cppt_notasi.user')->with('petugas:kdpegsimrs,nik,nama,kdgroupnakes');
+                            $query->select('cppt_notasi.id', 'cppt_notasi.cppt_id', 'cppt_notasi.notasi', 'cppt_notasi.tanggal', 'cppt_notasi.jam', 'cppt_notasi.user', 'cppt_notasi.created_at')->with('petugas:kdpegsimrs,nik,nama,kdgroupnakes');
                         },
                         'anamnesis' => function ($query) {
                             $query->select(

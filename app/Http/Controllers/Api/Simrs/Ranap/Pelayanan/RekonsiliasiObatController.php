@@ -149,4 +149,43 @@ class RekonsiliasiObatController extends Controller
         $cari->delete();
         return new JsonResponse(['message' => 'Data persetujuan berhasil dihapus'], 200);
     }
+
+    public function riwayatPengobatanAnamnesis()
+    {
+        $norm = request('norm');
+        $noreg = request('noreg');
+
+        if (!$norm && !$noreg) {
+            return new JsonResponse([], 200);
+        }
+
+        $query = \App\Models\Simrs\Anamnesis\Anamnesis::select([
+            'rs209.id',
+            'rs209.rs1 as noreg',
+            'rs209.rs2 as norm',
+            'rs209.rs3 as tgl',
+            'rs209.rs4 as keluhanUtama',
+            'rs209.riwayatpengobatan',
+            'rs209.kdruang',
+            'rs209.user'
+        ])
+        ->leftJoin('kepegx.pegawai as pegawai', 'rs209.user', '=', 'pegawai.kdpegsimrs')
+        ->selectRaw('pegawai.nama as petugas')
+        ->whereNotNull('rs209.riwayatpengobatan')
+        ->where('rs209.riwayatpengobatan', '!=', '')
+        ->where('rs209.riwayatpengobatan', '!=', '-');
+
+        if ($norm) {
+            $query->where('rs209.rs2', $norm);
+        } else {
+            $query->where('rs209.rs1', $noreg);
+        }
+
+        $data = $query->orderBy('rs209.rs3', 'DESC')
+            ->orderBy('rs209.id', 'DESC')
+            ->limit(30)
+            ->get();
+
+        return new JsonResponse($data, 200);
+    }
 }

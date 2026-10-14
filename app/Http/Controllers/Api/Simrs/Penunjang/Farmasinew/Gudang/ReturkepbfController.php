@@ -228,6 +228,29 @@ class ReturkepbfController extends Controller
         //     'message' => 'Cek Data cuy'
         // ]);
 
+        if (!in_array($request->opsiretur, ['barang', 'uang', 'recall', 'konsinyasi'], true)) {
+            return new JsonResponse(['message' => 'Opsi retur tidak valid'], 422);
+        }
+        if (!in_array($request->kondisi_barang, ['Baik', 'Rusak', 'Kadalwarsa'], true)) {
+            return new JsonResponse(['message' => 'Kondisi barang tidak valid'], 422);
+        }
+
+        $jumlahRetur = $request->jumlah_retur;
+        if (!is_numeric($jumlahRetur) || (float)$jumlahRetur <= 0) {
+            return new JsonResponse(['message' => 'Jumlah retur harus lebih dari 0'], 422);
+        }
+
+        if ($request->flag_tbl_rusak !== '1') {
+            $stok = Stokrel::where('kdobat', $request->kd_obat)
+                ->where('nopenerimaan', $request->nopenerimaan)
+                ->where('nobatch', $request->no_batch)
+                ->where('kdruang', $request->kd_ruang)
+                ->first();
+            if (!$stok || (float)$stok->jumlah < (float)$jumlahRetur) {
+                return new JsonResponse(['message' => 'Stok pada penerimaan dan batch tersebut tidak mencukupi'], 422);
+            }
+        }
+
         try {
             DB::connection('farmasi')->beginTransaction();
             if ($request->no_retur == '' || $request->no_retur == null) {
@@ -335,36 +358,66 @@ class ReturkepbfController extends Controller
         try {
             DB::connection('farmasi')->beginTransaction();
 
-            $data = Returpbfheder::where('no_retur', $request->no_retur)->first();
+            $data = Returpbfheder::where('no_retur', $request->no_retur)->lockForUpdate()->first();
             if (!$data) {
+                DB::connection('farmasi')->rollBack();
                 return new JsonResponse(['message' => 'Data Retur Tidak ditemukan, Data tidak terkunci'], 410);
+            }
+            if ((string)$data->kunci === '1') {
+                DB::connection('farmasi')->rollBack();
+                return new JsonResponse(['message' => 'Retur sudah terkunci'], 410);
             }
             $rinci = Returpbfrinci::where('no_retur', $request->no_retur)->get();
             if (count($rinci) <= 0) {
+                DB::connection('farmasi')->rollBack();
                 return new JsonResponse(['message' => 'Data Obat Tidak ditemukan, Data tidak terkunci'], 410);
             }
+
+            $stokPerBatch = [];
             foreach ($rinci as $key) {
                 if ($key['flag_tbl_rusak'] !== '1') {
-                    $stok = Stokrel::where('kdobat', $key['kd_obat'])
-                        ->where('nopenerimaan', $key['nopenerimaan_default'])
-                        ->where('nobatch', $key['no_batch_default'])
-                        ->where('kdruang', $data->gudang)
-                        ->first();
-                    if (!$stok) {
-                        return new JsonResponse([
-                            'message' => 'Data Stok Tidak ditemukan, Data tidak terkunci',
-                        ], 410);
+                    $stokKey = hash('sha256', implode("\0", [
+                        $key['kd_obat'],
+                        $key['nopenerimaan_default'],
+                        $key['no_batch_default'],
+                        $data->gudang,
+                    ]));
+                    if (!isset($stokPerBatch[$stokKey])) {
+                        $stok = Stokrel::where('kdobat', $key['kd_obat'])
+                            ->where('nopenerimaan', $key['nopenerimaan_default'])
+                            ->where('nobatch', $key['no_batch_default'])
+                            ->where('kdruang', $data->gudang)
+                            ->lockForUpdate()
+                            ->first();
+                        $stokPerBatch[$stokKey] = [
+                            'stok' => $stok,
+                            'jumlah_retur' => 0,
+                        ];
                     }
-                    $adaStok = (float)$stok->jumlah;
-                    if ($adaStok < $key['jumlah_retur']) {
-                        return new JsonResponse([
-                            'message' => 'Data Stok Tidak mencukupi, Data tidak terkunci',
-                        ], 410);
-                    }
-                    $jumlahStok = (float)$stok->jumlah - (float)$key['jumlah_retur'];
-                    $stok->jumlah = $jumlahStok;
-                    $stok->save();
+                    $stokPerBatch[$stokKey]['jumlah_retur'] += (float)$key['jumlah_retur'];
                 }
+            }
+
+            foreach ($stokPerBatch as $stokData) {
+                $stok = $stokData['stok'];
+                if (!$stok) {
+                    DB::connection('farmasi')->rollBack();
+                    return new JsonResponse([
+                        'message' => 'Data Stok Tidak ditemukan, Data tidak terkunci',
+                    ], 410);
+                }
+                $adaStok = (float)$stok->jumlah;
+                if ($adaStok < $stokData['jumlah_retur']) {
+                    DB::connection('farmasi')->rollBack();
+                    return new JsonResponse([
+                        'message' => 'Data Stok Tidak mencukupi, Data tidak terkunci',
+                    ], 410);
+                }
+            }
+
+            foreach ($stokPerBatch as $stokData) {
+                $stokData['stok']->jumlah = (float)$stokData['stok']->jumlah - $stokData['jumlah_retur'];
+                $stokData['stok']->save();
             }
             $data->kunci = '1';
             $data->tgl_kunci = date('Y-m-d H:i:s');
@@ -389,6 +442,9 @@ class ReturkepbfController extends Controller
         if (!$head) {
             return new JsonResponse(['message' => 'Data tidak ditemukan'], 410);
         }
+        if ((string)$head->kunci === '1') {
+            return new JsonResponse(['message' => 'Retur yang sudah terkunci tidak dapat dihapus'], 410);
+        }
         // menhapus rinci
         $rinci = Returpbfrinci::where('no_retur', $request->no_retur)->get();
         // $stok = [];
@@ -399,9 +455,11 @@ class ReturkepbfController extends Controller
                     ->where('nopenerimaan', $key['nopenerimaan'])
                     ->where('nobatch', $key['no_batch'])
                     ->first();
-                $barangRusak->tgl_retur = null;
-                $barangRusak->user_retur = '';
-                $barangRusak->save();
+                if ($barangRusak) {
+                    $barangRusak->tgl_retur = null;
+                    $barangRusak->user_retur = '';
+                    $barangRusak->save();
+                }
             }
             // menambahkan stok setiap obat di rinci
             // $stokNya = Stokrel::where('kdobat', $key['kd_obat'])
@@ -434,24 +492,37 @@ class ReturkepbfController extends Controller
     }
     public function deleteRinci(Request $request)
     {
+        $head = Returpbfheder::where('no_retur', $request->no_retur)->first();
+        if (!$head) {
+            return new JsonResponse(['message' => 'Data retur tidak ditemukan'], 410);
+        }
+        if ((string)$head->kunci === '1') {
+            return new JsonResponse(['message' => 'Rincian retur yang sudah terkunci tidak dapat dihapus'], 410);
+        }
+
         // hitung jumlah rinci
         $count = Returpbfrinci::where('no_retur', $request->no_retur)->count();
         // menghapus rinci
         $data = Returpbfrinci::where('no_retur', $request->no_retur)
             ->where('kd_obat', $request->kd_obat)
             ->where('nopenerimaan', $request->nopenerimaan)
+            ->where('no_batch', $request->no_batch)
             ->first();
         if (!$data) {
             return new JsonResponse(['message' => 'Data Obat tidak ditemukan'], 410);
         }
         // mengembalikan barang rusak
-        $barangRusak = BarangRusak::where('kd_obat', $request->kd_obat)
-            ->where('nopenerimaan', $request->nopenerimaan)
-            ->where('nobatch', $request->no_batch)
-            ->first();
-        $barangRusak->tgl_retur = null;
-        $barangRusak->user_retur = '';
-        $barangRusak->save();
+        if ($data->flag_tbl_rusak === '1') {
+            $barangRusak = BarangRusak::where('kd_obat', $request->kd_obat)
+                ->where('nopenerimaan', $request->nopenerimaan)
+                ->where('nobatch', $request->no_batch)
+                ->first();
+            if ($barangRusak) {
+                $barangRusak->tgl_retur = null;
+                $barangRusak->user_retur = '';
+                $barangRusak->save();
+            }
+        }
         // mngembalikan stok di rinci
         // $stok = Stokrel::where('kdobat', $request->kd_obat)
         //     ->where('nopenerimaan', $request->nopenerimaan)

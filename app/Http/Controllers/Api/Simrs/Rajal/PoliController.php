@@ -570,7 +570,7 @@ class PoliController extends Controller
                     ])->orderBy('id', 'DESC');
                 },
                 'hasilradiologi' => function ($t) {
-                    $t->orderBy('id', 'DESC');
+                    $t->with('dokterRadiologi:nama,kdpegsimrs')->orderBy('id', 'DESC');
                 },
                 'penunjanglain' => function ($t) {
                     $t->with('masterpenunjang')->orderBy('id', 'DESC');
@@ -674,7 +674,10 @@ class PoliController extends Controller
                         ->orderBy('id', 'DESC');
                 },
                 'prmrjflag',
-                'prmrjhis'
+                'prmrjhis',
+                'informconcern' => function ($informconcern) {
+                    $informconcern->orderBy('id', 'DESC');
+                }
                 // ini buat satset
                 // resep keluar fix
                 // 'apotek' => function ($apot) {

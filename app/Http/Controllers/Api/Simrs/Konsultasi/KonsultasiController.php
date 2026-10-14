@@ -44,6 +44,14 @@ class KonsultasiController extends Controller
 
 
         $user = FormatingHelper::session_user();
+        $userSimrs = $user['kodesimrs'] ?? '';
+
+        if (!empty($userSimrs) && $request->kddokterkonsul === $userSimrs) {
+            return new JsonResponse([
+                'message' => 'Mohon Maaf, dipastikan Dokter tujuan Konsul Berbeda dengan yg Mengajukan Konsulan ...'
+            ], 422);
+        }
+
         $tglInput = date('Y-m-d H:i:s');
 
         $data = null;

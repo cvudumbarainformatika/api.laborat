@@ -21,5 +21,5 @@ Route::group([
     //     return new JsonResponse($data);
     // });
     Route::post('/simpan', [TargetController::class, 'simpan']);
-    
+    Route::post('/verif', [TargetController::class, 'verif']);
 });

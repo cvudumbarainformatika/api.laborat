@@ -1314,10 +1314,8 @@ class PostKunjunganIgdHelper
             "resource" => [
                 "resourceType" => "Composition",
                 "identifier" => [
-                    [
-                        "system" => "http://sys-ids.kemkes.go.id/composition/" . $organization_id,
-                        "value" => "RESUME-IGD-" . ($request->noreg ?? $request->rs1)
-                    ]
+                    "system" => "http://sys-ids.kemkes.go.id/composition/" . $organization_id,
+                    "value" => "RESUME-IGD-" . ($request->noreg ?? $request->rs1)
                 ],
                 "status" => "final",
                 "type" => [
