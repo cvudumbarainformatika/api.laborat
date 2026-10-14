@@ -493,6 +493,16 @@ class PoliController extends Controller
 
     public function flagfinish(Request $request)
     {
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+        if ($user->kdgroupnakes !== 1 && $user->kdgroupnakes !== '1') {
+            return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
+        }
+
+        $memo = Memodiagnosadokter::where('noreg', $request->noreg)->first();
+        if (!$memo || empty(trim($memo->diagnosa ?? ''))) {
+            return new JsonResponse(['message' => 'Maaf, Memo Diagnosa Harap Diisi Dahulu...'], 500);
+        }
+
         $input = new Request([
             'noreg' => $request->noreg
         ]);
@@ -501,16 +511,12 @@ class PoliController extends Controller
         if ($cek === 0 || $cek === '') {
             BridantrianbpjsController::updateWaktu($input, 5);
         }
-        $user = Pegawai::find(auth()->user()->pegawai_id);
-        if ($user->kdgroupnakes === 1 || $user->kdgroupnakes === '1') {
-            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-            $updatekunjungan->rs19 = '1';
-            $updatekunjungan->rs24 = '1';
-            $updatekunjungan->save();
-            return new JsonResponse(['message' => 'ok'], 200);
-        } else {
-            return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
-        }
+
+        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+        $updatekunjungan->rs19 = '1';
+        $updatekunjungan->rs24 = '1';
+        $updatekunjungan->save();
+        return new JsonResponse(['message' => 'ok'], 200);
     }
 
     public function terimapasien(Request $request)
