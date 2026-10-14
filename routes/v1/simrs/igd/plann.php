@@ -10,6 +10,9 @@ Route::group([
     'prefix' => 'simrs/planing/igd'
 ],function () {
     Route::post('/simpanranap', [PlannController::class, 'simpanranap']);
+    Route::post('/simpanobatrujukan', [PlannController::class, 'simpanobatrujukan']);
+    Route::post('/ubahobatrujukan', [PlannController::class, 'ubahobatrujukan']);
+    Route::post('/hapusobatrujukan', [PlannController::class, 'hapusobatrujukan']);
     Route::post('/simpanskalatransfer', [SkalaTransferIgd::class, 'simpan']);
 
     Route::post('/hapusskalatransfer', [SkalaTransferIgd::class, 'hapusskalatransfer']);

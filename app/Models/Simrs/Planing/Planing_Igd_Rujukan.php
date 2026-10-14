@@ -10,4 +10,9 @@ class Planing_Igd_Rujukan extends Model
     use HasFactory;
     protected $table = 'plann_igd_rujukan';
     protected $guarded = ['id'];
+
+    public function obatrujukan()
+    {
+        return $this->hasMany(PlannIgdRujukanObat::class, 'id_rujukan', 'id');
+    }
 }
