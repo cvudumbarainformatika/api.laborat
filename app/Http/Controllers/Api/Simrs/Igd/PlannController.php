@@ -8,6 +8,7 @@ use App\Models\Simrs\Planing\Planing_Igd_Lama;
 use App\Models\Simrs\Planing\Planing_Igd_Pulang;
 use App\Models\Simrs\Planing\Planing_Igd_ranap;
 use App\Models\Simrs\Planing\Planing_Igd_Rujukan;
+use App\Models\Simrs\Planing\PlannIgdRujukanObat;
 use App\Models\Simrs\Planing\Plann_Igd_Ranap_Ruang;
 use App\Models\Simrs\Planing\SkalaTransferIgd;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -18,6 +19,51 @@ use Illuminate\Support\Facades\Storage;
 
 class PlannController extends Controller
 {
+    public function simpanobatrujukan(Request $request)
+    {
+        $request->validate([
+            'id_rujukan' => 'required|exists:plann_igd_rujukan,id',
+            'nama_obat' => 'required|string|max:255',
+            'jumlah' => 'required|string|max:100',
+            'dosis' => 'required|string|max:100',
+            'frekwensi' => 'required|string|max:100',
+            'cara_pemberian' => 'required|string|max:100',
+        ]);
+
+        $wew = FormatingHelper::session_user();
+        $data = PlannIgdRujukanObat::create([
+            'id_rujukan' => $request->id_rujukan,
+            'nama_obat' => $request->nama_obat,
+            'jumlah' => $request->jumlah,
+            'dosis' => $request->dosis,
+            'frekwensi' => $request->frekwensi,
+            'cara_pemberian' => $request->cara_pemberian,
+            'user' => $wew['kodesimrs'] ?? '',
+        ]);
+
+        return new JsonResponse(['message' => 'Obat rujukan berhasil disimpan', 'result' => $data], 200);
+    }
+
+    public function ubahobatrujukan(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:plann_igd_rujukan_obat,id',
+            'nama_obat' => 'required|string|max:255', 'jumlah' => 'required|string|max:100',
+            'dosis' => 'required|string|max:100', 'frekwensi' => 'required|string|max:100',
+            'cara_pemberian' => 'required|string|max:100',
+        ]);
+        $data = PlannIgdRujukanObat::findOrFail($request->id);
+        $data->update($request->only(['nama_obat', 'jumlah', 'dosis', 'frekwensi', 'cara_pemberian']));
+        return new JsonResponse(['message' => 'Obat rujukan berhasil diubah', 'result' => $data], 200);
+    }
+
+    public function hapusobatrujukan(Request $request)
+    {
+        $request->validate(['id' => 'required|exists:plann_igd_rujukan_obat,id']);
+        PlannIgdRujukanObat::findOrFail($request->id)->delete();
+        return new JsonResponse(['message' => 'Obat rujukan berhasil dihapus'], 200);
+    }
+
     public function simpanranap(Request $request)
     {
     //     $data = Planing_Igd_Lama::with(
@@ -122,6 +168,9 @@ class PlannController extends Controller
                     'kodepoli' => $request->kodepoli,
                     'poli_rujukan' => $request->polirujukan,
                     'keterangan' => $request->keterangan,
+                    'alasan_pindah_rs' => $request->alasanpindahrs,
+                    'terapi_tindakan' => $request->terapitindakan,
+                    'diet' => $request->diet,
                     ]
                 );
 
@@ -186,7 +235,7 @@ class PlannController extends Controller
                             'ruangranap',
                         ]);
                     },
-                    'planrujukan',
+                    'planrujukan.obatrujukan',
                     'planpulang'
                 ]
             )->where('rs1', $request->noreg)->get();
@@ -293,7 +342,6 @@ class PlannController extends Controller
             DB::beginTransaction();
             $id = $request->id;
             $rs141 = Planing_Igd_Lama::find($id);
-            $hapusrs141 = $rs141->delete();
             if($request->jenis === 'Pulang')
             {
                 $planigdpulang = Planing_Igd_Pulang::where('id_heder', $rs141['id']);
@@ -305,7 +353,15 @@ class PlannController extends Controller
                 $hapusrsplanranap = $plannranap->delete();
                 $hapusrsplanranapx = $Plann_Igd_Ranap_Ruang->delete();
 
+            }else if($request->jenis === 'Rujuk Ke Rumah Sakit' || $request->jenis === 'Rujuk Ke Rumah Sakit Lain'){
+                $planrujukan = Planing_Igd_Rujukan::where('id_heder', $id)->first();
+                if ($planrujukan) {
+                    PlannIgdRujukanObat::where('id_rujukan', $planrujukan->id)->delete();
+                    $planrujukan->delete();
+                }
             }
+
+            $hapusrs141 = $rs141->delete();
 
 
             DB::commit();
