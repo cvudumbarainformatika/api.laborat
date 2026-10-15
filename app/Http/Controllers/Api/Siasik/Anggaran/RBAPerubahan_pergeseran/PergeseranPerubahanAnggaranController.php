@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Siasik\Anggaran\RBAPerubahan_pergeseran;
 
 use App\Http\Controllers\Controller;
-use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Header;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Anggaran\Perubahan_pak_header;
 use App\Models\Siasik\Anggaran\Perubahan_RincianBelanja;
@@ -369,7 +368,7 @@ class PergeseranPerubahanAnggaranController extends Controller
 
     public function cetakData()
     {
-        $rkaawal = Penyesuaian_Prioritas_Header::where('penyesesuaianperioritas_heder.notrans', request('notrans'))
+        $rkaawal = Perubahan_pak_header::where('usulanHonor_h_pak.notrans', request('notrans'))
             ->with(['rinciantampung' => function($query) {
                 $query->leftJoin('akun50_2024', function ($join) {
                         $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
@@ -426,7 +425,7 @@ class PergeseranPerubahanAnggaranController extends Controller
                 //         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(t_tampung.koderek50, ".", 5) LIMIT 1) as uraian5'),
                 //         'akun50_2024.uraian as uraian6'
                 //     );
-            }, 'rincianpergeseran' => function($query) {
+            }, 'pergeseranpak' => function($query) {
                 $query->leftJoin('akun50_2024', function ($join) {
                         $join->on('perubahanrincianbelanja.koderek50', '=', 'akun50_2024.kodeall2')
                             ->orOn('perubahanrincianbelanja.koderek50', '=', 'akun50_2024.kodeall3');
@@ -497,7 +496,7 @@ class PergeseranPerubahanAnggaranController extends Controller
                 return $data;
             })->keyBy('idpp')->all() : [];
 
-            $pergeseranData = $item->rincianpergeseran->isNotEmpty() ? $item->rincianpergeseran->map(function ($pergeseran) {
+            $pergeseranData = $item->pergeseranpak->isNotEmpty() ? $item->pergeseranpak->map(function ($pergeseran) {
                 $data = $pergeseran->toArray();
                 return $data;
             })->keyBy('idpp')->all() : [];
@@ -641,7 +640,7 @@ class PergeseranPerubahanAnggaranController extends Controller
                             ->orOn('perubahanrincianbelanja.koderek50', '=', 'akun50_2024.kodeall3');
                             
                     })
-                ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'perubahanrincianbelanja.koderek50')
+                // ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'perubahanrincianbelanja.koderek50')
                     ->select(
                         'perubahanrincianbelanja.id',
                         'perubahanrincianbelanja.idpp',

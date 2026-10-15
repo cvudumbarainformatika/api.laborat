@@ -26,4 +26,9 @@ class Perubahan_pak_header extends Model
     public function penetapancopy(){
         return $this->hasMany(Tampungcopy::class,'kodekegiatanblud', 'kodeKegiatan');
     }
+
+
+    public function rinciantampung(){
+        return $this->hasMany(PergeseranPaguRinci::class,'notrans', 'notrans');
+    }
 }

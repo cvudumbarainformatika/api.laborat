@@ -16,21 +16,21 @@ class PergeseranPerubahanPaguController extends Controller
 
         $query = Penetapan_Pagu_pak::where('penetapan_pagu_pak.tahun', $tahun)
             ->join('kegiatan_blud', 'kegiatan_blud.no', '=', 'penetapan_pagu_pak.kodekegiatan')
-            ->join('t_tampung_pagu', 't_tampung_pagu.kodekegiatanblud', '=', 'penetapan_pagu_pak.kodekegiatan')
+            ->join('t_tampung_pagu_pak', 't_tampung_pagu_pak.kodekegiatanblud', '=', 'penetapan_pagu_pak.kodekegiatan')
             ->select(
                 'penetapan_pagu_pak.*',
                 'kegiatan_blud.no',
                 'kegiatan_blud.nomenklatur',
                 'kegiatan_blud.kode',
-                't_tampung_pagu.pagu as pagu_pergeseran'
+                't_tampung_pagu_pak.pagu as pagu_pergeseran'
             );
 
         // 🔍 FILTER PENCARIAN
         if ($q) {
             $query->where(function ($w) use ($q) {
                 $w->where('kegiatan_blud.nomenklatur', 'like', "%{$q}%")
-                ->orWhere('penetapan_pagu.namaorganisasi', 'like', "%{$q}%")
-                ->orWhere('penetapan_pagu.total', 'like', "%{$q}%");
+                ->orWhere('penetapan_pagu_pak.namaorganisasi', 'like', "%{$q}%")
+                ->orWhere('penetapan_pagu_pak.total', 'like', "%{$q}%");
             });
         }
 
